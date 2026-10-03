@@ -1,0 +1,76 @@
+@import "tailwindcss";
+/* Una sola tipografía, pensada para leerse bien en pantallas malas. Solo latín (incluye acentos). */
+@import "@fontsource/atkinson-hyperlegible-next/latin-400.css";
+@import "@fontsource/atkinson-hyperlegible-next/latin-700.css";
+
+@theme {
+  --font-sans: "Atkinson Hyperlegible Next", ui-sans-serif, system-ui, sans-serif;
+
+  /* Menú lateral: la pizarra (lousa) donde el local escribe su cardápio. */
+  --color-board: #1f2b27;
+  --color-board-hover: #2a3833;
+  --color-board-active: #34443e;
+  --color-chalk: #e7ece8;
+  --color-chalk-muted: #9fb0a8;
+
+  /* Área de trabajo. */
+  --color-paper: #f4f6f5;
+  --color-surface: #ffffff;
+  --color-ink: #1b2420;
+  --color-ink-muted: #56655f;
+  --color-line: #dce3df;
+  --color-action: #1b2420;
+  --color-action-hover: #2a3833;
+  --color-error: #8e3b34;
+  --color-error-soft: #fbecea;
+  --color-warning: #9a6412;
+  --color-success: #16794a;
+  /* Estrellas de las reseñas (siempre van con la nota en número al lado). */
+  --color-star: #c27c0e;
+
+  /* Estado del local: el cartel de la puerta. Texto blanco con contraste AA en los tres. */
+  --color-open: #16794a;
+  --color-paused: #9a6412;
+  --color-closed: #8e3b34;
+}
+
+/* Los colores de marca y los carteles de estado conservan su identidad. */
+html[data-theme="dark"] {
+  --color-paper: #121a17;
+  --color-surface: #1b2621;
+  --color-ink: #e7ece8;
+  --color-ink-muted: #afbeb6;
+  --color-line: #3c4c43;
+  --color-action: #345c47;
+  --color-action-hover: #406f56;
+  --color-error: #ffb4aa;
+  --color-error-soft: #422723;
+  --color-warning: #efc078;
+  --color-success: #7ed7a3;
+  --color-star: #f2c14e;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+  /* Foco siempre visible con teclado. */
+  :focus-visible {
+    outline: 3px solid #2f7de1;
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}

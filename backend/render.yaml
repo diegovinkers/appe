@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: serice-api-uy
+    runtime: node
+    plan: free
+    region: virginia
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: 24.21.0
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: TRANSCRIPTION_PROVIDER
+        value: local
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: PUBLIC_WEB_URL
+        sync: false
