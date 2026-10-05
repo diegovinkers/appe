@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://appe-l99l.onrender.com/api/:path*"
+      "destination": "https://appe-1991.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
