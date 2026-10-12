@@ -7295,6 +7295,79 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/whatsapp/twilio": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mensajes de los clientes por Twilio (formulario firmado con el Auth Token); contesta un TwiML vacío
+         * @description Sin sesión.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/x-www-form-urlencoded": {
+                        MessageSid: string;
+                        From: string;
+                        To: string;
+                        Body?: string;
+                        ProfileName?: string;
+                        NumMedia?: string;
+                        MediaUrl0?: string;
+                        MediaContentType0?: string;
+                        Latitude?: string;
+                    } & {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            responses: {
+                /** @description Archivo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/xml": string;
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/owner/coupons": {
         parameters: {
             query?: never;

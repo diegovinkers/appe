@@ -1,14 +1,17 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import request from "supertest";
+import twilio from "twilio";
 import { describe, expect, it } from "vitest";
 import { createApiRouters, createApp } from "../../src/app.js";
+import { config } from "../../src/config.js";
 import { buildOpenApi } from "../../src/docs/openapi.js";
 import { operations } from "../../src/docs/operations.js";
 import Conversation from "../../src/models/conversation.model.js";
 import { errorResponse } from "../../src/schemas/responses.schema.js";
 import { setAiProvider } from "../../src/services/assistant/ai.js";
 import { setTranscriber } from "../../src/services/assistant/transcription.js";
+import { settleWebhooks } from "../../src/services/assistant/whatsapp.js";
 import { setSpeaker } from "../../src/services/assistant/voice.js";
 import { PASSWORD, createCommerceWithOwner, createMenu, createSuperadmin, loginAs } from "../helpers.js";
 
@@ -75,6 +78,20 @@ describe("contrato de las respuestas", () => {
       "post",
       "/api/whatsapp/webhook"
     );
+    // Por Twilio (elegido como proveedor): un mensaje a un número que no es de ningún local.
+    config.WHATSAPP_PROVIDER = "twilio";
+    const twilioMessage = { MessageSid: "SM0", From: "whatsapp:+5555999990000", To: "whatsapp:+14155238886", Body: "oi" };
+    check(
+      await request(app)
+        .post("/api/whatsapp/twilio")
+        .type("form")
+        .set("X-Twilio-Signature", twilio.getExpectedTwilioSignature("token-de-twilio-de-prueba", "https://prueba.ngrok-free.app/api/whatsapp/twilio", twilioMessage))
+        .send(twilioMessage),
+      "post",
+      "/api/whatsapp/twilio"
+    );
+    await settleWebhooks();
+    config.WHATSAPP_PROVIDER = "meta";
 
     // Plataforma
     await createSuperadmin();

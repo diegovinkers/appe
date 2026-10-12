@@ -55,7 +55,7 @@ export function buildOpenApi() {
       ...(op.auth === "public" ? {} : { security: [op.auth === "customer" ? { customerSession: [] } : { session: [] }] }),
       ...(params.length ? { parameters: params } : {}),
       ...(op.body
-        ? { requestBody: { required: true, content: { "application/json": { schema: jsonSchema(op.body, "input") } } } }
+        ? { requestBody: { required: true, content: { [op.bodyType ?? "application/json"]: { schema: jsonSchema(op.body, "input") } } } }
         : {}),
       responses: responses(op),
     };

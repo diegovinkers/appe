@@ -1,7 +1,8 @@
 import { createHmac } from "node:crypto";
+import twilio from "twilio";
 import { describe, expect, it } from "vitest";
-import { inboundMessages } from "../../src/services/assistant/whatsapp.js";
-import { splitText, validSignature } from "../../src/services/assistant/whatsappCloud.js";
+import { inboundMessages, twilioInboundMessages } from "../../src/services/assistant/whatsapp.js";
+import { splitText, validSignature, validTwilioSignature } from "../../src/services/assistant/whatsappCloud.js";
 
 describe("firma del webhook", () => {
   const raw = Buffer.from('{"object":"whatsapp_business_account"}');
@@ -52,4 +53,41 @@ it("un texto largo sale en varios mensajes, cortando en un salto de línea", () 
   expect(parts.every((part) => part.length <= 4000)).toBe(true);
   expect(parts.join("\n")).toBe(text);
   expect(splitText("  oi  ")).toEqual(["oi"]);
+});
+
+it("con el límite de Twilio, en partes de hasta 1600", () => {
+  const text = Array(60).fill("x".repeat(99)).join("\n");
+  const parts = splitText(text, 1600);
+  expect(parts.length).toBe(4);
+  expect(parts.every((part) => part.length <= 1600)).toBe(true);
+  expect(parts.join("\n")).toBe(text);
+});
+
+describe("Twilio", () => {
+  const url = "https://prueba.ngrok-free.app/api/whatsapp/twilio";
+  const params = { MessageSid: "SM1", From: "whatsapp:+5555999991234", To: "whatsapp:+14155238886", Body: "oi" };
+
+  it("acepta solo lo firmado con nuestro Auth Token para la URL configurada", () => {
+    const good = twilio.getExpectedTwilioSignature("token-de-twilio-de-prueba", url, params);
+    expect(validTwilioSignature(good, params)).toBe(true);
+    expect(validTwilioSignature(good, { ...params, Body: "otro" })).toBe(false);
+    expect(validTwilioSignature(twilio.getExpectedTwilioSignature("otro-token", url, params), params)).toBe(false);
+    expect(validTwilioSignature(twilio.getExpectedTwilioSignature("token-de-twilio-de-prueba", "https://otro.ngrok-free.app/api/whatsapp/twilio", params), params)).toBe(false);
+    expect(validTwilioSignature(undefined, params)).toBe(false);
+    expect(validTwilioSignature(good, undefined)).toBe(false);
+  });
+
+  it("cada POST, con la misma forma que lo de Meta", () => {
+    const media = (type) => ({ ...params, Body: "", NumMedia: "1", MediaUrl0: "https://api.twilio.com/m/1", MediaContentType0: type });
+    expect(twilioInboundMessages({ ...params, ProfileName: "Maria" })).toEqual([
+      { phoneNumberId: "14155238886", waId: "5555999991234", name: "Maria", message: { id: "SM1", type: "text", text: { body: "oi" } } },
+    ]);
+    expect(twilioInboundMessages(media("audio/ogg"))[0].message).toMatchObject({ type: "audio", audio: { id: "https://api.twilio.com/m/1" } });
+    expect(twilioInboundMessages(media("image/jpeg"))[0].message.type).toBe("image");
+    expect(twilioInboundMessages(media("application/pdf"))[0].message.type).toBe("document");
+    expect(twilioInboundMessages({ ...params, Body: "", Latitude: "-30.38" })[0].message.type).toBe("location");
+    // Un SMS al mismo número, o algo sin id, no es de WhatsApp.
+    expect(twilioInboundMessages({ ...params, From: "+5555999991234" })).toEqual([]);
+    expect(twilioInboundMessages({ ...params, MessageSid: undefined })).toEqual([]);
+  });
 });

@@ -19533,6 +19533,102 @@
         }
       }
     },
+    "/api/whatsapp/twilio": {
+      "post": {
+        "tags": [
+          "WhatsApp"
+        ],
+        "summary": "Mensajes de los clientes por Twilio (formulario firmado con el Auth Token); contesta un TwiML vacío",
+        "description": "Sin sesión.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "MessageSid": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "From": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "To": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "Body": {
+                    "type": "string",
+                    "maxLength": 10000
+                  },
+                  "ProfileName": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "NumMedia": {
+                    "type": "string",
+                    "pattern": "^\\d{1,2}$"
+                  },
+                  "MediaUrl0": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "MediaContentType0": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "Latitude": {
+                    "type": "string",
+                    "maxLength": 40
+                  }
+                },
+                "required": [
+                  "MessageSid",
+                  "From",
+                  "To"
+                ],
+                "additionalProperties": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Archivo",
+            "content": {
+              "text/xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/owner/coupons": {
       "get": {
         "tags": [

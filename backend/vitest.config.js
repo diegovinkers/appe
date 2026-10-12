@@ -19,6 +19,10 @@ export default defineConfig({
       WHATSAPP_ACCESS_TOKEN: "token-de-prueba",
       WHATSAPP_APP_SECRET: "secreto-de-prueba",
       WHATSAPP_VERIFY_TOKEN: "verificacion-de-prueba",
+      // Twilio de mentira (los tests de Twilio cambian WHATSAPP_PROVIDER a "twilio").
+      TWILIO_ACCOUNT_SID: "AC00000000000000000000000000000000",
+      TWILIO_AUTH_TOKEN: "token-de-twilio-de-prueba",
+      TWILIO_WEBHOOK_URL: "https://prueba.ngrok-free.app/api/whatsapp/twilio",
     },
   },
 });

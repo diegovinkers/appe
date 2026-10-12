@@ -47,6 +47,16 @@ const envSchema = z.object({
     .trim()
     .regex(/^v\d+\.\d+$/, "WHATSAPP_GRAPH_VERSION tiene que ser como v23.0")
     .default("v23.0"),
+  // Por dónde va WhatsApp: "meta" (Cloud API, las WHATSAPP_* de arriba) o "twilio" (las TWILIO_* de abajo).
+  WHATSAPP_PROVIDER: z.enum(["meta", "twilio"]).default("meta"),
+  // Opcional: WhatsApp por Twilio (por ejemplo, su Sandbox para probar).
+  TWILIO_ACCOUNT_SID: optionalSecret,
+  TWILIO_AUTH_TOKEN: optionalSecret,
+  // La URL del webhook tal cual está cargada en Twilio: con ella se chequea la firma (detrás de
+  // ngrok o Render, este servidor ve otra).
+  TWILIO_WEBHOOK_URL: optionalSecret.pipe(
+    z.url({ protocol: /^https$/, error: "TWILIO_WEBHOOK_URL tiene que ser una URL https" }).optional()
+  ),
   // Audios de los clientes: "local" los pasa a texto en este servidor (Whisper, gratis); "none", no.
   TRANSCRIPTION_PROVIDER: z.enum(["local", "none"]).default("none"),
   // Modelo de Whisper para "local": base (76 MB, rápido) o onnx-community/whisper-small (241 MB, entiende mejor con ruido).

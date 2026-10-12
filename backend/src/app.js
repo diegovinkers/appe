@@ -64,7 +64,8 @@ export function createApp({ limits = {} } = {}) {
       customErrorMessage: (req, res) => `${req.method} ${req.originalUrl} → ${res.statusCode}`,
     })
   );
-  app.use(requireJsonContentType());
+  // El webhook de Twilio manda formularios: lo protege su firma, no el Content-Type.
+  app.use(requireJsonContentType({ except: ["/api/whatsapp/twilio"] }));
   // Notas de voz del simulador (base64): más grandes que el resto de los pedidos a la API.
   app.use("/api/owner/assistant/simulator/audio", express.json({ limit: "2mb" }));
   // El webhook de WhatsApp necesita el cuerpo tal como llegó para chequear la firma de Meta.

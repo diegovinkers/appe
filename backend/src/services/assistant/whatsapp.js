@@ -1,4 +1,4 @@
-// El asistente en WhatsApp: lo que llega por el webhook de Meta, las respuestas y los
+// El asistente en WhatsApp: lo que llega por el webhook (Meta o Twilio), las respuestas y los
 // avisos del estado del pedido. Solo se le escribe al cliente dentro de las 24 h desde su
 // último mensaje (regla de WhatsApp; fuera de eso harían falta plantillas aprobadas).
 import Assistant from "../../models/assistant.model.js";
@@ -162,6 +162,25 @@ export function inboundMessages(body) {
   return events;
 }
 
+// Lo mismo con Twilio: un mensaje por POST, como formulario. Los números llegan como
+// "whatsapp:+5555999991234" y acá van sin el prefijo, como el wa_id de Meta.
+export function twilioInboundMessages(body) {
+  const number = (address) => (typeof address === "string" && address.startsWith("whatsapp:+") ? address.slice("whatsapp:+".length) : null);
+  const waId = number(body?.From);
+  if (!waId || !body.MessageSid) return [];
+  const message = { id: body.MessageSid, type: "text", text: { body: body.Body ?? "" } };
+  const media = Number(body.NumMedia) > 0 ? String(body.MediaContentType0 ?? "").split("/")[0] : "";
+  if (media === "audio") {
+    message.type = "audio";
+    message.audio = { id: body.MediaUrl0 };
+  } else if (media) {
+    message.type = ["image", "video"].includes(media) ? media : "document";
+  } else if (body.Latitude) {
+    message.type = "location";
+  }
+  return [{ phoneNumberId: number(body.To), waId, name: body.ProfileName ?? "", message }];
+}
+
 async function conversationFor(commerceId, { waId, name, blocked = false }) {
   const now = Date.now();
   let conversation = await Conversation.findOne({ commerce: commerceId, channel: "whatsapp", waId, status: { $ne: "closed" } }).sort({
@@ -244,9 +263,9 @@ async function transcribeAudio(client, mediaId, locale) {
 // Lo que se está procesando (el webhook contesta 200 enseguida y sigue después).
 const inFlight = new Set();
 
-export function processWebhook(body) {
+function processEvents(events) {
   const work = (async () => {
-    for (const event of inboundMessages(body)) {
+    for (const event of events) {
       await handle(event).catch((error) => logger.error({ err: error }, "whatsapp: falló un mensaje entrante"));
     }
   })();
@@ -254,6 +273,9 @@ export function processWebhook(body) {
   work.finally(() => inFlight.delete(work));
   return work;
 }
+
+export const processWebhook = (body) => processEvents(inboundMessages(body));
+export const processTwilioWebhook = (body) => processEvents(twilioInboundMessages(body));
 
 // Para los tests: esperar a que termine lo que llegó por el webhook.
 export const settleWebhooks = () => Promise.all([...inFlight]);

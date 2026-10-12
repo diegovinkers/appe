@@ -1,14 +1,21 @@
-// Cliente de la API oficial de WhatsApp (Cloud API de Meta): firma del webhook, enviar
-// mensajes y bajar audios. Los tests ponen un cliente falso con setWhatsappClient(): nunca
-// llaman a Meta.
+// Clientes de WhatsApp: la Cloud API de Meta o Twilio (WHATSAPP_PROVIDER). Firma del webhook,
+// enviar mensajes y bajar audios. Los tests ponen un cliente falso con setWhatsappClient():
+// nunca llaman a Meta ni a Twilio.
 import { createHmac, timingSafeEqual } from "node:crypto";
+import twilio from "twilio";
 import { config, isTest } from "../../config.js";
 
-// WhatsApp corta los mensajes de texto en 4096 caracteres.
+// WhatsApp corta los mensajes de texto en 4096 caracteres; Twilio, en 1600.
 const MAX_TEXT = 4000;
+const TWILIO_MAX_TEXT = 1600;
 
-export const whatsappConfigured = () =>
+// Cada webhook atiende solo si su proveedor es el elegido y tiene sus claves.
+export const metaConfigured = () =>
+  config.WHATSAPP_PROVIDER === "meta" &&
   Boolean(config.WHATSAPP_ACCESS_TOKEN && config.WHATSAPP_APP_SECRET && config.WHATSAPP_VERIFY_TOKEN);
+export const twilioConfigured = () =>
+  config.WHATSAPP_PROVIDER === "twilio" && Boolean(config.TWILIO_ACCOUNT_SID && config.TWILIO_AUTH_TOKEN && config.TWILIO_WEBHOOK_URL);
+export const whatsappConfigured = () => metaConfigured() || twilioConfigured();
 
 // El webhook viene firmado por Meta con el App Secret: X-Hub-Signature-256: sha256=<hex>.
 export function validSignature(rawBody, header) {
@@ -18,13 +25,20 @@ export function validSignature(rawBody, header) {
   return given.length === expected.length && timingSafeEqual(given, expected);
 }
 
+// Twilio firma con el Auth Token: X-Twilio-Signature, sobre su URL del webhook y los parámetros
+// del formulario. Con su librería, porque Twilio agrega parámetros sin avisar.
+export function validTwilioSignature(header, params) {
+  if (!config.TWILIO_AUTH_TOKEN || !config.TWILIO_WEBHOOK_URL || typeof header !== "string" || !params) return false;
+  return twilio.validateRequest(config.TWILIO_AUTH_TOKEN, header, config.TWILIO_WEBHOOK_URL, params);
+}
+
 // Un texto largo en varios mensajes, cortando en saltos de línea.
-export function splitText(text) {
+export function splitText(text, max = MAX_TEXT) {
   const parts = [];
   let rest = text.trim();
-  while (rest.length > MAX_TEXT) {
-    const cut = rest.lastIndexOf("\n", MAX_TEXT);
-    const at = cut > MAX_TEXT / 2 ? cut : MAX_TEXT;
+  while (rest.length > max) {
+    const cut = rest.lastIndexOf("\n", max);
+    const at = cut > max / 2 ? cut : max;
     parts.push(rest.slice(0, at).trim());
     rest = rest.slice(at).trim();
   }
@@ -98,13 +112,43 @@ const metaClient = {
   },
 };
 
+let twilioApi;
+
+// Con Twilio, el número del local va en el panel sin "+" (como el wa_id): 14155238886 es el Sandbox.
+const twilioClient = {
+  async sendText({ phoneNumberId, to, text }) {
+    twilioApi ??= twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
+    const ids = [];
+    for (const body of splitText(text, TWILIO_MAX_TEXT)) {
+      // Si falla, el error trae status y code de Twilio (63015: el cliente no se unió al Sandbox).
+      const message = await twilioApi.messages.create({ from: `whatsapp:+${phoneNumberId}`, to: `whatsapp:+${to}`, body });
+      ids.push(message.sid);
+    }
+    return ids;
+  },
+  // Twilio no marca los mensajes como leídos.
+  async markRead() {},
+  // Twilio no recibe el archivo: lo baja de una URL pública. Por ahora, solo texto.
+  async sendAudio() {
+    throw new WhatsappError(501, "TWILIO_AUDIO_NOT_SUPPORTED");
+  },
+  // El audio de un cliente: la URL de Twilio que llegó en el webhook, con las claves de la cuenta.
+  async downloadMedia(url) {
+    if (typeof url !== "string" || !url.startsWith("https://api.twilio.com/")) throw new WhatsappError(400, "INVALID_MEDIA_URL");
+    const auth = Buffer.from(`${config.TWILIO_ACCOUNT_SID}:${config.TWILIO_AUTH_TOKEN}`).toString("base64");
+    const response = await fetch(url, { headers: { Authorization: `Basic ${auth}` }, signal: AbortSignal.timeout(30_000) });
+    if (!response.ok) throw new WhatsappError(response.status);
+    return { buffer: Buffer.from(await response.arrayBuffer()), mimeType: response.headers.get("content-type") };
+  },
+};
+
 let override;
 
 export function getWhatsappClient() {
   if (override) return override;
   // En los tests, nunca la API real.
   if (isTest) throw new Error("En los tests hay que usar setWhatsappClient()");
-  return metaClient;
+  return config.WHATSAPP_PROVIDER === "twilio" ? twilioClient : metaClient;
 }
 
 export function setWhatsappClient(client) {

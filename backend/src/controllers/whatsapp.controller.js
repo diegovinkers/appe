@@ -1,8 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { config } from "../config.js";
 import { AppError, forbidden, notFound } from "../lib/errors.js";
-import { processWebhook } from "../services/assistant/whatsapp.js";
-import { validSignature, whatsappConfigured } from "../services/assistant/whatsappCloud.js";
+import { processTwilioWebhook, processWebhook } from "../services/assistant/whatsapp.js";
+import { metaConfigured, twilioConfigured, validSignature, validTwilioSignature } from "../services/assistant/whatsappCloud.js";
 
 const sameText = (a, b) => {
   const [left, right] = [Buffer.from(String(a)), Buffer.from(String(b))];
@@ -12,7 +12,7 @@ const sameText = (a, b) => {
 // GET /api/whatsapp/webhook — Meta lo llama una vez al configurar el webhook: si el token
 // es el nuestro, se le devuelve el challenge.
 export const verifyWebhook = (req, res) => {
-  if (!whatsappConfigured()) throw notFound();
+  if (!metaConfigured()) throw notFound();
   const query = req.valid.query;
   if (query["hub.mode"] !== "subscribe" || !sameText(query["hub.verify_token"], config.WHATSAPP_VERIFY_TOKEN)) {
     throw forbidden("INVALID_VERIFY_TOKEN", "Token de verificação inválido");
@@ -23,10 +23,22 @@ export const verifyWebhook = (req, res) => {
 // POST /api/whatsapp/webhook — mensajes de los clientes. Se contesta 200 enseguida (si no,
 // Meta reenvía) y se procesan después.
 export const receiveWebhook = (req, res) => {
-  if (!whatsappConfigured()) throw notFound();
+  if (!metaConfigured()) throw notFound();
   if (!validSignature(req.rawBody, req.get("x-hub-signature-256"))) {
     throw new AppError(401, "INVALID_SIGNATURE", "Assinatura inválida");
   }
   processWebhook(req.valid.body);
   res.json({ ok: true });
+};
+
+// POST /api/whatsapp/twilio — lo mismo por Twilio. La firma va sobre los parámetros tal como
+// llegaron (req.body). Se contesta un TwiML vacío enseguida: Twilio espera hasta 15 s y el
+// asistente tarda más; las respuestas salen después por la API de Twilio.
+export const receiveTwilioWebhook = (req, res) => {
+  if (!twilioConfigured()) throw notFound();
+  if (!validTwilioSignature(req.get("x-twilio-signature"), req.body)) {
+    throw new AppError(401, "INVALID_SIGNATURE", "Assinatura inválida");
+  }
+  processTwilioWebhook(req.valid.body);
+  res.type("text/xml").send("<Response/>");
 };

@@ -1,7 +1,9 @@
 import { createHmac, randomUUID } from "node:crypto";
 import request from "supertest";
+import twilio from "twilio";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "../../src/app.js";
+import { config } from "../../src/config.js";
 import Assistant from "../../src/models/assistant.model.js";
 import Conversation from "../../src/models/conversation.model.js";
 import ConversationMessage from "../../src/models/conversationMessage.model.js";
@@ -42,7 +44,7 @@ const use = (name, input) => ({ content: [{ type: "tool_use", id: `t-${name}`, n
 // WhatsApp de mentira: guarda lo que se mandó.
 let whatsapp;
 beforeEach(() => {
-  whatsapp = { sent: [], read: [], audios: [] };
+  whatsapp = { sent: [], read: [], audios: [], downloaded: [] };
   setWhatsappClient({
     sendText: async (message) => {
       whatsapp.sent.push(message);
@@ -50,7 +52,10 @@ beforeEach(() => {
     },
     markRead: async (message) => whatsapp.read.push(message),
     sendAudio: async (message) => whatsapp.audios.push(message),
-    downloadMedia: async () => ({ buffer: Buffer.from("audio"), mimeType: "audio/ogg" }),
+    downloadMedia: async (media) => {
+      whatsapp.downloaded.push(media);
+      return { buffer: Buffer.from("audio"), mimeType: "audio/ogg" };
+    },
   });
   setReplyDelay(60_000);
 });
@@ -352,5 +357,100 @@ describe("WhatsApp desde el panel", () => {
     await vi.waitFor(() => expect(whatsapp.sent.at(-1).text).toContain("foi confirmado"));
     await agent.patch(`/api/owner/orders/${order._id}/status`).send({ status: "ready" });
     await vi.waitFor(() => expect(whatsapp.sent.at(-1).text).toContain("pronto para retirar"));
+  });
+});
+
+// Como Twilio: un formulario firmado con el Auth Token sobre la URL que tiene cargada.
+const TWILIO_URL = "https://prueba.ngrok-free.app/api/whatsapp/twilio";
+const TWILIO_TOKEN = "token-de-twilio-de-prueba";
+const SANDBOX = "14155238886";
+
+const twilioIncoming = ({ from = "5555999991234", body = "oi", ...media } = {}) => ({
+  MessageSid: `SM${randomUUID().replaceAll("-", "")}`,
+  AccountSid: "AC00000000000000000000000000000000",
+  From: `whatsapp:+${from}`,
+  To: `whatsapp:+${SANDBOX}`,
+  Body: body,
+  ProfileName: "Maria",
+  WaId: from,
+  NumMedia: "0",
+  ...media,
+});
+
+async function twilioWebhook(params, signature) {
+  const res = await request(app)
+    .post("/api/whatsapp/twilio")
+    .type("form")
+    .set("X-Twilio-Signature", signature ?? twilio.getExpectedTwilioSignature(TWILIO_TOKEN, TWILIO_URL, params))
+    .send(params);
+  await settleWebhooks();
+  return res;
+}
+
+describe("webhook de Twilio", () => {
+  beforeEach(() => {
+    config.WHATSAPP_PROVIDER = "twilio";
+  });
+  afterEach(() => {
+    config.WHATSAPP_PROVIDER = "meta";
+  });
+
+  async function setupSandbox() {
+    const result = await setup();
+    await Assistant.updateOne({ commerce: result.commerce._id }, { $set: { phoneNumberId: SANDBOX } });
+    return result;
+  }
+
+  it("un mensaje por el Sandbox: TwiML vacío enseguida y la respuesta sale por la API", async () => {
+    await setupSandbox();
+    const calls = fakeAi([say("Olá, Maria! O que vai ser hoje?")]);
+    const res = await twilioWebhook(twilioIncoming({ body: "oi, boa noite" }));
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toMatch(/^text\/xml/);
+    expect(res.text).toBe("<Response/>");
+
+    const conversation = await Conversation.findOne().lean();
+    expect(conversation).toMatchObject({ channel: "whatsapp", waId: "5555999991234", locale: "pt-BR", status: "bot" });
+    expect(conversation.customer).toEqual({ phone: "+5555999991234", name: "Maria" });
+
+    await flushReplies();
+    expect(calls).toHaveLength(1);
+    expect(whatsapp.sent).toEqual([{ phoneNumberId: SANDBOX, to: "5555999991234", text: "Olá, Maria! O que vai ser hoje?" }]);
+  });
+
+  it("sin la firma de Twilio para esta URL no se acepta nada", async () => {
+    await setupSandbox();
+    fakeAi([]);
+    expect((await twilioWebhook(twilioIncoming(), "firma-falsa")).status).toBe(401);
+    expect((await request(app).post("/api/whatsapp/twilio").type("form").send(twilioIncoming())).status).toBe(401);
+    // Firmado para otra dirección (por ejemplo, un túnel de ngrok viejo).
+    const params = twilioIncoming();
+    const otherUrl = twilio.getExpectedTwilioSignature(TWILIO_TOKEN, "https://otro.ngrok-free.app/api/whatsapp/twilio", params);
+    expect((await twilioWebhook(params, otherUrl)).status).toBe(401);
+    expect(await ConversationMessage.countDocuments()).toBe(0);
+  });
+
+  it("cada webhook atiende solo con su proveedor elegido", async () => {
+    await setupSandbox();
+    fakeAi([]);
+    expect((await webhook(incoming())).status).toBe(404);
+    config.WHATSAPP_PROVIDER = "meta";
+    expect((await twilioWebhook(twilioIncoming())).status).toBe(404);
+    expect(await ConversationMessage.countDocuments()).toBe(0);
+  });
+
+  it("un audio se baja de la URL de Twilio y se contesta transcrito; una foto pide texto", async () => {
+    await setupSandbox();
+    setTranscriber(async () => "quero um x-burger");
+    const calls = fakeAi([say("Anotado!")]);
+    const mediaUrl = "https://api.twilio.com/2010-04-01/Accounts/AC0/Messages/MM1/Media/ME1";
+    await twilioWebhook(twilioIncoming({ body: "", NumMedia: "1", MediaUrl0: mediaUrl, MediaContentType0: "audio/ogg" }));
+    await flushReplies();
+    expect(whatsapp.downloaded).toEqual([mediaUrl]);
+    expect(calls[0].messages.at(-1).content).toContain("quero um x-burger");
+    expect(await ConversationMessage.findOne({ role: "customer" }).lean()).toMatchObject({ kind: "audio", text: "quero um x-burger" });
+
+    await twilioWebhook(twilioIncoming({ body: "", NumMedia: "1", MediaUrl0: mediaUrl, MediaContentType0: "image/jpeg" }));
+    expect(whatsapp.sent.at(-1).text).toContain("só entendo mensagens de texto");
   });
 });
