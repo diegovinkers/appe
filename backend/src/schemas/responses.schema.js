@@ -541,6 +541,7 @@ const aiUsage = z.strictObject({
 export const assistantSettingsResponse = z.strictObject({
   assistant: z.strictObject({
     enabled: z.boolean(),
+    plusActive: z.boolean(),
     phoneNumberId: z.string().nullable(),
     monthlyBudgetUsdCents: z.number().int(),
     voiceReplies: z.boolean(),
@@ -556,6 +557,7 @@ export const conversation = z.strictObject({
   customer: z.strictObject({ phone: z.string(), name: z.string() }),
   locale: z.enum(ORDER_LOCALES),
   status: z.enum(CONVERSATION_STATUSES),
+  automationBlocked: z.boolean(),
   handoff: z.strictObject({ reason: z.string(), at: date }).nullable(),
   testMode: z.boolean(),
   orders: z.array(id),
@@ -581,3 +583,4 @@ export const conversationMessage = z.strictObject({
 
 export const conversationThreadResponse = z.strictObject({ conversation, messages: z.array(conversationMessage) });
 export const staffMessageResponse = z.strictObject({ conversation, message: conversationMessage });
+export const conversationAutomationBlockResponse = z.strictObject({ blocked: z.boolean() });

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import { createApiRouters, createApp } from "../../src/app.js";
 import { buildOpenApi } from "../../src/docs/openapi.js";
 import { operations } from "../../src/docs/operations.js";
+import Conversation from "../../src/models/conversation.model.js";
 import { errorResponse } from "../../src/schemas/responses.schema.js";
 import { setAiProvider } from "../../src/services/assistant/ai.js";
 import { setTranscriber } from "../../src/services/assistant/transcription.js";
@@ -246,12 +247,23 @@ describe("contrato de las respuestas", () => {
       }),
     });
     check(await owner.get("/api/owner/assistant"), "get", "/api/owner/assistant");
-    check(await owner.patch("/api/owner/assistant").send({ enabled: true, monthlyBudgetUsdCents: 500 }), "patch", "/api/owner/assistant");
+    check(await owner.patch("/api/owner/assistant").send({ enabled: false, monthlyBudgetUsdCents: 500 }), "patch", "/api/owner/assistant");
     const chat = check(
       await owner.post("/api/owner/assistant/simulator").send({ text: "oi", customer: { name: "Maria", phone: "55 99999-1234" } }),
       "post",
       "/api/owner/assistant/simulator"
     ).body.conversation;
+    const waConversation = await Conversation.create({
+      commerce: commerceId,
+      channel: "whatsapp",
+      waId: "5555999990000",
+      customer: { name: "Maria", phone: "+5555999990000" },
+    });
+    check(
+      await owner.post(`/api/owner/assistant/conversations/${waConversation._id}/automation-block`).send({ blocked: true }),
+      "post",
+      "/api/owner/assistant/conversations/:id/automation-block"
+    );
     setTranscriber(async () => "quero um x-burger");
     check(
       await owner

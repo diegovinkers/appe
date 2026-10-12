@@ -7,6 +7,7 @@ import Conversation from "../../src/models/conversation.model.js";
 import ConversationMessage from "../../src/models/conversationMessage.model.js";
 import Customer from "../../src/models/customer.model.js";
 import Order from "../../src/models/order.model.js";
+import Subscription from "../../src/models/subscription.model.js";
 import { hashPassword } from "../../src/lib/passwords.js";
 import { setAiProvider } from "../../src/services/assistant/ai.js";
 import { setTranscriber } from "../../src/services/assistant/transcription.js";
@@ -101,11 +102,44 @@ async function webhook(payload, signature) {
 async function setup({ enabled = true } = {}) {
   const { commerce, owner } = await createCommerceWithOwner({ slug: "loja-zap", paymentMethods: ["cash", "pix"] });
   await createMenu(commerce);
+  await Subscription.create({ commerce: commerce._id, plan: "Member Plus", status: "active" });
   await Assistant.create({ commerce: commerce._id, enabled, phoneNumberId: PHONE_ID });
   return { commerce, owner };
 }
 
 describe("webhook de WhatsApp", () => {
+  it("no atiende por WhatsApp si el comercio no tiene Member Plus activa", async () => {
+    const { commerce } = await setup();
+    await Subscription.deleteOne({ commerce: commerce._id });
+    fakeAi([say("No debería responder")]);
+    expect((await webhook(incoming())).status).toBe(200);
+    expect(await Conversation.countDocuments({ commerce: commerce._id })).toBe(0);
+    expect(whatsapp.sent).toEqual([]);
+  });
+
+  it("permite bloquear la automatización de un número en chats futuros", async () => {
+    const { owner, commerce } = await setup();
+    fakeAi([say("Hola")]);
+    await webhook(incoming());
+    const conversation = await Conversation.findOne({ commerce: commerce._id, channel: "whatsapp" });
+    const agent = await loginAs(app, owner.email);
+    const blocked = await agent.post(`/api/owner/assistant/conversations/${conversation._id}/automation-block`).send({ blocked: true });
+    expect(blocked.status).toBe(200);
+    expect(blocked.body.blocked).toBe(true);
+
+    await webhook(incoming({ id: "wamid.blocked-later" }));
+    const current = await Conversation.findById(conversation._id);
+    expect(current).toMatchObject({ status: "human", automationBlocked: true });
+    expect(whatsapp.sent).toEqual([]);
+
+    await Conversation.updateOne({ _id: conversation._id }, { $set: { lastCustomerMessageAt: new Date(Date.now() - 13 * 60 * 60 * 1000) } });
+    await webhook(incoming({ id: "wamid.blocked-new-thread" }));
+    const threads = await Conversation.find({ commerce: commerce._id, channel: "whatsapp" }).lean();
+    expect(threads).toHaveLength(2);
+    expect(threads.find((thread) => thread.status !== "closed")).toMatchObject({ status: "human", automationBlocked: true });
+    expect(whatsapp.sent).toEqual([]);
+  });
+
   it("Meta verifica el webhook con nuestro token", async () => {
     const ok = await request(app).get("/api/whatsapp/webhook").query({ "hub.mode": "subscribe", "hub.verify_token": "verificacion-de-prueba", "hub.challenge": "desafio-123" });
     expect(ok.status).toBe(200);

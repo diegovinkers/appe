@@ -12,6 +12,7 @@ import { transcribe, transcriptionAvailable } from "../services/assistant/transc
 import { speak, voiceAvailable } from "../services/assistant/voice.js";
 import { resumeAssistant, sendStaffText, windowOpen } from "../services/assistant/whatsapp.js";
 import { whatsappConfigured } from "../services/assistant/whatsappCloud.js";
+import { hasAssistantPlus } from "../services/assistant/entitlements.js";
 
 const conversationNotFound = () => notFound("Conversa não encontrada");
 
@@ -29,6 +30,7 @@ export const conversationView = (conversation) => ({
   customer: { phone: conversation.customer.phone, name: conversation.customer.name },
   locale: conversation.locale,
   status: conversation.status,
+  automationBlocked: conversation.automationBlocked ?? false,
   handoff: conversation.handoff ? { reason: conversation.handoff.reason, at: conversation.handoff.at } : null,
   testMode: conversation.testMode,
   orders: conversation.orders,
@@ -63,6 +65,7 @@ async function settingsView(commerce) {
   ]);
   return {
     enabled: settings?.enabled ?? false,
+    plusActive: await hasAssistantPlus(commerce._id),
     phoneNumberId: settings?.phoneNumberId ?? null,
     monthlyBudgetUsdCents: settings?.monthlyBudgetUsdCents ?? DEFAULT_BUDGET_USD_CENTS,
     voiceReplies: settings?.voiceReplies ?? false,
@@ -84,6 +87,9 @@ export const getAssistant = async (req, res) => res.json({ assistant: await sett
 // PATCH /api/owner/assistant
 export const updateAssistant = async (req, res) => {
   const changes = req.valid.body;
+  if (changes.enabled === true && !(await hasAssistantPlus(req.commerce._id))) {
+    throw new AppError(403, "MEMBER_PLUS_REQUIRED", "Member Plus precisa estar ativa para ligar o assistente no WhatsApp");
+  }
   try {
     await Assistant.updateOne({ commerce: req.commerce._id }, { $set: changes }, { upsert: true, runValidators: true });
   } catch (error) {
@@ -184,9 +190,39 @@ export const takeOverConversation = async (req, res) => {
 
 // POST /api/owner/assistant/conversations/:id/release — vuelve a contestar el asistente.
 export const releaseConversation = async (req, res) => {
+  const existing = await Conversation.findOne({ _id: req.valid.params.id, commerce: req.commerce._id });
+  if (!existing) throw conversationNotFound();
+  if (existing.automationBlocked) throw conflict("NUMBER_AUTOMATION_BLOCKED", "Primero vuelve a permitir la automatización para este número");
+  if (existing.channel === "whatsapp" && !(await hasAssistantPlus(req.commerce._id))) {
+    throw new AppError(403, "MEMBER_PLUS_REQUIRED", "Member Plus precisa estar ativa para devolver a conversa ao assistente");
+  }
   const conversation = await setStatus(req, "bot", null);
   await resumeAssistant(conversation);
   res.json({ conversation: conversationView(conversation) });
+};
+
+// Bloqueo persistente por wa_id: también afecta conversaciones nuevas del mismo cliente.
+export const setConversationAutomationBlock = async (req, res) => {
+  const conversation = await Conversation.findOne({ _id: req.valid.params.id, commerce: req.commerce._id, channel: "whatsapp" });
+  if (!conversation) throw conversationNotFound();
+  const { waId } = conversation;
+  const blocked = req.valid.body.blocked;
+  const assistant = await Assistant.findOneAndUpdate(
+    { commerce: req.commerce._id },
+    blocked ? { $addToSet: { blockedWaIds: waId } } : { $pull: { blockedWaIds: waId } },
+    { upsert: true, returnDocument: "after", setDefaultsOnInsert: true }
+  );
+  await Conversation.updateMany(
+    { commerce: req.commerce._id, channel: "whatsapp", waId },
+    blocked
+      ? { $set: { automationBlocked: true, status: "human", handoff: { reason: "Automatización pausada para este número", at: new Date() } } }
+      : { $set: { automationBlocked: false } }
+  );
+  await audit(req, {
+    action: blocked ? "assistant.number_blocked" : "assistant.number_unblocked",
+    entity: { type: "commerce", id: req.commerce._id },
+  });
+  res.json({ blocked: assistant.blockedWaIds.includes(waId) });
 };
 
 // POST /api/owner/assistant/conversations/:id/messages — alguien del local le escribe al

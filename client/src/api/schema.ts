@@ -6076,6 +6076,7 @@ export interface paths {
                         "application/json": {
                             assistant: {
                                 enabled: boolean;
+                                plusActive: boolean;
                                 phoneNumberId: string | null;
                                 monthlyBudgetUsdCents: number;
                                 voiceReplies: boolean;
@@ -6152,6 +6153,7 @@ export interface paths {
                         "application/json": {
                             assistant: {
                                 enabled: boolean;
+                                plusActive: boolean;
                                 phoneNumberId: string | null;
                                 monthlyBudgetUsdCents: number;
                                 voiceReplies: boolean;
@@ -6168,6 +6170,22 @@ export interface paths {
                                     conversations: number;
                                     orders: number;
                                 };
+                            };
+                        };
+                    };
+                };
+                /** @description OK */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: unknown;
+                                requestId?: string;
                             };
                         };
                     };
@@ -6254,6 +6272,7 @@ export interface paths {
                                 locale: "pt-BR" | "es";
                                 /** @enum {string} */
                                 status: "bot" | "human" | "closed";
+                                automationBlocked: boolean;
                                 handoff: {
                                     reason: string;
                                     /** Format: date-time */
@@ -6391,6 +6410,7 @@ export interface paths {
                                 locale: "pt-BR" | "es";
                                 /** @enum {string} */
                                 status: "bot" | "human" | "closed";
+                                automationBlocked: boolean;
                                 handoff: {
                                     reason: string;
                                     /** Format: date-time */
@@ -6578,6 +6598,7 @@ export interface paths {
                                 locale: "pt-BR" | "es";
                                 /** @enum {string} */
                                 status: "bot" | "human" | "closed";
+                                automationBlocked: boolean;
                                 handoff: {
                                     reason: string;
                                     /** Format: date-time */
@@ -6674,6 +6695,7 @@ export interface paths {
                                 locale: "pt-BR" | "es";
                                 /** @enum {string} */
                                 status: "bot" | "human" | "closed";
+                                automationBlocked: boolean;
                                 handoff: {
                                     reason: string;
                                     /** Format: date-time */
@@ -6796,6 +6818,7 @@ export interface paths {
                                 locale: "pt-BR" | "es";
                                 /** @enum {string} */
                                 status: "bot" | "human" | "closed";
+                                automationBlocked: boolean;
                                 handoff: {
                                     reason: string;
                                     /** Format: date-time */
@@ -6892,6 +6915,7 @@ export interface paths {
                                 locale: "pt-BR" | "es";
                                 /** @enum {string} */
                                 status: "bot" | "human" | "closed";
+                                automationBlocked: boolean;
                                 handoff: {
                                     reason: string;
                                     /** Format: date-time */
@@ -6916,6 +6940,89 @@ export interface paths {
                                 /** Format: date-time */
                                 updatedAt: string;
                             };
+                        };
+                    };
+                };
+                /** @description OK */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                code: string;
+                                message: string;
+                                details?: unknown;
+                                requestId?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/assistant/conversations/{id}/automation-block": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bloquear o permitir la automatización futura de este número
+         * @description Con sesión y el permiso `orders:write`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        blocked: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            blocked: boolean;
                         };
                     };
                 };
@@ -6994,6 +7101,7 @@ export interface paths {
                                 locale: "pt-BR" | "es";
                                 /** @enum {string} */
                                 status: "bot" | "human" | "closed";
+                                automationBlocked: boolean;
                                 handoff: {
                                     reason: string;
                                     /** Format: date-time */

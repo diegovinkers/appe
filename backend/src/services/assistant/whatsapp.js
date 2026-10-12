@@ -12,6 +12,7 @@ import { shouldSpeak } from "./speech.js";
 import { transcribe, transcriptionAvailable } from "./transcription.js";
 import { speak, voiceAvailable } from "./voice.js";
 import { getWhatsappClient } from "./whatsappCloud.js";
+import { hasAssistantPlus } from "./entitlements.js";
 
 export const WINDOW_MS = 24 * 60 * 60 * 1000;
 // Si el cliente vuelve después de tanto tiempo, es otra conversación (otro pedido).
@@ -88,6 +89,10 @@ async function answer(conversationId) {
   const replies = await replyTo(conversationId);
   if (!replies.length) return;
   const conversation = await Conversation.findById(conversationId);
+  if (!conversation || conversation.status !== "bot" || conversation.automationBlocked || !(await hasAssistantPlus(conversation.commerce))) {
+    await ConversationMessage.updateMany({ _id: { $in: replies.map((reply) => reply._id) } }, { $set: { delivery: "failed" } });
+    return;
+  }
   for (const reply of replies) await deliver(conversation, reply);
   if (await wantsVoice(conversation)) {
     for (const reply of replies) if (reply.delivery === "sent" && shouldSpeak(reply.text)) await sendVoice(conversation, reply.text);
@@ -157,7 +162,7 @@ export function inboundMessages(body) {
   return events;
 }
 
-async function conversationFor(commerceId, { waId, name }) {
+async function conversationFor(commerceId, { waId, name, blocked = false }) {
   const now = Date.now();
   let conversation = await Conversation.findOne({ commerce: commerceId, channel: "whatsapp", waId, status: { $ne: "closed" } }).sort({
     lastMessageAt: -1,
@@ -172,6 +177,8 @@ async function conversationFor(commerceId, { waId, name }) {
       commerce: commerceId,
       channel: "whatsapp",
       waId,
+      automationBlocked: blocked,
+      ...(blocked && { status: "human", handoff: { reason: "Automatización pausada para este número", at: new Date() } }),
       customer: { phone: normalizePhone(`+${waId}`) ?? `+${waId}`, name: String(name ?? "").slice(0, 60) },
       // Un número de Uruguay empieza en español; después el asistente sigue el idioma del cliente.
       locale: waId.startsWith("598") ? "es" : "pt-BR",
@@ -185,11 +192,12 @@ async function handle({ phoneNumberId, waId, name, message }) {
   const settings = await Assistant.findOne({ phoneNumberId, enabled: true }).lean();
   if (!settings) return;
   const store = await Commerce.exists({ _id: settings.commerce, status: "active" });
-  if (!store) return;
+  if (!store || !(await hasAssistantPlus(settings.commerce))) return;
   // Meta reenvía si no respondimos a tiempo: el mismo mensaje se procesa una sola vez.
   if (await ConversationMessage.exists({ externalId: message.id })) return;
 
-  const conversation = await conversationFor(settings.commerce, { waId, name });
+  const blocked = (settings.blockedWaIds ?? []).includes(waId);
+  const conversation = await conversationFor(settings.commerce, { waId, name, blocked });
   const client = getWhatsappClient();
   client.markRead({ phoneNumberId, messageId: message.id }).catch(() => {});
 
@@ -218,7 +226,7 @@ async function handle({ phoneNumberId, waId, name, message }) {
     if (error.code === 11000) return;
     throw error;
   }
-  if (conversation.status === "bot") scheduleReply(conversation._id);
+  if (conversation.status === "bot" && !blocked) scheduleReply(conversation._id);
 }
 
 async function transcribeAudio(client, mediaId, locale) {
@@ -271,6 +279,7 @@ export async function notifyOrderStatus(order) {
   if (order.status === "ready" && order.fulfillment === "delivery") return;
   const conversation = await Conversation.findOne({ _id: order.conversation, channel: "whatsapp" });
   if (!conversation || !windowOpen(conversation)) return;
+  if (!(await hasAssistantPlus(conversation.commerce))) return;
   const texts = textsFor(order.locale ?? conversation.locale).status;
   const eta = order.estimatedMinutes?.min != null ? `${order.estimatedMinutes.min}–${order.estimatedMinutes.max} min` : null;
   const text = order.status === "confirmed" ? texts.confirmed(order.number, eta) : order.status === "cancelled" ? texts.cancelled(order.number, order.cancelReason) : texts[order.status](order.number);

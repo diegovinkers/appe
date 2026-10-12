@@ -8,6 +8,7 @@ import ConversationMessage from "../../src/models/conversationMessage.model.js";
 import OptionGroup from "../../src/models/optionGroup.model.js";
 import Order from "../../src/models/order.model.js";
 import Product from "../../src/models/product.model.js";
+import Subscription from "../../src/models/subscription.model.js";
 import { formatBRL } from "../../src/lib/money.js";
 import { setAiProvider } from "../../src/services/assistant/ai.js";
 import { cleanupOldConversations } from "../../src/services/assistant/privacy.js";
@@ -59,12 +60,21 @@ afterEach(() => {
 async function setup() {
   const { commerce, owner } = await createCommerceWithOwner({ slug: "loja-bot", paymentMethods: ["cash", "pix"] });
   await createMenu(commerce);
+  await Subscription.create({ commerce: commerce._id, plan: "Member Plus", status: "active" });
   const agent = await loginAs(app, owner.email);
   const say = (body) => agent.post("/api/owner/assistant/simulator").send({ customer, ...body });
   return { commerce, owner, agent, send: say };
 }
 
 describe("asistente: tomar un pedido", () => {
+  it("no permite activar WhatsApp sin Member Plus", async () => {
+    const { commerce, agent } = await setup();
+    await Subscription.deleteOne({ commerce: commerce._id });
+    const response = await agent.patch("/api/owner/assistant").send({ enabled: true, phoneNumberId: "123456789012345" });
+    expect(response.status).toBe(403);
+    expect(response.body.error.code).toBe("MEMBER_PLUS_REQUIRED");
+  });
+
   it("cotiza, espera la confirmación del cliente y crea el pedido", async () => {
     const { commerce, send } = await setup();
     const calls = fakeAi([use("cotar_pedido", pickupQuote), say("*Resumo* ... Total R$ 31,00. Confirma?")]);

@@ -16450,6 +16450,9 @@
                         "enabled": {
                           "type": "boolean"
                         },
+                        "plusActive": {
+                          "type": "boolean"
+                        },
                         "phoneNumberId": {
                           "type": [
                             "string",
@@ -16524,6 +16527,7 @@
                       },
                       "required": [
                         "enabled",
+                        "plusActive",
                         "phoneNumberId",
                         "monthlyBudgetUsdCents",
                         "voiceReplies",
@@ -16624,6 +16628,9 @@
                         "enabled": {
                           "type": "boolean"
                         },
+                        "plusActive": {
+                          "type": "boolean"
+                        },
                         "phoneNumberId": {
                           "type": [
                             "string",
@@ -16698,6 +16705,7 @@
                       },
                       "required": [
                         "enabled",
+                        "plusActive",
                         "phoneNumberId",
                         "monthlyBudgetUsdCents",
                         "voiceReplies",
@@ -16710,6 +16718,42 @@
                   },
                   "required": [
                     "assistant"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {},
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
                   ],
                   "additionalProperties": false
                 }
@@ -16858,6 +16902,9 @@
                             "closed"
                           ]
                         },
+                        "automationBlocked": {
+                          "type": "boolean"
+                        },
                         "handoff": {
                           "anyOf": [
                             {
@@ -16983,6 +17030,7 @@
                         "customer",
                         "locale",
                         "status",
+                        "automationBlocked",
                         "handoff",
                         "testMode",
                         "orders",
@@ -17281,6 +17329,9 @@
                             "closed"
                           ]
                         },
+                        "automationBlocked": {
+                          "type": "boolean"
+                        },
                         "handoff": {
                           "anyOf": [
                             {
@@ -17406,6 +17457,7 @@
                         "customer",
                         "locale",
                         "status",
+                        "automationBlocked",
                         "handoff",
                         "testMode",
                         "orders",
@@ -17753,6 +17805,9 @@
                               "closed"
                             ]
                           },
+                          "automationBlocked": {
+                            "type": "boolean"
+                          },
                           "handoff": {
                             "anyOf": [
                               {
@@ -17878,6 +17933,7 @@
                           "customer",
                           "locale",
                           "status",
+                          "automationBlocked",
                           "handoff",
                           "testMode",
                           "orders",
@@ -17999,6 +18055,9 @@
                             "human",
                             "closed"
                           ]
+                        },
+                        "automationBlocked": {
+                          "type": "boolean"
                         },
                         "handoff": {
                           "anyOf": [
@@ -18125,6 +18184,7 @@
                         "customer",
                         "locale",
                         "status",
+                        "automationBlocked",
                         "handoff",
                         "testMode",
                         "orders",
@@ -18379,6 +18439,9 @@
                             "closed"
                           ]
                         },
+                        "automationBlocked": {
+                          "type": "boolean"
+                        },
                         "handoff": {
                           "anyOf": [
                             {
@@ -18504,6 +18567,7 @@
                         "customer",
                         "locale",
                         "status",
+                        "automationBlocked",
                         "handoff",
                         "testMode",
                         "orders",
@@ -18625,6 +18689,9 @@
                             "closed"
                           ]
                         },
+                        "automationBlocked": {
+                          "type": "boolean"
+                        },
                         "handoff": {
                           "anyOf": [
                             {
@@ -18750,6 +18817,7 @@
                         "customer",
                         "locale",
                         "status",
+                        "automationBlocked",
                         "handoff",
                         "testMode",
                         "orders",
@@ -18766,6 +18834,126 @@
                   },
                   "required": [
                     "conversation"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {},
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/owner/assistant/conversations/{id}/automation-block": {
+      "post": {
+        "tags": [
+          "Panel: asistente"
+        ],
+        "summary": "Bloquear o permitir la automatización futura de este número",
+        "description": "Con sesión y el permiso `orders:write`.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f\\d]{24}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "blocked": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "blocked"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "blocked": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "blocked"
                   ],
                   "additionalProperties": false
                 }
@@ -18891,6 +19079,9 @@
                             "closed"
                           ]
                         },
+                        "automationBlocked": {
+                          "type": "boolean"
+                        },
                         "handoff": {
                           "anyOf": [
                             {
@@ -19016,6 +19207,7 @@
                         "customer",
                         "locale",
                         "status",
+                        "automationBlocked",
                         "handoff",
                         "testMode",
                         "orders",

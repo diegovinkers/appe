@@ -43,6 +43,7 @@ const conversationSchema = new mongoose.Schema(
     waId: { type: String, default: null },
     locale: { type: String, enum: ORDER_LOCALES, default: "pt-BR" },
     status: { type: String, enum: CONVERSATION_STATUSES, default: "bot" },
+    automationBlocked: { type: Boolean, default: false },
     // Por qué pasó a una persona (lo muestra el panel).
     handoff: {
       type: new mongoose.Schema({ reason: String, at: Date }, { _id: false }),

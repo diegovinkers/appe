@@ -43,5 +43,6 @@ export const conversationsQuery = z.object({
 });
 
 export const staffMessageSchema = z.object({ text: requiredText(1000) });
+export const conversationAutomationBlockSchema = z.object({ blocked: z.boolean() });
 
 export const speechSchema = z.object({ text: requiredText(1000), locale: z.enum(ORDER_LOCALES).default("pt-BR") });

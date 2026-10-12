@@ -12,6 +12,7 @@ import { buildMenu, momentInfo, storeInfo } from "./context.js";
 import { costMicros, monthSpendMicros } from "./costs.js";
 import { instructions } from "./prompt.js";
 import { TOOLS, runTool } from "./tools.js";
+import { hasAssistantPlus } from "./entitlements.js";
 
 // Llamadas a la IA por respuesta: cada herramienta usada es una vuelta más.
 const MAX_STEPS = 6;
@@ -123,6 +124,7 @@ async function giveUp(conversation, store, reason, spent = {}) {
 async function reply(conversationId) {
   const conversation = await Conversation.findById(conversationId);
   if (!conversation || conversation.status !== "bot") return [];
+  if (conversation.channel === "whatsapp" && !(await hasAssistantPlus(conversation.commerce))) return [];
   const store = await Commerce.findOne({ _id: conversation.commerce, status: "active" });
   if (!store) return [];
   // Contesta solo si lo último que hay es del cliente.

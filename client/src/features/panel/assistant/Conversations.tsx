@@ -15,6 +15,7 @@ import {
   needsPerson,
   useConversation,
   useConversationAction,
+  useConversationAutomationBlock,
   useConversations,
   useStaffMessage,
 } from "./assistant";
@@ -24,6 +25,7 @@ const FILTERS: ChannelFilter[] = ["all", "whatsapp", "simulator"];
 
 function StatusLabel({ conversation }: { conversation: Conversation }) {
   const c = useT().assistant.conversations;
+  if (conversation.automationBlocked) return <span className="rounded-full bg-error-soft px-2 py-0.5 text-xs font-bold text-error">{c.numberBlocked}</span>;
   if (needsPerson(conversation))
     return <span className="rounded-full bg-error-soft px-2 py-0.5 text-xs font-bold text-error">{c.needsPerson}</span>;
   const label = conversation.status === "bot" ? c.withAssistant : conversation.status === "human" ? c.withPerson : c.closed;
@@ -38,6 +40,7 @@ function Detail({ id, onBack, canListen }: { id: string; onBack: () => void; can
   const { user } = usePanel();
   const query = useConversation(id);
   const action = useConversationAction();
+  const automationBlock = useConversationAutomationBlock();
   const reply = useStaffMessage();
   const [text, setText] = useState("");
   const canAnswer = can(user.role, "orders:write");
@@ -66,6 +69,20 @@ function Detail({ id, onBack, canListen }: { id: string; onBack: () => void; can
           </p>
         </div>
         <StatusLabel conversation={conversation} />
+        {conversation.channel === "whatsapp" && canAnswer && (
+          <button
+            type="button"
+            className={button.secondary}
+            disabled={automationBlock.isPending}
+            onClick={() => {
+              const blocked = !conversation.automationBlocked;
+              if (blocked && !window.confirm(c.blockConfirm)) return;
+              automationBlock.mutate({ id, blocked });
+            }}
+          >
+            {conversation.automationBlocked ? c.unblockNumber : c.blockNumber}
+          </button>
+        )}
         {canAnswer &&
           (conversation.status === "bot" ? (
             <button
@@ -76,7 +93,7 @@ function Detail({ id, onBack, canListen }: { id: string; onBack: () => void; can
             >
               {t.assistant.takeover}
             </button>
-          ) : (
+          ) : !conversation.automationBlocked ? (
             <button
               type="button"
               className={button.secondary}
@@ -85,7 +102,7 @@ function Detail({ id, onBack, canListen }: { id: string; onBack: () => void; can
             >
               {t.assistant.release}
             </button>
-          ))}
+          ) : null)}
       </header>
       {conversation.status === "human" && conversation.handoff && (
         <p className="border-b border-line bg-surface px-4 py-2 text-sm">{t.assistant.handedOff(conversation.handoff.reason)}</p>

@@ -37,11 +37,12 @@ import { createCouponSchema, updateCouponSchema } from "../schemas/coupon.schema
 import { storeParams, storeQuery } from "../schemas/public.schema.js";
 import { createReviewSchema, updateReviewSchema } from "../schemas/review.schema.js";
 import { customerLoginSchema, deleteCustomerSchema, linkOrdersSchema, signupSchema, updateCustomerSchema } from "../schemas/customer.schema.js";
-import { conversationsQuery, simulatorAudioSchema, simulatorMessageSchema, speechSchema, staffMessageSchema, updateAssistantSchema } from "../schemas/assistant.schema.js";
+import { conversationAutomationBlockSchema, conversationsQuery, simulatorAudioSchema, simulatorMessageSchema, speechSchema, staffMessageSchema, updateAssistantSchema } from "../schemas/assistant.schema.js";
 import { webhookBody, webhookVerifyQuery } from "../schemas/whatsapp.schema.js";
 import {
   auditEntry,
   category,
+  errorResponse,
   coupon,
   manualOrderResponse,
   slotsResponse,
@@ -61,6 +62,7 @@ import {
   customerSessionResponse,
   linkedOrdersResponse,
   customerOrdersResponse,
+  conversationAutomationBlockResponse,
   publicReviewsResponse,
   ownerReviewsResponse,
   ownerReviewResponse,
@@ -165,14 +167,15 @@ export const operations = [
 
   // Panel: asistente con IA
   { method: "get", path: "/api/owner/assistant", tag: "Panel: asistente", summary: "Configuración del asistente y gasto del mes", auth: "store:write", responses: { 200: assistantSettingsResponse } },
-  { method: "patch", path: "/api/owner/assistant", tag: "Panel: asistente", summary: "Activar, número de WhatsApp, tope de gasto y voz", auth: "store:write", body: updateAssistantSchema, responses: { 200: assistantSettingsResponse } },
+  { method: "patch", path: "/api/owner/assistant", tag: "Panel: asistente", summary: "Activar, número de WhatsApp, tope de gasto y voz", auth: "store:write", body: updateAssistantSchema, responses: { 200: assistantSettingsResponse, 403: errorResponse } },
   { method: "post", path: "/api/owner/assistant/simulator", tag: "Panel: asistente", summary: "Escribirle al asistente como un cliente (contesta en la respuesta)", auth: "store:write", body: simulatorMessageSchema, responses: { 201: conversationThreadResponse } },
   { method: "post", path: "/api/owner/assistant/simulator/audio", tag: "Panel: asistente", summary: "Lo mismo con una nota de voz en base64 (se transcribe)", auth: "store:write", body: simulatorAudioSchema, responses: { 201: conversationThreadResponse } },
   { method: "post", path: "/api/owner/assistant/speech", tag: "Panel: asistente", summary: "Una respuesta en voz, para escuchar cómo suena (OGG/Opus)", auth: "orders:read", body: speechSchema, responses: { 200: binary("audio/ogg") } },
   { method: "get", path: "/api/owner/assistant/conversations", tag: "Panel: asistente", summary: "Conversaciones, las más recientes primero", auth: "orders:read", query: conversationsQuery, responses: { 200: wrapList("conversations", conversation) } },
   { method: "get", path: "/api/owner/assistant/conversations/:id", tag: "Panel: asistente", summary: "Una conversación con sus mensajes", auth: "orders:read", params: idParams, responses: { 200: conversationThreadResponse } },
   { method: "post", path: "/api/owner/assistant/conversations/:id/takeover", tag: "Panel: asistente", summary: "Atenderla una persona (el asistente deja de contestar)", auth: "orders:write", params: idParams, responses: { 200: wrap("conversation", conversation) } },
-  { method: "post", path: "/api/owner/assistant/conversations/:id/release", tag: "Panel: asistente", summary: "Devolverla al asistente", auth: "orders:write", params: idParams, responses: { 200: wrap("conversation", conversation) } },
+  { method: "post", path: "/api/owner/assistant/conversations/:id/release", tag: "Panel: asistente", summary: "Devolverla al asistente", auth: "orders:write", params: idParams, responses: { 200: wrap("conversation", conversation), 403: errorResponse } },
+  { method: "post", path: "/api/owner/assistant/conversations/:id/automation-block", tag: "Panel: asistente", summary: "Bloquear o permitir la automatización futura de este número", auth: "orders:write", params: idParams, body: conversationAutomationBlockSchema, responses: { 200: conversationAutomationBlockResponse } },
   { method: "post", path: "/api/owner/assistant/conversations/:id/messages", tag: "Panel: asistente", summary: "Escribirle al cliente desde el panel", auth: "orders:write", params: idParams, body: staffMessageSchema, responses: { 201: staffMessageResponse } },
 
   // WhatsApp (Meta)

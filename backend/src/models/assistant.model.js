@@ -8,6 +8,8 @@ const assistantSchema = new mongoose.Schema(
     enabled: { type: Boolean, default: false },
     // Id del número de WhatsApp Business (lo da Meta): lo que llega a ese número es de este local.
     phoneNumberId: { type: String, trim: true, default: null },
+    // wa_id de clientes a los que el comercio pidió no volver a automatizar.
+    blockedWaIds: { type: [String], default: [] },
     // Tope de gasto de IA por mes, en centavos de dólar (1000 = US$ 10). Al llegar, el
     // asistente deja de contestar y pasa las conversaciones a una persona.
     monthlyBudgetUsdCents: { type: Number, default: 1000, min: 0, validate: Number.isInteger },

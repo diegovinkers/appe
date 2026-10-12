@@ -77,6 +77,14 @@ export function useConversationAction() {
   });
 }
 
+export function useConversationAutomationBlock() {
+  const queryClient = useQueryClient();
+  return useMutation<{ blocked: boolean }, ApiError, { id: string; blocked: boolean }>({
+    mutationFn: ({ id, blocked }) => api(`/owner/assistant/conversations/${id}/automation-block`, { method: "POST", body: { blocked } }),
+    onSuccess: (_data, variables) => queryClient.invalidateQueries({ queryKey: threadKey(variables.id) }).then(() => queryClient.invalidateQueries({ queryKey: conversationsKey })),
+  });
+}
+
 export function useStaffMessage() {
   const queryClient = useQueryClient();
   return useMutation<StaffMessageResponse, ApiError, { id: string; text: string }>({

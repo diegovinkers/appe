@@ -77,11 +77,13 @@ import {
   sendSimulatorAudio,
   sendSimulatorMessage,
   sendStaffMessage,
+  setConversationAutomationBlock,
   takeOverConversation,
   updateAssistant,
 } from "../controllers/assistant.controller.js";
 import {
   conversationsQuery,
+  conversationAutomationBlockSchema,
   simulatorAudioSchema,
   speechSchema,
   simulatorMessageSchema,
@@ -182,6 +184,7 @@ router.get("/assistant/conversations", can("orders:read"), validate({ query: con
 router.get("/assistant/conversations/:id", can("orders:read"), validate({ params: idParams }), getConversation);
 router.post("/assistant/conversations/:id/takeover", can("orders:write"), validate({ params: idParams }), takeOverConversation);
 router.post("/assistant/conversations/:id/release", can("orders:write"), validate({ params: idParams }), releaseConversation);
+router.post("/assistant/conversations/:id/automation-block", can("orders:write"), validate({ params: idParams, body: conversationAutomationBlockSchema }), setConversationAutomationBlock);
 router.post(
   "/assistant/conversations/:id/messages",
   can("orders:write"),

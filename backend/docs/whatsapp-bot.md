@@ -4,6 +4,29 @@ Guía para probar el asistente con tu celular, usando el **número de prueba gra
 
 Antes, probalo en el panel (**Assistente → Testar**). Para eso alcanza con la clave de Claude (`ANTHROPIC_API_KEY`) en `backend/.env`.
 
+## Probar el servicio publicado en Render
+
+Para probar desde tu celular, no hace falta poner tu número personal como número del comercio. Usa el número de prueba que entrega Meta y agrega tu celular como destinatario permitido. Así le escribís desde WhatsApp a la cuenta de prueba de Fronteiriço Burger sin migrar tu línea.
+
+En Render, agrega estas variables al servicio del backend y vuelve a desplegar:
+
+| Variable | Valor |
+|---|---|
+| `WHATSAPP_ACCESS_TOKEN` | Token de acceso de la cuenta/número de WhatsApp en Meta. No lo pongas en Vercel ni en el navegador. |
+| `WHATSAPP_APP_SECRET` | Clave secreta de la app de Meta. |
+| `WHATSAPP_VERIFY_TOKEN` | Secreto que inventas tú; debe coincidir exactamente con el token que escribes al configurar el webhook. |
+| `WHATSAPP_GRAPH_VERSION` | Opcional; si se omite, el backend usa `v23.0`. |
+
+En la configuración del webhook de Meta usa esta URL de callback:
+
+`https://appe-l99l.onrender.com/api/whatsapp/webhook`
+
+Verifica y guarda el webhook, y suscribe el campo `messages`. Después, en la app, administración debe activar manualmente `Member Plus` para Fronteiriço Burger con estado activo y una fecha de vencimiento futura. El dueño entra a **Asistente → Configurar**, pega el `Phone number ID` del número de prueba y activa **Atender por WhatsApp**.
+
+El flujo de prueba seguro es: escribe desde tu celular agregado a la lista **To** de Meta; confirma que el chat aparece en **Asistente → Conversaciones**; toma el control, responde desde la app y confirma que llegó a WhatsApp. Para probar pedidos, completa una conversación y confirma explícitamente el resumen antes de revisar **Pedidos nuevos**.
+
+No compartas aquí claves, tokens, códigos de verificación ni capturas donde se vean. Si Meta exige registrar o migrar un número, detente antes de hacerlo con tu línea personal y revisa la alternativa de número de prueba.
+
 ## Qué vas a necesitar
 - Una cuenta de Facebook.
 - El backend corriendo en tu PC (`npm run dev`, puerto 4000).

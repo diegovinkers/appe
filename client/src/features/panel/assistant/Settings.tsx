@@ -30,8 +30,9 @@ export function Settings({ settings }: { settings: AssistantSettings }) {
     <div className="grid gap-5 lg:grid-cols-[1fr_18rem]">
       <form onSubmit={save} className="space-y-5 rounded-xl border border-line bg-surface p-4 sm:p-5">
         <div>
-          <Switch checked={enabled} onChange={setEnabled} label={s.enabled} disabled={!settings.available.whatsapp && !enabled} />
+          <Switch checked={enabled} onChange={setEnabled} label={s.enabled} disabled={(!settings.available.whatsapp || !settings.plusActive) && !enabled} />
           <p className="text-sm text-ink-muted">{settings.available.whatsapp ? s.enabledHint : s.noWhatsapp}</p>
+          {!settings.plusActive && <p className="mt-1 font-bold text-error">{s.plusRequired}</p>}
         </div>
         <Field id="assistente-numero" label={s.phoneNumberId} hint={s.phoneNumberIdHint}>
           <input
@@ -67,7 +68,7 @@ export function Settings({ settings }: { settings: AssistantSettings }) {
           </p>
         )}
         <div className="flex items-center gap-3">
-          <button type="submit" className={button.primary} disabled={update.isPending || !validBudget}>
+          <button type="submit" className={button.primary} disabled={update.isPending || !validBudget || (enabled && !settings.plusActive)}>
             {s.save}
           </button>
           {update.isSuccess && (
