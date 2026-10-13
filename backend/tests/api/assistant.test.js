@@ -176,6 +176,21 @@ describe("asistente: cuando no sigue solo", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("si la IA dice que creó un pedido que no existe, no se manda y pasa a una persona", async () => {
+    const { commerce, send } = await setup();
+    fakeAi([say("Perfecto, creando tu pedido... ✓ **Número del pedido: #12345** Previsión: 40–60 minutos")]);
+    const res = await send({ text: "Confirmo", locale: "es" });
+    expect(res.body.conversation).toMatchObject({ status: "human", handoff: { reason: "O assistente disse que criou um pedido que não existe" } });
+    expect(res.body.messages[1].text).not.toContain("#12345");
+    expect(res.body.messages[1].text).toContain("http://localhost:5173/loja-bot");
+    expect(await Order.countDocuments({ commerce: commerce._id })).toBe(0);
+
+    // Sin número también: "creando tu pedido" sin haber llamado a criar_pedido.
+    fakeAi([say("Listo, ya estoy creando tu pedido.")]);
+    const other = await send({ text: "dale", locale: "es" });
+    expect(other.body.conversation.status).toBe("human");
+  });
+
   it("si la IA falla, deja el link del menú y pasa a una persona", async () => {
     const { send } = await setup();
     fakeAi([new Error("timeout")]);

@@ -5,6 +5,7 @@ import Assistant from "../../models/assistant.model.js";
 import Commerce from "../../models/commerce.model.js";
 import Conversation from "../../models/conversation.model.js";
 import ConversationMessage from "../../models/conversationMessage.model.js";
+import Order from "../../models/order.model.js";
 import { logger } from "../../lib/logger.js";
 import { storeUrl } from "../../lib/links.js";
 import { getAiProvider } from "./ai.js";
@@ -121,6 +122,21 @@ async function giveUp(conversation, store, reason, spent = {}) {
   return saveReply(conversation, { text: textsFor(conversation.locale).fallback(storeUrl(store)), ...spent });
 }
 
+// Números de pedido en la respuesta ("#12", "# 12") y frases de "estoy creando tu pedido".
+const ORDER_NUMBER = /#\s?(\d+)/g;
+const CREATING_ORDER = /\b(criando|creando)\b[^.\n]{0,20}\bpedido/i;
+
+// La IA a veces dice que creó un pedido sin haber llamado a criar_pedido. Un pedido que el
+// cliente cree hecho y el local nunca ve es peor que pasarle la conversación a una persona.
+async function inventsOrder(text, conversation, toolCalls) {
+  const created = toolCalls.some((call) => call.name === "criar_pedido" && call.output?.ok);
+  const numbers = [...text.matchAll(ORDER_NUMBER)].map((match) => Number(match[1]));
+  if (!numbers.length) return !created && CREATING_ORDER.test(text);
+  const orders = await Order.find({ _id: { $in: conversation.orders }, commerce: conversation.commerce }).select("number").lean();
+  const known = new Set(orders.map((order) => order.number));
+  return numbers.some((number) => !known.has(number));
+}
+
 async function reply(conversationId) {
   const conversation = await Conversation.findById(conversationId);
   if (!conversation || conversation.status !== "bot") return [];
@@ -189,6 +205,10 @@ async function reply(conversationId) {
 
   text ||= earlierText || (conversation.status === "human" ? textsFor(conversation.locale).handoff : "");
   if (!text) return [await giveUp(conversation, store, "O assistente não conseguiu responder", { model, usage, toolCalls })];
+  if (await inventsOrder(text, conversation, toolCalls)) {
+    logger.warn({ conversation: String(conversation._id) }, "asistente: dijo que creó un pedido que no existe");
+    return [await giveUp(conversation, store, "O assistente disse que criou um pedido que não existe", { model, usage, toolCalls })];
+  }
   return [await saveReply(conversation, { text, model, usage, toolCalls })];
 }
 

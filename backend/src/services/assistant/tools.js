@@ -16,29 +16,36 @@ import { findAccount, formatWhen } from "./context.js";
 
 const PAYMENTS = { pix: "pix", dinheiro: "cash", cartao: "card" };
 
+// strict: la API garantiza que cada llamada cumple el schema (sin campos obligatorios de menos).
+// Con strict, cada objeto lleva additionalProperties: false y no hay minimum/minItems: los
+// límites los valida createOrderSchema al cotizar.
 export const TOOLS = [
   {
     name: "cotar_pedido",
     description:
       "Valida o pedido e calcula o total com os preços da loja, sem criar nada. Use quando tiver os produtos (com as opções obrigatórias), entrega ou retirada (com o endereço, se for entrega), a forma de pagamento e o nome. Devolve o resumo para mostrar ao cliente, ou os problemas para resolver com ele.",
+    strict: true,
     input_schema: {
       type: "object",
+      additionalProperties: false,
       properties: {
         itens: {
           type: "array",
-          minItems: 1,
+          description: "Pelo menos um item",
           items: {
             type: "object",
+            additionalProperties: false,
             properties: {
               produto: { type: "string", description: "Código do produto no cardápio, ex. P12" },
-              quantidade: { type: "integer", minimum: 1 },
+              quantidade: { type: "integer", description: "Quantas unidades (1 ou mais)" },
               opcoes: {
                 type: "array",
                 items: {
                   type: "object",
+                  additionalProperties: false,
                   properties: {
                     opcao: { type: "string", description: "Código da opção, ex. G3-2" },
-                    quantidade: { type: "integer", minimum: 1, description: "Vezes a mesma opção (ex. bacon 2x). Padrão 1." },
+                    quantidade: { type: "integer", description: "Vezes a mesma opção (ex. bacon 2x). Padrão 1." },
                   },
                   required: ["opcao"],
                 },
@@ -51,6 +58,7 @@ export const TOOLS = [
         tipo: { type: "string", enum: ["entrega", "retirada"] },
         endereco: {
           type: "object",
+          additionalProperties: false,
           description: "Obrigatório na entrega",
           properties: {
             rua: { type: "string" },
@@ -74,8 +82,10 @@ export const TOOLS = [
     name: "criar_pedido",
     description:
       "Cria de verdade o último pedido cotado. Só use depois que o cliente viu o resumo e confirmou. Devolve o número do pedido, a previsão e o link de acompanhamento.",
+    strict: true,
     input_schema: {
       type: "object",
+      additionalProperties: false,
       properties: { versao: { type: "integer", description: "A versão que cotar_pedido devolveu" } },
       required: ["versao"],
     },
@@ -84,8 +94,10 @@ export const TOOLS = [
     name: "chamar_atendente",
     description:
       "Passa a conversa para uma pessoa da loja e você para de responder neste chat. Use em reclamações, alergias, mudança ou cancelamento de pedido feito, quando o cliente pedir uma pessoa ou quando você não entender depois de duas tentativas.",
+    strict: true,
     input_schema: {
       type: "object",
+      additionalProperties: false,
       properties: { motivo: { type: "string", description: "Em poucas palavras, para a loja saber o que houve" } },
       required: ["motivo"],
     },
@@ -127,7 +139,7 @@ async function cotarPedido(args, { store, conversation, menu }) {
       }
       return [{ groupId: ref.groupId, optionId: ref.optionId, quantity: pick.quantidade ?? 1 }];
     });
-    return { productId, quantity: item.quantidade, options, ...(item.observacao && { notes: item.observacao }) };
+    return { productId, quantity: item.quantidade ?? 1, options, ...(item.observacao && { notes: item.observacao }) };
   });
   if (errors.length) return failure(...errors);
 
@@ -152,7 +164,8 @@ async function cotarPedido(args, { store, conversation, menu }) {
   const locale = args.idioma === "es" ? "es" : "pt-BR";
   const parsed = createOrderSchema.safeParse({
     clientOrderId: "cotacao-do-assistente",
-    customer: { name: args.nome, phone: conversation.customer.phone },
+    // Sin nombre, el del perfil de WhatsApp.
+    customer: { name: args.nome || conversation.customer.name || undefined, phone: conversation.customer.phone },
     fulfillment,
     ...(address && { address }),
     paymentMethod: PAYMENTS[args.pagamento],
