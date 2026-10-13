@@ -33,6 +33,9 @@ export function createApiRouters({ limits = {} } = {}) {
   };
 }
 
+// La URL para el log, sin el secreto del webhook de 360dialog.
+export const logUrl = (url) => String(url).replace(/(\/360dialog\/)[^/?#]+/, "$1***");
+
 export const healthCheck = (req, res) => {
   const dbConnected = mongoose.connection.readyState === 1;
   res.status(dbConnected ? 200 : 503).json({ ok: dbConnected });
@@ -55,13 +58,13 @@ export function createApp({ limits = {} } = {}) {
         return id;
       },
       serializers: {
-        req: (req) => ({ id: req.id, method: req.method, url: req.url }),
+        req: (req) => ({ id: req.id, method: req.method, url: logUrl(req.url) }),
         res: (res) => ({ statusCode: res.statusCode }),
       },
       customLogLevel: (req, res, err) => (err || res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info"),
       customSuccessMessage: (req, res, responseTime) =>
-        `${req.method} ${req.originalUrl} → ${res.statusCode} (${Math.round(responseTime)} ms)`,
-      customErrorMessage: (req, res) => `${req.method} ${req.originalUrl} → ${res.statusCode}`,
+        `${req.method} ${logUrl(req.originalUrl)} → ${res.statusCode} (${Math.round(responseTime)} ms)`,
+      customErrorMessage: (req, res) => `${req.method} ${logUrl(req.originalUrl)} → ${res.statusCode}`,
     })
   );
   // El webhook de Twilio manda formularios: lo protege su firma, no el Content-Type.

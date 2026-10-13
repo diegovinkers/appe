@@ -38,7 +38,7 @@ import { storeParams, storeQuery } from "../schemas/public.schema.js";
 import { createReviewSchema, updateReviewSchema } from "../schemas/review.schema.js";
 import { customerLoginSchema, deleteCustomerSchema, linkOrdersSchema, signupSchema, updateCustomerSchema } from "../schemas/customer.schema.js";
 import { conversationAutomationBlockSchema, conversationsQuery, simulatorAudioSchema, simulatorMessageSchema, speechSchema, staffMessageSchema, updateAssistantSchema } from "../schemas/assistant.schema.js";
-import { twilioWebhookBody, webhookBody, webhookVerifyQuery } from "../schemas/whatsapp.schema.js";
+import { d360WebhookBody, d360WebhookParams, twilioWebhookBody, webhookBody, webhookVerifyQuery } from "../schemas/whatsapp.schema.js";
 import {
   auditEntry,
   category,
@@ -178,10 +178,11 @@ export const operations = [
   { method: "post", path: "/api/owner/assistant/conversations/:id/automation-block", tag: "Panel: asistente", summary: "Bloquear o permitir la automatización futura de este número", auth: "orders:write", params: idParams, body: conversationAutomationBlockSchema, responses: { 200: conversationAutomationBlockResponse } },
   { method: "post", path: "/api/owner/assistant/conversations/:id/messages", tag: "Panel: asistente", summary: "Escribirle al cliente desde el panel", auth: "orders:write", params: idParams, body: staffMessageSchema, responses: { 201: staffMessageResponse } },
 
-  // WhatsApp (Meta o Twilio)
+  // WhatsApp (Meta, Twilio o 360dialog)
   { method: "get", path: "/api/whatsapp/webhook", tag: "WhatsApp", summary: "Verificación del webhook: devuelve hub.challenge si el verify token es el nuestro", auth: "public", query: webhookVerifyQuery, responses: { 200: binary("text/plain") } },
   { method: "post", path: "/api/whatsapp/webhook", tag: "WhatsApp", summary: "Mensajes de los clientes (firmados por Meta con el App Secret)", auth: "public", body: webhookBody, responses: { 200: z.strictObject({ ok: z.literal(true) }) } },
   { method: "post", path: "/api/whatsapp/twilio", tag: "WhatsApp", summary: "Mensajes de los clientes por Twilio (formulario firmado con el Auth Token); contesta un TwiML vacío", auth: "public", body: twilioWebhookBody, bodyType: "application/x-www-form-urlencoded", responses: { 200: binary("text/xml") } },
+  { method: "post", path: "/api/whatsapp/360dialog/:token", tag: "WhatsApp", summary: "Mensajes de los clientes por 360dialog (el secreto D360_WEBHOOK_TOKEN va en la URL)", auth: "public", params: d360WebhookParams, body: d360WebhookBody, responses: { 200: z.strictObject({ ok: z.literal(true) }) } },
 
   // Panel: cupones
   { method: "get", path: "/api/owner/coupons", tag: "Panel: cupones", summary: "Cupones del local", auth: "coupons:manage", responses: { 200: wrapList("coupons", coupon) } },

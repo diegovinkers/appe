@@ -454,3 +454,67 @@ describe("webhook de Twilio", () => {
     expect(whatsapp.sent.at(-1).text).toContain("só entendo mensagens de texto");
   });
 });
+
+// Como 360dialog: el formato de Meta, a la URL con el secreto. El sandbox no manda "object" ni el número del local.
+const D360_TOKEN = "secreto-del-webhook-de-prueba";
+const D360_SANDBOX = "551146733492";
+
+async function d360Webhook(payload, token = D360_TOKEN) {
+  const res = await request(app).post(`/api/whatsapp/360dialog/${token}`).send(payload);
+  await settleWebhooks();
+  return res;
+}
+
+const d360Incoming = (options) => {
+  const { object, ...payload } = incoming(options);
+  delete payload.entry[0].changes[0].value.metadata;
+  return payload;
+};
+
+describe("webhook de 360dialog", () => {
+  beforeEach(() => {
+    config.WHATSAPP_PROVIDER = "360dialog";
+  });
+  afterEach(() => {
+    config.WHATSAPP_PROVIDER = "meta";
+  });
+
+  async function setupSandbox() {
+    const result = await setup();
+    await Assistant.updateOne({ commerce: result.commerce._id }, { $set: { phoneNumberId: D360_SANDBOX } });
+    return result;
+  }
+
+  it("un mensaje del sandbox va al local de D360_PHONE_NUMBER y la respuesta sale por 360dialog", async () => {
+    await setupSandbox();
+    const calls = fakeAi([say("Olá, Maria! O que vai ser hoje?")]);
+    const res = await d360Webhook(d360Incoming({ body: "oi, boa noite" }));
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true });
+
+    const conversation = await Conversation.findOne().lean();
+    expect(conversation).toMatchObject({ channel: "whatsapp", waId: "5555999991234", status: "bot" });
+    await flushReplies();
+    expect(calls).toHaveLength(1);
+    expect(whatsapp.sent).toEqual([{ phoneNumberId: D360_SANDBOX, to: "5555999991234", text: "Olá, Maria! O que vai ser hoje?" }]);
+  });
+
+  it("con el número en el aviso (fuera del sandbox), manda ese número", async () => {
+    await setup();
+    fakeAi([say("Oi!")]);
+    const { object, ...payload } = incoming();
+    await d360Webhook(payload);
+    await flushReplies();
+    expect(whatsapp.sent).toEqual([{ phoneNumberId: PHONE_ID, to: "5555999991234", text: "Oi!" }]);
+  });
+
+  it("sin el secreto, o con otro proveedor elegido, no se acepta nada", async () => {
+    await setupSandbox();
+    fakeAi([]);
+    expect((await d360Webhook(d360Incoming(), "otro-secreto-cualquiera")).status).toBe(404);
+    expect((await d360Webhook(d360Incoming(), `${D360_TOKEN}x`)).status).toBe(404);
+    config.WHATSAPP_PROVIDER = "twilio";
+    expect((await d360Webhook(d360Incoming())).status).toBe(404);
+    expect(await ConversationMessage.countDocuments()).toBe(0);
+  });
+});

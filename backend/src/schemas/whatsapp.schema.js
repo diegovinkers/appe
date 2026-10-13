@@ -27,3 +27,10 @@ export const twilioWebhookBody = z.looseObject({
   MediaContentType0: z.string().max(100).optional(),
   Latitude: z.string().max(40).optional(),
 });
+
+// 360dialog: el secreto del webhook va en la URL (no firma los mensajes). El cuerpo es el de
+// Meta, aunque el sandbox no manda "object".
+export const d360WebhookParams = z.object({ token: z.string().max(200) });
+export const d360WebhookBody = z.looseObject({
+  entry: z.array(z.looseObject({})).max(100),
+});

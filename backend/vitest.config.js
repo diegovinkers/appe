@@ -23,6 +23,10 @@ export default defineConfig({
       TWILIO_ACCOUNT_SID: "AC00000000000000000000000000000000",
       TWILIO_AUTH_TOKEN: "token-de-twilio-de-prueba",
       TWILIO_WEBHOOK_URL: "https://prueba.ngrok-free.app/api/whatsapp/twilio",
+      // 360dialog de mentira (los tests de 360dialog cambian WHATSAPP_PROVIDER a "360dialog").
+      D360_API_KEY: "key-de-360dialog-de-prueba",
+      D360_WEBHOOK_TOKEN: "secreto-del-webhook-de-prueba",
+      D360_PHONE_NUMBER: "551146733492",
     },
   },
 });

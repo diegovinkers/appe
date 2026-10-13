@@ -1,10 +1,11 @@
-// El asistente en WhatsApp: lo que llega por el webhook (Meta o Twilio), las respuestas y los
+// El asistente en WhatsApp: lo que llega por el webhook (Meta, Twilio o 360dialog), las respuestas y los
 // avisos del estado del pedido. Solo se le escribe al cliente dentro de las 24 h desde su
 // último mensaje (regla de WhatsApp; fuera de eso harían falta plantillas aprobadas).
 import Assistant from "../../models/assistant.model.js";
 import Commerce from "../../models/commerce.model.js";
 import Conversation from "../../models/conversation.model.js";
 import ConversationMessage from "../../models/conversationMessage.model.js";
+import { config } from "../../config.js";
 import { logger } from "../../lib/logger.js";
 import { normalizePhone } from "../../lib/phone.js";
 import { addMessage, replyTo } from "./engine.js";
@@ -181,6 +182,10 @@ export function twilioInboundMessages(body) {
   return [{ phoneNumberId: number(body.To), waId, name: body.ProfileName ?? "", message }];
 }
 
+// 360dialog manda lo mismo que Meta. El sandbox no dice a qué número llegó: es el de D360_PHONE_NUMBER.
+export const d360InboundMessages = (body) =>
+  inboundMessages(body).map((event) => ({ ...event, phoneNumberId: event.phoneNumberId ?? config.D360_PHONE_NUMBER ?? null }));
+
 async function conversationFor(commerceId, { waId, name, blocked = false }) {
   const now = Date.now();
   let conversation = await Conversation.findOne({ commerce: commerceId, channel: "whatsapp", waId, status: { $ne: "closed" } }).sort({
@@ -276,6 +281,7 @@ function processEvents(events) {
 
 export const processWebhook = (body) => processEvents(inboundMessages(body));
 export const processTwilioWebhook = (body) => processEvents(twilioInboundMessages(body));
+export const process360dialogWebhook = (body) => processEvents(d360InboundMessages(body));
 
 // Para los tests: esperar a que termine lo que llegó por el webhook.
 export const settleWebhooks = () => Promise.all([...inFlight]);

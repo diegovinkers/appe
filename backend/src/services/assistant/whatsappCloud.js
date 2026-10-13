@@ -1,6 +1,6 @@
-// Clientes de WhatsApp: la Cloud API de Meta o Twilio (WHATSAPP_PROVIDER). Firma del webhook,
-// enviar mensajes y bajar audios. Los tests ponen un cliente falso con setWhatsappClient():
-// nunca llaman a Meta ni a Twilio.
+// Clientes de WhatsApp: la Cloud API de Meta, Twilio o 360dialog (WHATSAPP_PROVIDER). Firma del
+// webhook, enviar mensajes y bajar audios. Los tests ponen un cliente falso con setWhatsappClient():
+// nunca llaman a Meta, Twilio ni 360dialog.
 import { createHmac, timingSafeEqual } from "node:crypto";
 import twilio from "twilio";
 import { config, isTest } from "../../config.js";
@@ -15,7 +15,9 @@ export const metaConfigured = () =>
   Boolean(config.WHATSAPP_ACCESS_TOKEN && config.WHATSAPP_APP_SECRET && config.WHATSAPP_VERIFY_TOKEN);
 export const twilioConfigured = () =>
   config.WHATSAPP_PROVIDER === "twilio" && Boolean(config.TWILIO_ACCOUNT_SID && config.TWILIO_AUTH_TOKEN && config.TWILIO_WEBHOOK_URL);
-export const whatsappConfigured = () => metaConfigured() || twilioConfigured();
+export const d360Configured = () =>
+  config.WHATSAPP_PROVIDER === "360dialog" && Boolean(config.D360_API_KEY && config.D360_WEBHOOK_TOKEN);
+export const whatsappConfigured = () => metaConfigured() || twilioConfigured() || d360Configured();
 
 // El webhook viene firmado por Meta con el App Secret: X-Hub-Signature-256: sha256=<hex>.
 export function validSignature(rawBody, header) {
@@ -142,13 +144,49 @@ const twilioClient = {
   },
 };
 
+// 360dialog: la misma API de Meta detrás de su dominio, con la API key del número.
+async function d360(path, body) {
+  const response = await fetch(`${config.D360_API_URL}/${path}`, {
+    method: "POST",
+    headers: { "D360-API-KEY": config.D360_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(15_000),
+  });
+  const data = await response.json().catch(() => null);
+  // Sin el cuerpo del error en el mensaje: puede traer el teléfono del cliente.
+  if (!response.ok) throw new WhatsappError(response.status, data?.error?.code);
+  return data;
+}
+
+// Por ahora solo texto: el sandbox no maneja archivos ni el aviso de leído (y cada llamada
+// cuenta en su tope de 200 mensajes).
+const d360Client = {
+  async sendText({ to, text }) {
+    const ids = [];
+    for (const body of splitText(text)) {
+      const data = await d360("messages", { messaging_product: "whatsapp", recipient_type: "individual", to, type: "text", text: { body } });
+      ids.push(data?.messages?.[0]?.id ?? null);
+    }
+    return ids;
+  },
+  async markRead() {},
+  async sendAudio() {
+    throw new WhatsappError(501, "D360_AUDIO_NOT_SUPPORTED");
+  },
+  async downloadMedia() {
+    throw new WhatsappError(501, "D360_MEDIA_NOT_SUPPORTED");
+  },
+};
+
+const CLIENTS = { meta: metaClient, twilio: twilioClient, "360dialog": d360Client };
+
 let override;
 
 export function getWhatsappClient() {
   if (override) return override;
   // En los tests, nunca la API real.
   if (isTest) throw new Error("En los tests hay que usar setWhatsappClient()");
-  return config.WHATSAPP_PROVIDER === "twilio" ? twilioClient : metaClient;
+  return CLIENTS[config.WHATSAPP_PROVIDER];
 }
 
 export function setWhatsappClient(client) {

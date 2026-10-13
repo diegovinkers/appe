@@ -47,8 +47,9 @@ const envSchema = z.object({
     .trim()
     .regex(/^v\d+\.\d+$/, "WHATSAPP_GRAPH_VERSION tiene que ser como v23.0")
     .default("v23.0"),
-  // Por dónde va WhatsApp: "meta" (Cloud API, las WHATSAPP_* de arriba) o "twilio" (las TWILIO_* de abajo).
-  WHATSAPP_PROVIDER: z.enum(["meta", "twilio"]).default("meta"),
+  // Por dónde va WhatsApp: "meta" (Cloud API, las WHATSAPP_* de arriba), "twilio" o "360dialog"
+  // (las TWILIO_* o D360_* de abajo).
+  WHATSAPP_PROVIDER: z.enum(["meta", "twilio", "360dialog"]).default("meta"),
   // Opcional: WhatsApp por Twilio (por ejemplo, su Sandbox para probar).
   TWILIO_ACCOUNT_SID: optionalSecret,
   TWILIO_AUTH_TOKEN: optionalSecret,
@@ -57,6 +58,17 @@ const envSchema = z.object({
   TWILIO_WEBHOOK_URL: optionalSecret.pipe(
     z.url({ protocol: /^https$/, error: "TWILIO_WEBHOOK_URL tiene que ser una URL https" }).optional()
   ),
+  // Opcional: WhatsApp por 360dialog. La API key es la del número (en el sandbox llega por WhatsApp).
+  D360_API_KEY: optionalSecret,
+  // Base de su API: https://waba-v2.360dialog.io, o https://waba-sandbox.360dialog.io/v1 para el sandbox.
+  D360_API_URL: z
+    .url({ protocol: /^https$/, error: "D360_API_URL tiene que ser una URL https" })
+    .default("https://waba-v2.360dialog.io")
+    .transform((url) => url.replace(/\/+$/, "")),
+  // 360dialog no firma los mensajes: el webhook lleva este secreto en la URL (/api/whatsapp/360dialog/<secreto>).
+  D360_WEBHOOK_TOKEN: optionalSecret.pipe(z.string().min(16, "D360_WEBHOOK_TOKEN tiene que tener al menos 16 caracteres").optional()),
+  // Número del local (solo dígitos, como en el panel) para los avisos que no lo traen, como los del sandbox.
+  D360_PHONE_NUMBER: optionalSecret.pipe(z.string().regex(/^\d{5,30}$/, "D360_PHONE_NUMBER: solo dígitos").optional()),
   // Audios de los clientes: "local" los pasa a texto en este servidor (Whisper, gratis); "none", no.
   TRANSCRIPTION_PROVIDER: z.enum(["local", "none"]).default("none"),
   // Modelo de Whisper para "local": base (76 MB, rápido) o onnx-community/whisper-small (241 MB, entiende mejor con ruido).

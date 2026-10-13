@@ -91,6 +91,14 @@ describe("contrato de las respuestas", () => {
       "/api/whatsapp/twilio"
     );
     await settleWebhooks();
+    // Por 360dialog: un aviso sin mensajes, con el secreto en la URL.
+    config.WHATSAPP_PROVIDER = "360dialog";
+    check(
+      await request(app).post("/api/whatsapp/360dialog/secreto-del-webhook-de-prueba").send({ entry: [{ changes: [{ field: "messages", value: { statuses: [] } }] }] }),
+      "post",
+      "/api/whatsapp/360dialog/:token"
+    );
+    await settleWebhooks();
     config.WHATSAPP_PROVIDER = "meta";
 
     // Plataforma

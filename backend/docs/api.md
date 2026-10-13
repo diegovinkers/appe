@@ -430,7 +430,7 @@ Atiende a los clientes por WhatsApp y toma pedidos con Claude (Anthropic). Sin `
 
 **Cómo toma un pedido:** con `cotar_pedido` valida y calcula con las mismas reglas que el menú (precios de la base, horario, mínimo, stock, cupones) y guarda esa cotización. `criar_pedido` crea exactamente lo cotizado, solo si el cliente escribió después de ver el resumen. El pedido entra `new`, con `channel: "whatsapp"` y `conversation`. Pasa a una persona (`chamar_atendente`) en reclamos, alergias o cambios de un pedido hecho; también si la IA falla, si se llegó al tope de gasto del mes o si hay demasiados mensajes en una hora. Las conversaciones se borran a los 90 días y con la cuenta del cliente.
 
-### WhatsApp (`/api/whatsapp`, sin sesión, lo llama Meta)
+### WhatsApp (`/api/whatsapp`, sin sesión, lo llama Meta, Twilio o 360dialog)
 Paso a paso para conectarlo: [whatsapp-bot.md](whatsapp-bot.md). Sin `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_APP_SECRET` y `WHATSAPP_VERIFY_TOKEN`, responde `404`.
 
 - `GET /api/whatsapp/webhook?hub.mode=subscribe&hub.verify_token=...&hub.challenge=...` → el `challenge` en texto plano si el token es `WHATSAPP_VERIFY_TOKEN`; si no, `403 INVALID_VERIFY_TOKEN`.
@@ -440,6 +440,9 @@ Paso a paso para conectarlo: [whatsapp-bot.md](whatsapp-bot.md). Sin `WHATSAPP_A
   - El número llega sin `+` (`wa_id`) y a veces sin el 9 del celular; la cuenta y los pedidos del cliente se buscan con y sin el 9.
   - Una conversación sin mensajes del cliente por 12 h se cierra; si vuelve a escribir, empieza otra.
 - Con `voiceReplies` y `VOICE_PROVIDER=local`: si el cliente habló por audio, las respuestas cortas (hasta 400 caracteres y 5 líneas) van también como nota de voz. El resumen del pedido va solo por escrito. Precios, números y horarios se leen en palabras.
+- `WHATSAPP_PROVIDER` elige el proveedor (`meta` por defecto, `twilio` o `360dialog`); el webhook de los otros responde `404`.
+- `POST /api/whatsapp/twilio` (formulario de Twilio) → un TwiML vacío (`<Response/>`), solo con la firma `X-Twilio-Signature` válida para `TWILIO_WEBHOOK_URL`; si no, `401 INVALID_SIGNATURE`. Las respuestas salen después por la API de Twilio. El local sale del `To` (sin `whatsapp:+`).
+- `POST /api/whatsapp/360dialog/:token` (JSON con el formato de Meta) → `{ "ok": true }`, solo si `:token` es `D360_WEBHOOK_TOKEN`; si no, `404`. El secreto se tapa en los logs. El local sale de `metadata.phone_number_id` o, si no viene (sandbox), de `D360_PHONE_NUMBER`. Por ahora solo texto: sin audios ni aviso de leído.
 - Cuando un pedido del asistente pasa a `confirmed`, `ready` (retiro), `out_for_delivery` o `cancelled`, el cliente recibe un aviso por WhatsApp si todavía está dentro de las 24 h.
 
 ## Superadmin (`/api/admin`, rol `superadmin`)

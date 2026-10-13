@@ -1,8 +1,8 @@
 import { timingSafeEqual } from "node:crypto";
 import { config } from "../config.js";
 import { AppError, forbidden, notFound } from "../lib/errors.js";
-import { processTwilioWebhook, processWebhook } from "../services/assistant/whatsapp.js";
-import { metaConfigured, twilioConfigured, validSignature, validTwilioSignature } from "../services/assistant/whatsappCloud.js";
+import { process360dialogWebhook, processTwilioWebhook, processWebhook } from "../services/assistant/whatsapp.js";
+import { d360Configured, metaConfigured, twilioConfigured, validSignature, validTwilioSignature } from "../services/assistant/whatsappCloud.js";
 
 const sameText = (a, b) => {
   const [left, right] = [Buffer.from(String(a)), Buffer.from(String(b))];
@@ -41,4 +41,12 @@ export const receiveTwilioWebhook = (req, res) => {
   }
   processTwilioWebhook(req.valid.body);
   res.type("text/xml").send("<Response/>");
+};
+
+// POST /api/whatsapp/360dialog/:token — lo mismo por 360dialog. No firma los mensajes: lo que
+// prueba que viene de ahí es el secreto de la URL. Con otro secreto, 404, como si no existiera.
+export const receive360dialogWebhook = (req, res) => {
+  if (!d360Configured() || !sameText(req.valid.params.token, config.D360_WEBHOOK_TOKEN)) throw notFound();
+  process360dialogWebhook(req.valid.body);
+  res.json({ ok: true });
 };

@@ -1,7 +1,8 @@
 import { createHmac } from "node:crypto";
 import twilio from "twilio";
 import { describe, expect, it } from "vitest";
-import { inboundMessages, twilioInboundMessages } from "../../src/services/assistant/whatsapp.js";
+import { logUrl } from "../../src/app.js";
+import { d360InboundMessages, inboundMessages, twilioInboundMessages } from "../../src/services/assistant/whatsapp.js";
 import { splitText, validSignature, validTwilioSignature } from "../../src/services/assistant/whatsappCloud.js";
 
 describe("firma del webhook", () => {
@@ -89,5 +90,23 @@ describe("Twilio", () => {
     // Un SMS al mismo número, o algo sin id, no es de WhatsApp.
     expect(twilioInboundMessages({ ...params, From: "+5555999991234" })).toEqual([]);
     expect(twilioInboundMessages({ ...params, MessageSid: undefined })).toEqual([]);
+  });
+});
+
+describe("360dialog", () => {
+  it("lee lo mismo que Meta; si el aviso no trae el número del local, usa D360_PHONE_NUMBER", () => {
+    const message = { from: "5555999991234", id: "wamid.1", type: "text", text: { body: "oi" } };
+    const value = { contacts: [{ wa_id: "5555999991234", profile: { name: "Maria" } }], messages: [message] };
+    expect(d360InboundMessages({ entry: [{ changes: [{ field: "messages", value }] }] })).toEqual([
+      { phoneNumberId: "551146733492", waId: "5555999991234", name: "Maria", message },
+    ]);
+    const withNumber = { ...value, metadata: { phone_number_id: "111" } };
+    expect(d360InboundMessages({ entry: [{ changes: [{ field: "messages", value: withNumber }] }] })[0].phoneNumberId).toBe("111");
+  });
+
+  it("el log no muestra el secreto del webhook", () => {
+    expect(logUrl("/api/whatsapp/360dialog/secreto-largo-123?x=1")).toBe("/api/whatsapp/360dialog/***?x=1");
+    expect(logUrl("/360dialog/secreto-largo-123")).toBe("/360dialog/***");
+    expect(logUrl("/api/health")).toBe("/api/health");
   });
 });
