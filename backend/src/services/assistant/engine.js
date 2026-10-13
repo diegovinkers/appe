@@ -118,7 +118,7 @@ async function saveReply(conversation, { text, model, usage, toolCalls }) {
 // No puede seguir: pasa la conversación a una persona y le deja al cliente el link del menú.
 async function giveUp(conversation, store, reason, spent = {}) {
   conversation.status = "human";
-  conversation.handoff = { reason, at: new Date() };
+  conversation.handoff = { reason, at: new Date(), by: "assistant" };
   return saveReply(conversation, { text: textsFor(conversation.locale).fallback(storeUrl(store)), ...spent });
 }
 

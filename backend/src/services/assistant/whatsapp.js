@@ -87,10 +87,15 @@ async function sendFromStore(conversation, role, text) {
 const pending = new Map();
 
 async function answer(conversationId) {
+  const startedAt = new Date();
   const replies = await replyTo(conversationId);
   if (!replies.length) return;
   const conversation = await Conversation.findById(conversationId);
-  if (!conversation || conversation.status !== "bot" || conversation.automationBlocked || !(await hasAssistantPlus(conversation.commerce))) {
+  // Si la pasó a una persona el propio asistente en esta respuesta, su aviso igual sale; si la
+  // tomó alguien del local mientras pensaba, no.
+  const handedOffNow = conversation?.handoff?.by === "assistant" && conversation.handoff.at >= startedAt;
+  const active = conversation?.status === "bot" || (conversation?.status === "human" && handedOffNow);
+  if (!conversation || !active || conversation.automationBlocked || !(await hasAssistantPlus(conversation.commerce))) {
     await ConversationMessage.updateMany({ _id: { $in: replies.map((reply) => reply._id) } }, { $set: { delivery: "failed" } });
     return;
   }

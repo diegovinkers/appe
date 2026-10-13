@@ -46,7 +46,8 @@ const conversationSchema = new mongoose.Schema(
     automationBlocked: { type: Boolean, default: false },
     // Por qué pasó a una persona (lo muestra el panel).
     handoff: {
-      type: new mongoose.Schema({ reason: String, at: Date }, { _id: false }),
+      // by: "assistant" si la pasó el asistente (su aviso igual se le manda al cliente).
+      type: new mongoose.Schema({ reason: String, at: Date, by: { type: String, enum: ["assistant"], default: undefined } }, { _id: false }),
       default: null,
     },
     // Simulador en modo prueba: los pedidos se cotizan pero no se guardan.

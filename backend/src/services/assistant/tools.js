@@ -281,7 +281,7 @@ async function criarPedido(args, { store, conversation }) {
 
 async function chamarAtendente(args, { conversation }) {
   conversation.status = "human";
-  conversation.handoff = { reason: String(args.motivo ?? "").slice(0, 200) || "Pedido do assistente", at: new Date() };
+  conversation.handoff = { reason: String(args.motivo ?? "").slice(0, 200) || "Pedido do assistente", at: new Date(), by: "assistant" };
   await conversation.save();
   return { ok: true, proximo_passo: "Avise o cliente que alguém da loja vai continuar a conversa por aqui." };
 }

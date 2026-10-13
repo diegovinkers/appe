@@ -258,6 +258,17 @@ describe("webhook de WhatsApp", () => {
 });
 
 describe("WhatsApp: contestar con voz", () => {
+  it("si el asistente pasa la conversación a una persona, el aviso igual le llega al cliente", async () => {
+    await setup();
+    fakeAi([use("chamar_atendente", { motivo: "Reclamação" }), say("")]);
+    await webhook(incoming({ body: "meu pedido veio errado" }));
+    await flushReplies();
+    expect(await Conversation.findOne().lean()).toMatchObject({ status: "human", handoff: { reason: "Reclamação", by: "assistant" } });
+    expect(whatsapp.sent).toHaveLength(1);
+    expect(whatsapp.sent[0].text).toContain("Vou chamar alguém da loja");
+    expect(await ConversationMessage.findOne({ role: "assistant" }).lean()).toMatchObject({ delivery: "sent" });
+  });
+
   it("si el local lo activó y el cliente mandó audio, además del texto va una nota de voz corta", async () => {
     await setup();
     await Assistant.updateOne({}, { $set: { voiceReplies: true } });
