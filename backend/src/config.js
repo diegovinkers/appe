@@ -67,7 +67,7 @@ const envSchema = z.object({
     .transform((url) => url.replace(/\/+$/, "")),
   // 360dialog no firma los mensajes: el webhook lleva este secreto en la URL (/api/whatsapp/360dialog/<secreto>).
   D360_WEBHOOK_TOKEN: optionalSecret.pipe(z.string().min(16, "D360_WEBHOOK_TOKEN tiene que tener al menos 16 caracteres").optional()),
-  // Número del local (solo dígitos, como en el panel) para los avisos que no lo traen, como los del sandbox.
+  // Número del local (solo dígitos, como en el panel): todo lo que llega por esta API key va a ese local.
   D360_PHONE_NUMBER: optionalSecret.pipe(z.string().regex(/^\d{5,30}$/, "D360_PHONE_NUMBER: solo dígitos").optional()),
   // Audios de los clientes: "local" los pasa a texto en este servidor (Whisper, gratis); "none", no.
   TRANSCRIPTION_PROVIDER: z.enum(["local", "none"]).default("none"),

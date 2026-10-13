@@ -442,7 +442,7 @@ Paso a paso para conectarlo: [whatsapp-bot.md](whatsapp-bot.md). Sin `WHATSAPP_A
 - Con `voiceReplies` y `VOICE_PROVIDER=local`: si el cliente habló por audio, las respuestas cortas (hasta 400 caracteres y 5 líneas) van también como nota de voz. El resumen del pedido va solo por escrito. Precios, números y horarios se leen en palabras.
 - `WHATSAPP_PROVIDER` elige el proveedor (`meta` por defecto, `twilio` o `360dialog`); el webhook de los otros responde `404`.
 - `POST /api/whatsapp/twilio` (formulario de Twilio) → un TwiML vacío (`<Response/>`), solo con la firma `X-Twilio-Signature` válida para `TWILIO_WEBHOOK_URL`; si no, `401 INVALID_SIGNATURE`. Las respuestas salen después por la API de Twilio. El local sale del `To` (sin `whatsapp:+`).
-- `POST /api/whatsapp/360dialog/:token` (JSON con el formato de Meta) → `{ "ok": true }`, solo si `:token` es `D360_WEBHOOK_TOKEN`; si no, `404`. El secreto se tapa en los logs. El local sale de `metadata.phone_number_id` o, si no viene (sandbox), de `D360_PHONE_NUMBER`. Por ahora solo texto: sin audios ni aviso de leído.
+- `POST /api/whatsapp/360dialog/:token` (JSON con el formato de Meta) → `{ "ok": true }`, solo si `:token` es `D360_WEBHOOK_TOKEN`; si no, `404`. El secreto se tapa en los logs. El local es el de `D360_PHONE_NUMBER` (cada API key es de un número); sin esa variable, el de `metadata.phone_number_id`. Si un mensaje no se atiende, el log dice por qué (`whatsapp: mensaje ignorado`). Por ahora solo texto: sin audios ni aviso de leído.
 - Cuando un pedido del asistente pasa a `confirmed`, `ready` (retiro), `out_for_delivery` o `cancelled`, el cliente recibe un aviso por WhatsApp si todavía está dentro de las 24 h.
 
 ## Superadmin (`/api/admin`, rol `superadmin`)

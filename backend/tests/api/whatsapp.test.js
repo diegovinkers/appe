@@ -499,13 +499,35 @@ describe("webhook de 360dialog", () => {
     expect(whatsapp.sent).toEqual([{ phoneNumberId: D360_SANDBOX, to: "5555999991234", text: "Olá, Maria! O que vai ser hoje?" }]);
   });
 
-  it("con el número en el aviso (fuera del sandbox), manda ese número", async () => {
-    await setup();
+  it("D360_PHONE_NUMBER manda sobre el número del aviso; sin él, se usa el del aviso", async () => {
+    await setupSandbox();
+    fakeAi([say("Oi!"), say("Oi de novo!")]);
+    // El sandbox puede mandar otro id de número: igual es el de la API key.
+    const otherId = incoming({ phoneNumberId: "999888777" });
+    await d360Webhook({ entry: otherId.entry });
+    await flushReplies();
+    expect(whatsapp.sent.at(-1)).toEqual({ phoneNumberId: D360_SANDBOX, to: "5555999991234", text: "Oi!" });
+
+    const original = config.D360_PHONE_NUMBER;
+    config.D360_PHONE_NUMBER = undefined;
+    try {
+      await Assistant.updateOne({}, { $set: { phoneNumberId: PHONE_ID } });
+      await d360Webhook({ entry: incoming({ from: "5555999990000" }).entry });
+      await flushReplies();
+      expect(whatsapp.sent.at(-1)).toEqual({ phoneNumberId: PHONE_ID, to: "5555999990000", text: "Oi de novo!" });
+    } finally {
+      config.D360_PHONE_NUMBER = original;
+    }
+  });
+
+  it("un aviso sin \"field\" se lee igual", async () => {
+    await setupSandbox();
     fakeAi([say("Oi!")]);
-    const { object, ...payload } = incoming();
+    const payload = d360Incoming();
+    delete payload.entry[0].changes[0].field;
     await d360Webhook(payload);
     await flushReplies();
-    expect(whatsapp.sent).toEqual([{ phoneNumberId: PHONE_ID, to: "5555999991234", text: "Oi!" }]);
+    expect(whatsapp.sent).toHaveLength(1);
   });
 
   it("sin el secreto, o con otro proveedor elegido, no se acepta nada", async () => {

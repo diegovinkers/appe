@@ -151,7 +151,8 @@ export function inboundMessages(body) {
   const events = [];
   for (const entry of body?.entry ?? []) {
     for (const change of entry.changes ?? []) {
-      if (change.field !== "messages") continue;
+      // Sin "field" (algunos avisos de 360dialog) se lee igual; con otro field, no es de mensajes.
+      if (change.field && change.field !== "messages") continue;
       const value = change.value ?? {};
       const phoneNumberId = value.metadata?.phone_number_id;
       const names = new Map((value.contacts ?? []).map((contact) => [contact.wa_id, contact.profile?.name ?? ""]));
@@ -183,8 +184,9 @@ export function twilioInboundMessages(body) {
 }
 
 // 360dialog manda lo mismo que Meta. El sandbox no dice a qué número llegó: es el de D360_PHONE_NUMBER.
+// Cada API key de 360dialog es de un solo número: si está D360_PHONE_NUMBER, todo va a ese local.
 export const d360InboundMessages = (body) =>
-  inboundMessages(body).map((event) => ({ ...event, phoneNumberId: event.phoneNumberId ?? config.D360_PHONE_NUMBER ?? null }));
+  inboundMessages(body).map((event) => ({ ...event, phoneNumberId: config.D360_PHONE_NUMBER ?? event.phoneNumberId ?? null }));
 
 async function conversationFor(commerceId, { waId, name, blocked = false }) {
   const now = Date.now();
@@ -211,12 +213,19 @@ async function conversationFor(commerceId, { waId, name, blocked = false }) {
   return conversation;
 }
 
+// Por qué no se atendió un mensaje, sin datos del cliente: el número del local no es personal.
+const ignored = (reason, details = {}) => logger.warn({ ...details, reason }, "whatsapp: mensaje ignorado");
+
 async function handle({ phoneNumberId, waId, name, message }) {
-  if (!phoneNumberId || !waId || !message?.id) return;
+  if (!phoneNumberId || !waId || !message?.id) {
+    return ignored("incompleto", { phoneNumberId: phoneNumberId ?? null, waId: Boolean(waId), userId: Boolean(message?.from_user_id), id: Boolean(message?.id) });
+  }
   const settings = await Assistant.findOne({ phoneNumberId, enabled: true }).lean();
-  if (!settings) return;
+  if (!settings) return ignored("ningún asistente encendido con ese número", { phoneNumberId });
   const store = await Commerce.exists({ _id: settings.commerce, status: "active" });
-  if (!store || !(await hasAssistantPlus(settings.commerce))) return;
+  if (!store || !(await hasAssistantPlus(settings.commerce))) {
+    return ignored("local inactivo o sin Member Plus", { commerce: String(settings.commerce) });
+  }
   // Meta reenvía si no respondimos a tiempo: el mismo mensaje se procesa una sola vez.
   if (await ConversationMessage.exists({ externalId: message.id })) return;
 
@@ -281,7 +290,16 @@ function processEvents(events) {
 
 export const processWebhook = (body) => processEvents(inboundMessages(body));
 export const processTwilioWebhook = (body) => processEvents(twilioInboundMessages(body));
-export const process360dialogWebhook = (body) => processEvents(d360InboundMessages(body));
+export function process360dialogWebhook(body) {
+  const events = d360InboundMessages(body);
+  // Un aviso que no es de mensajes ni de estados: se anota su forma (solo los nombres de los campos).
+  const values = (body?.entry ?? []).flatMap((entry) => (entry.changes ?? []).map((change) => change.value ?? {}));
+  if (!events.length && !values.some((value) => value.statuses)) {
+    const shape = (body?.entry ?? []).flatMap((entry) => (entry.changes ?? []).map((change) => ({ field: change.field, value: Object.keys(change.value ?? {}) })));
+    logger.warn({ shape, entry: Object.keys(body?.entry?.[0] ?? {}) }, "whatsapp: aviso de 360dialog sin mensajes");
+  }
+  return processEvents(events);
+}
 
 // Para los tests: esperar a que termine lo que llegó por el webhook.
 export const settleWebhooks = () => Promise.all([...inFlight]);

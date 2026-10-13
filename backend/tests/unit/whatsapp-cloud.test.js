@@ -94,14 +94,16 @@ describe("Twilio", () => {
 });
 
 describe("360dialog", () => {
-  it("lee lo mismo que Meta; si el aviso no trae el número del local, usa D360_PHONE_NUMBER", () => {
+  it("lee lo mismo que Meta; el local es siempre el de D360_PHONE_NUMBER (una key, un número)", () => {
     const message = { from: "5555999991234", id: "wamid.1", type: "text", text: { body: "oi" } };
     const value = { contacts: [{ wa_id: "5555999991234", profile: { name: "Maria" } }], messages: [message] };
     expect(d360InboundMessages({ entry: [{ changes: [{ field: "messages", value }] }] })).toEqual([
       { phoneNumberId: "551146733492", waId: "5555999991234", name: "Maria", message },
     ]);
     const withNumber = { ...value, metadata: { phone_number_id: "111" } };
-    expect(d360InboundMessages({ entry: [{ changes: [{ field: "messages", value: withNumber }] }] })[0].phoneNumberId).toBe("111");
+    expect(d360InboundMessages({ entry: [{ changes: [{ field: "messages", value: withNumber }] }] })[0].phoneNumberId).toBe("551146733492");
+    // Sin "field" también es de mensajes.
+    expect(d360InboundMessages({ entry: [{ changes: [{ value }] }] })).toHaveLength(1);
   });
 
   it("el log no muestra el secreto del webhook", () => {
