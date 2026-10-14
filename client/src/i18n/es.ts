@@ -17,6 +17,7 @@ export const es: Dictionary = {
     submit: "Entrar",
     submitting: "Entrando…",
     aside: "Pedidos, menú y horarios de tu local, en un solo lugar.",
+    expired: "Tu sesión terminó. Entrá de nuevo para seguir donde estabas.",
   },
 
   nav: {

@@ -63,7 +63,9 @@ export function PanelLayout() {
     };
   }, [drawerOpen]);
 
-  if (storeQuery.isPending || !user) {
+  // Sesión vencida: main.tsx ya lleva a /entrar; mientras tanto, solo la espera.
+  const expired = storeQuery.isError && storeQuery.error instanceof ApiError && storeQuery.error.status === 401;
+  if (storeQuery.isPending || !user || expired) {
     return (
       <FullScreenMessage>
         <Spinner />

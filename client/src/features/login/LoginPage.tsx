@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router";
+import { Navigate, useLocation } from "react-router";
 import { type ApiError, api } from "../../api/client";
 import type { SessionResponse } from "../../api/types";
+import { clearPanelExpired } from "../../auth/expiry";
 import { homeFor, sessionKey, useSession } from "../../auth/session";
 import { LanguageSwitch } from "../../components/LanguageSwitch";
 import { errorText, useT } from "../../i18n";
@@ -13,20 +14,23 @@ export function LoginPage() {
   const t = useT();
   const { data: user } = useSession();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const location = useLocation();
   const [form, setForm] = useState<Credentials>({ email: "", password: "" });
 
   const login = useMutation<SessionResponse, ApiError, Credentials>({
     mutationFn: (credentials) => api<SessionResponse>("/auth/login", { method: "POST", body: credentials }),
     onSuccess: ({ user: logged }) => {
+      clearPanelExpired();
+      // Lo de la sesión anterior no se mezcla con la nueva.
+      queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== sessionKey[0] });
       queryClient.setQueryData(sessionKey, logged);
-      const from = (location.state as { from?: string } | null)?.from;
-      navigate(from ?? homeFor(logged), { replace: true });
     },
   });
 
-  if (user) return <Navigate to={homeFor(user)} replace />;
+  const state = location.state as { from?: string; expired?: boolean } | null;
+  const expired = Boolean(state?.expired);
+  // Con sesión (la de recién o una que ya había): a donde se quería ir, o al inicio del rol.
+  if (user) return <Navigate to={state?.from ?? homeFor(user)} replace />;
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -81,6 +85,11 @@ export function LoginPage() {
               className={field}
             />
           </div>
+          {expired && !login.isError && (
+            <p role="status" className="rounded-lg bg-[#fff4d6] px-3 py-2 text-[#7a4e00] ring-1 ring-[#f0d48a]">
+              {t.login.expired}
+            </p>
+          )}
           {login.isError && (
             <p role="alert" className="rounded-lg bg-error-soft px-3 py-2 text-error">
               {errorText(login.error, t)}

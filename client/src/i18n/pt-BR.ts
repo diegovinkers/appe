@@ -15,6 +15,7 @@ export const ptBR = {
     submit: "Entrar",
     submitting: "Entrando…",
     aside: "Pedidos, cardápio e horários da sua loja, num lugar só.",
+    expired: "Sua sessão terminou. Entre de novo para continuar de onde parou.",
   },
 
   nav: {

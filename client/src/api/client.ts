@@ -5,12 +5,15 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly details: unknown;
+  // La ruta que falló (ej. /owner/orders): sirve para saber qué sesión venció.
+  readonly path: string;
 
-  constructor(status: number, code: string, message: string, details?: unknown) {
+  constructor(status: number, code: string, message: string, details?: unknown, path = "") {
     super(message);
     this.status = status;
     this.code = code;
     this.details = details;
+    this.path = path;
   }
 }
 
@@ -28,14 +31,14 @@ export async function api<T>(path: string, options: { method?: Method; body?: un
     });
   } catch {
     // El texto para mostrar sale del diccionario según el código (ver errorText en i18n).
-    throw new ApiError(0, "NETWORK_ERROR", "");
+    throw new ApiError(0, "NETWORK_ERROR", "", undefined, path);
   }
 
   if (response.status === 204) return undefined as T;
   const data = await response.json().catch(() => null);
   if (!response.ok) {
     const error = data?.error;
-    throw new ApiError(response.status, error?.code ?? "UNKNOWN", error?.message ?? "", error?.details);
+    throw new ApiError(response.status, error?.code ?? "UNKNOWN", error?.message ?? "", error?.details, path);
   }
   return data as T;
 }

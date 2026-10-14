@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ApiError, api } from "../../api/client";
 import type { CustomerAccount, CustomerAddress, CustomerOrdersResponse, CustomerResponse, CustomerSessionResponse } from "../../api/types";
 
@@ -26,6 +26,14 @@ const flag = {
     }
   },
 };
+
+// La sesión del cliente venció (cambió la contraseña en otro aparato, borró la cuenta): se cierra
+// acá también y la página muestra "Entrar" de nuevo.
+export function forgetCustomer(queryClient: QueryClient) {
+  flag.set(false);
+  queryClient.setQueryData(customerKey, null);
+  queryClient.removeQueries({ queryKey: ordersKey });
+}
 
 export function useCustomer() {
   return useQuery<CustomerAccount | null>({

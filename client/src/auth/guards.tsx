@@ -4,6 +4,7 @@ import type { Role } from "../api/types";
 import { FullScreenMessage, Spinner } from "../components/FullScreenMessage";
 import { useT } from "../i18n";
 import { can, type Permission } from "./permissions";
+import { panelSessionExpired } from "./expiry";
 import { homeFor, useSession } from "./session";
 
 // Deja pasar solo a usuarios con sesión y con uno de estos roles.
@@ -31,7 +32,7 @@ export function RequireSession({ roles }: { roles: Role[] }) {
       />
     );
   }
-  if (!user) return <Navigate to="/entrar" replace state={{ from: location.pathname }} />;
+  if (!user) return <Navigate to="/entrar" replace state={{ from: location.pathname + location.search, expired: panelSessionExpired() }} />;
   if (!roles.includes(user.role)) return <Navigate to={homeFor(user)} replace />;
   return <Outlet />;
 }
