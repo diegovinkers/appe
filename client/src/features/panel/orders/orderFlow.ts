@@ -106,6 +106,32 @@ export function byUrgency(now = Date.now()) {
   };
 }
 
+// Las etapas en el orden en que pasan: así se agrupa la lista.
+export const STATUS_ORDER: OrderStatus[] = ["new", "confirmed", "ready", "out_for_delivery", "delivered", "cancelled"];
+
+// La marca de color de cada etapa (el borde de la fila y el título de la sección).
+export const STATUS_MARK: Record<OrderStatus, string> = {
+  new: "bg-[#b07a12]",
+  confirmed: "bg-[#1d4f91]",
+  ready: "bg-[#16794a]",
+  out_for_delivery: "bg-[#4a3a8c]",
+  delivered: "bg-ink-muted/40",
+  cancelled: "bg-closed/50",
+};
+
+// De dónde vino el pedido: el cliente en el cardápio, el asistente o el equipo (y por dónde).
+export type OrderSource = "online" | "assistant" | "phone" | "whatsapp" | "counter" | "table";
+export function orderSource(order: Pick<Order, "channel" | "conversation" | "fulfillment">): OrderSource {
+  if (order.conversation) return "assistant";
+  if (order.fulfillment === "table") return "table";
+  return order.channel;
+}
+
+// Quién del equipo lo registró (solo los cargados en el panel; los viejos no lo guardaban).
+export function takenBy(order: Pick<Order, "statusHistory">): string | null {
+  return order.statusHistory.find((entry) => entry.status === "new")?.byName ?? null;
+}
+
 export const STATUS_TONE: Record<OrderStatus, string> = {
   new: "bg-[#fff4d6] text-[#7a4e00] ring-[#f0d48a]",
   confirmed: "bg-[#e3eefc] text-[#1d4f91] ring-[#b9d1f3]",

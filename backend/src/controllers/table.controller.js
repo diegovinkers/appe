@@ -277,7 +277,7 @@ export const closeTab = async (req, res) => {
     for (const order of orders.filter((item) => item.status === "ready")) {
       await Order.updateOne(
         { _id: order._id, commerce: req.commerce._id, status: "ready" },
-        { $set: { status: "delivered" }, $push: { statusHistory: { status: "delivered", at: now, by: req.user.id } } },
+        { $set: { status: "delivered" }, $push: { statusHistory: { status: "delivered", at: now, by: req.user.id, byName: req.user.name } } },
         { session }
       );
     }

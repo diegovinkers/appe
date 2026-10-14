@@ -319,6 +319,22 @@ describe("pedidos cargados en el panel", () => {
     expect((await staff.post("/api/owner/orders").send(manual())).status).toBe(201);
     expect((await request(app).post("/api/owner/orders").send(manual())).status).toBe(401);
   });
+
+  it("queda quién lo registró y quién cambió cada estado; el cliente no lo ve", async () => {
+    await createStaff(commerce);
+    const staff = await loginAs(app, "staff-loja-a@test.local");
+    const created = await staff.post("/api/owner/orders").send(manual());
+    expect(created.body.order.statusHistory.map((h) => h.byName)).toEqual(["Atendente", "Atendente"]);
+    const ready = await owner.patch(`/api/owner/orders/${created.body.order._id}/status`).send({ status: "ready" });
+    expect(ready.body.order.statusHistory.at(-1)).toMatchObject({ status: "ready", byName: "Dono loja-a" });
+    // El seguimiento del cliente no muestra nombres del equipo.
+    const tracking = await request(app).get(`/api/public/orders/${created.body.trackingUrl.split("/").at(-1)}`);
+    expect(JSON.stringify(tracking.body)).not.toContain("Atendente");
+    // Un pedido del cardápio no tiene a nadie del equipo al entrar.
+    const online = await postOrder(orderBody());
+    const order = await Order.findOne({ number: online.body.order.number, commerce: commerce._id }).lean();
+    expect(order.statusHistory[0].byName).toBeUndefined();
+  });
 });
 
 describe("notas internas y comanda", () => {

@@ -143,7 +143,7 @@ export const updateOrderStatus = async (req, res) => {
   const set = { status };
   if (status === "cancelled") set.cancelReason = reason;
   if (estimatedMinutes) set.estimatedMinutes = estimatedMinutes;
-  const entry = { status, at: new Date(), by: req.user.id, ...(status === "cancelled" ? { reason } : {}) };
+  const entry = { status, at: new Date(), by: req.user.id, byName: req.user.name, ...(status === "cancelled" ? { reason } : {}) };
 
   // El filtro por el estado anterior evita pisar un cambio hecho desde otro dispositivo.
   // Al cancelar, en la misma transacción vuelven el stock y el uso del cupón.

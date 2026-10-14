@@ -384,7 +384,7 @@ Para cargarle el menú rápido a un local: se exporta, se edita en Excel y se im
     - Datos: `number`, `channel` (`online`, `phone`, `whatsapp` o `counter`), `locale`, `customer`, `fulfillment`, `address`, `paymentMethod`, `changeForCents`, `notes`, `items`.
     - Totales: `subtotalCents`, `discountCents`, `coupon`, `deliveryFeeCents` y `totalCents`.
     - Tiempos: `estimatedMinutes` y `scheduledFor`.
-    - Estado: `status`, `statusHistory: [{ status, at, by?, reason? }]` (`by`: el usuario del panel que hizo el cambio), `cancelReason` e `internalNotes`.
+    - Estado: `status`, `statusHistory: [{ status, at, by?, byName?, reason? }]` (`by` y `byName`: el usuario del panel que hizo el cambio y su nombre en ese momento; en un pedido cargado en el panel, la primera entrada dice quién lo registró. El seguimiento del cliente no los muestra), `cancelReason` e `internalNotes`.
     - `trackingToken` (el link del cliente es `/pedido/<trackingToken>`), `createdAt` y `updatedAt`.
     - `conversation`: si lo tomó el asistente por WhatsApp, el id de la conversación (si no, `null`).
 - `GET /api/owner/orders/:id` → `{ "order" }`.

@@ -5536,6 +5536,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */
@@ -5705,6 +5706,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */
@@ -5818,6 +5820,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */
@@ -7075,6 +7078,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */
@@ -7256,6 +7260,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */
@@ -7355,6 +7360,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */
@@ -7577,6 +7583,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */
@@ -7719,6 +7726,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */
@@ -7885,6 +7893,7 @@ export interface paths {
                                     /** Format: date-time */
                                     at: string;
                                     by?: string;
+                                    byName?: string;
                                     reason?: string;
                                 }[];
                                 /** Format: date-time */

@@ -122,11 +122,12 @@ const orderSchema = new mongoose.Schema(
       max: { type: Number },
     },
     status: { type: String, enum: ORDER_STATUSES, default: "new" },
-    // `by`: usuario del panel que hizo el cambio (vacío si lo creó el cliente).
+    // `by`: usuario del panel que hizo el cambio (vacío si lo creó el cliente) y su nombre en
+    // ese momento (`byName`), para mostrar quién lo hizo sin buscar al usuario.
     statusHistory: {
       type: [
         new mongoose.Schema(
-          { status: String, at: Date, by: { type: ObjectId, ref: "User" }, reason: String },
+          { status: String, at: Date, by: { type: ObjectId, ref: "User" }, byName: String, reason: String },
           { _id: false }
         ),
       ],

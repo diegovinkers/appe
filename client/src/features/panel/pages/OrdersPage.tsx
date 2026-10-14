@@ -1,4 +1,20 @@
-import { Plus, Printer, Search } from "lucide-react";
+import {
+  Armchair,
+  Bike,
+  Bot,
+  CalendarClock,
+  Globe,
+  type LucideIcon,
+  MessageCircle,
+  Phone,
+  Plus,
+  Printer,
+  Search,
+  ShoppingBag,
+  StickyNote,
+  Store,
+  Wallet,
+} from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { Order } from "../../../api/types";
@@ -13,8 +29,21 @@ import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { useNow } from "../../../hooks/useNow";
 import { useParamSheet } from "../../../hooks/useParamSheet";
 import { Conversations } from "../assistant/Conversations";
-import { OrderDetail, StatusChip } from "../orders/OrderDetail";
-import { ORDER_FILTERS, type OrderFilter, byUrgency, fulfillmentLabel, matchesFilter, nextLabel, nextStatus, orderTiming } from "../orders/orderFlow";
+import { OrderDetail } from "../orders/OrderDetail";
+import {
+  ORDER_FILTERS,
+  type OrderFilter,
+  type OrderSource,
+  STATUS_MARK,
+  STATUS_ORDER,
+  byUrgency,
+  matchesFilter,
+  nextLabel,
+  nextStatus,
+  orderSource,
+  orderTiming,
+  takenBy,
+} from "../orders/orderFlow";
 import { useDeviceSettings } from "../orders/deviceSettings";
 import { OrdersWorkspace } from "../orders/OrdersWorkspace";
 import { printTicket } from "../orders/printTicket";
@@ -24,30 +53,30 @@ import { SalonBoard } from "../salon/SalonBoard";
 import { TableTab } from "../salon/TableTab";
 import { useSalonTables } from "../salon/useSalon";
 
-// Cuándo entró y cuánto lleva: "18:42 · há 12 min"; si es de otro día, "sex 23:50".
-function TimeInfo({ order, now, today }: { order: Order; now: number; today: string }) {
+// Cuánto lleva, a la derecha de la fila: en rojo si espera que alguien lo acepte o pasó la
+// hora prometida; si no, tranquilo ("há 12 min", "Pronto há 5 min"). Los terminados, nada.
+function Elapsed({ order, now }: { order: Order; now: number }) {
   const t = useT();
   const timing = orderTiming(order, now);
-  const when = operatingDayISO(new Date(order.createdAt)) === today ? formatTime(order.createdAt) : formatWhen(order.createdAt, new Date(now));
-  if (timing.kind === "done") return <>{when}</>;
+  if (timing.kind === "done") return null;
   const elapsed = formatMinutes(timing.minutes);
-  if (timing.kind === "ready") return <>{when} · {t.orders.readySince(elapsed)}</>;
-  if (timing.kind === "late") return <>{when}</>;
-  return <>{when} · {t.orders.ago(elapsed)}</>;
+  if (timing.late) {
+    const text = timing.kind === "waiting" ? t.orders.waiting(elapsed) : t.orders.late(elapsed);
+    return <span className="inline-flex shrink-0 rounded-full bg-error-soft px-2.5 py-0.5 text-sm font-bold whitespace-nowrap text-error ring-1 ring-inset ring-error/30">{text}</span>;
+  }
+  if (timing.kind === "ready") return <span className="text-sm text-ink-muted">{t.orders.readySince(elapsed)}</span>;
+  return <span className="text-sm text-ink-muted">{timing.minutes < 1 ? t.orders.justNow : t.orders.ago(elapsed)}</span>;
 }
 
-// Aviso al lado del estado: el pedido nuevo que nadie acepta o el que pasó la hora prometida.
-function LateChip({ order, now }: { order: Order; now: number }) {
-  const t = useT();
-  const timing = orderTiming(order, now);
-  if (!timing.late) return null;
-  const text = timing.kind === "waiting" ? t.orders.waiting(formatMinutes(timing.minutes)) : t.orders.late(formatMinutes(timing.minutes));
-  return <span className="inline-flex shrink-0 rounded-full bg-error-soft px-2.5 py-0.5 text-sm font-bold text-error ring-1 ring-inset ring-error/30">{text}</span>;
-}
+const SOURCE_ICON: Record<OrderSource, LucideIcon> = { online: Globe, assistant: Bot, phone: Phone, whatsapp: MessageCircle, counter: Store, table: Armchair };
+const FULFILLMENT_ICON: Record<Order["fulfillment"], LucideIcon> = { delivery: Bike, pickup: ShoppingBag, table: Armchair };
 
-// Una fila de la lista. Se acomoda al ancho de donde está (la página o un panel), no al de la pantalla.
+// Una fila de la lista: lo que hay que saber sin abrir el pedido (qué pidió, de dónde vino y
+// quién lo tomó, cómo se entrega y cómo paga) y el próximo paso. Se acomoda al ancho de donde
+// está (la página o un panel), no al de la pantalla.
 function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpen: () => void; now: number; today: string; selected: boolean }) {
   const t = useT();
+  const o = t.orders;
   const { user } = usePanel();
   const change = useChangeStatus();
   const next = nextStatus(order);
@@ -55,48 +84,94 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
   const late = orderTiming(order, now).late;
   const { paper } = useDeviceSettings();
 
+  const source = orderSource(order);
+  const SourceIcon = SOURCE_ICON[source];
+  const by = takenBy(order);
+  const FulfillmentIcon = FULFILLMENT_ICON[order.fulfillment];
+  const when = operatingDayISO(new Date(order.createdAt)) === today ? formatTime(order.createdAt) : formatWhen(order.createdAt, new Date(now));
+  // En la mesa el nombre ya es "Mesa 4": no se repite.
+  const place = order.fulfillment === "delivery" ? [o.delivery, order.address?.neighborhood].filter(Boolean).join(", ") : order.fulfillment === "pickup" ? o.pickup : null;
+  const method = order.paymentMethod ? t.checkout.methods[order.paymentMethod] : null;
+  let payment = method;
+  if (method && order.changeForCents != null) payment = o.paymentWithChange(method, formatMoney(order.changeForCents));
+  if (!method && order.fulfillment === "table") payment = o.payAtTable;
+  const total = formatMoney(order.totalCents);
+
   return (
-    <li
-      aria-current={selected || undefined}
-      className={`px-4 py-3 @3xl:flex @3xl:items-center @3xl:gap-4 ${late ? "border-l-4 border-l-error pl-3" : ""} ${selected ? "bg-paper" : ""}`}
-    >
-      <button type="button" onClick={onOpen} className="flex w-full min-w-0 flex-1 items-center gap-3 text-left">
-        <span className="w-12 shrink-0 text-lg font-bold tabular-nums">#{order.number}</span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate font-bold">{order.customer.name}</span>
-          <span className="block text-sm text-ink-muted">
-            <TimeInfo order={order} now={now} today={today} /> · {fulfillmentLabel(order, t)}
-            {/* En la mesa el canal sobra: siempre lo carga el equipo. */}
-            {order.fulfillment !== "table" && <> · {order.conversation ? t.orders.byAssistant : t.orders.channels[order.channel]}</>}
-            {order.scheduledFor && <strong className="text-warning"> · {t.orders.scheduled(formatWhen(order.scheduledFor))}</strong>}
+    <li aria-current={selected || undefined} className={`flex ${selected ? "bg-paper" : ""}`}>
+      {/* El color de la etapa; rojo si está atrasado. */}
+      <span aria-hidden className={`w-1.5 shrink-0 ${late ? "bg-error" : STATUS_MARK[order.status]}`} />
+      <div className="min-w-0 flex-1 py-3 pr-3 pl-3 @xl:flex @xl:items-start @xl:gap-4">
+        <button type="button" onClick={onOpen} className="flex w-full min-w-0 flex-1 gap-3 text-left">
+          <span className="w-14 shrink-0">
+            <span className="block text-lg leading-tight font-bold tabular-nums">#{order.number}</span>
+            <span className="block text-sm text-ink-muted tabular-nums">{when}</span>
           </span>
-        </span>
-        <span className="shrink-0 font-bold tabular-nums">{formatMoney(order.totalCents)}</span>
-      </button>
-      <div className="mt-2 flex flex-wrap items-center justify-end gap-2 @3xl:mt-0">
-        <LateChip order={order} now={now} />
-        <StatusChip order={order} />
-        <button
-          type="button"
-          onClick={() => printTicket(order._id, paper)}
-          aria-label={t.alerts.print(order.number)}
-          title={t.alerts.print(order.number)}
-          className="grid size-11 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted hover:bg-paper hover:text-ink"
-        >
-          <Printer aria-hidden className="size-5" />
+          <span className="min-w-0 flex-1 space-y-0.5">
+            <span className="flex items-baseline justify-between gap-3">
+              <span className={`truncate font-bold ${order.status === "cancelled" ? "text-ink-muted line-through" : ""}`}>{order.customer.name}</span>
+              <span className="shrink-0 font-bold tabular-nums @xl:hidden">{total}</span>
+            </span>
+            <span className="flex items-center gap-1.5 text-sm text-ink-muted">
+              <SourceIcon aria-hidden className="size-4 shrink-0" />
+              <span className="truncate">{by ? o.sourceBy(o.source[source], by) : o.source[source]}</span>
+            </span>
+            <span className="line-clamp-2 text-sm">{order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}</span>
+            <span className="flex flex-wrap gap-x-3 gap-y-0.5 pt-0.5 text-sm text-ink-muted">
+              {place && (
+                <span className="inline-flex items-center gap-1.5">
+                  <FulfillmentIcon aria-hidden className="size-4 shrink-0" />
+                  {place}
+                </span>
+              )}
+              {payment && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Wallet aria-hidden className="size-4 shrink-0" />
+                  {payment}
+                </span>
+              )}
+              {order.notes && (
+                <strong className="inline-flex items-center gap-1.5 text-warning">
+                  <StickyNote aria-hidden className="size-4 shrink-0" />
+                  {o.hasNotes}
+                </strong>
+              )}
+              {order.scheduledFor && (
+                <strong className="inline-flex items-center gap-1.5 text-warning">
+                  <CalendarClock aria-hidden className="size-4 shrink-0" />
+                  {o.scheduled(formatWhen(order.scheduledFor))}
+                </strong>
+              )}
+            </span>
+          </span>
         </button>
-        {next && label && can(user.role, "orders:write") && (
-          <button
-            type="button"
-            disabled={change.isPending}
-            onClick={() => change.mutate({ id: order._id, status: next })}
-            className="h-11 min-w-32 rounded-lg bg-action px-3 text-sm font-bold text-white hover:bg-action-hover disabled:opacity-60"
-          >
-            {label}
-          </button>
-        )}
+        <div className="mt-2 flex flex-wrap items-center gap-2 @xl:mt-0 @xl:w-56 @xl:shrink-0 @xl:flex-col @xl:items-end">
+          <span className="hidden text-lg leading-tight font-bold tabular-nums @xl:block">{total}</span>
+          <Elapsed order={order} now={now} />
+          <span className="ml-auto flex gap-2 @xl:ml-0">
+            <button
+              type="button"
+              onClick={() => printTicket(order._id, paper)}
+              aria-label={t.alerts.print(order.number)}
+              title={t.alerts.print(order.number)}
+              className="grid size-11 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted hover:bg-paper hover:text-ink"
+            >
+              <Printer aria-hidden className="size-5" />
+            </button>
+            {next && label && can(user.role, "orders:write") && (
+              <button
+                type="button"
+                disabled={change.isPending}
+                onClick={() => change.mutate({ id: order._id, status: next })}
+                className="h-11 min-w-32 rounded-lg bg-action px-3 text-sm font-bold text-white hover:bg-action-hover disabled:opacity-60"
+              >
+                {label}
+              </button>
+            )}
+          </span>
+        </div>
+        {change.isError && <p className="mt-1 text-right text-sm font-bold text-error">{errorText(change.error, t)}</p>}
       </div>
-      {change.isError && <p className="mt-1 text-right text-sm font-bold text-error">{errorText(change.error, t)}</p>}
     </li>
   );
 }
@@ -146,8 +221,8 @@ export function useOrdersView() {
   const found = search.trim()
     ? list.filter((order) => matchesSearch(`#${order.number} ${order.number} ${order.customer.name} ${order.customer.phone} ${order.customer.phone.replace(/\D/g, "")}`, search))
     : list;
-  const visible = found.filter((order) => matchesFilter(order.status, filter));
-  if (filter === "active" || filter === "new") visible.sort(byUrgency(now));
+  // Lo más urgente arriba en cada etapa; los terminados, el último primero.
+  const visible = found.filter((order) => matchesFilter(order.status, filter)).sort(byUrgency(now));
   const count = (value: OrderFilter) => found.filter((order) => matchesFilter(order.status, value)).length;
 
   return { params, setParam, update, now, today, day, filter, search, setSearch, orders, list, visible, count };
@@ -222,11 +297,27 @@ export function OrdersList({ view, selectedId, onOpen }: { view: OrdersView; sel
             {view.search.trim() ? t.workspace.noResults : list.length === 0 && day === today ? t.orders.empty : t.orders.emptyFilter}
           </p>
         ) : (
-          <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
-            {visible.map((order) => (
-              <OrderRow key={order._id} order={order} now={now} today={today} selected={order._id === selectedId} onOpen={() => onOpen(order._id)} />
-            ))}
-          </ul>
+          // Por etapa, en el orden en que pasan: qué hay para aceptar, qué está en la cocina…
+          <div className="space-y-5">
+            {STATUS_ORDER.map((status) => {
+              const orders = visible.filter((order) => order.status === status);
+              if (!orders.length) return null;
+              return (
+                <section key={status} aria-labelledby={`etapa-${status}`}>
+                  <h3 id={`etapa-${status}`} className="mb-2 flex items-center gap-2 font-bold">
+                    <span aria-hidden className={`size-2.5 rounded-full ${STATUS_MARK[status]}`} />
+                    {t.orders.sections[status]}
+                    <span className="font-normal text-ink-muted tabular-nums">{orders.length}</span>
+                  </h3>
+                  <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+                    {orders.map((order) => (
+                      <OrderRow key={order._id} order={order} now={now} today={today} selected={order._id === selectedId} onOpen={() => onOpen(order._id)} />
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
         ))}
     </div>
   );

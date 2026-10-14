@@ -103,6 +103,21 @@ export const ptBR = {
     },
     channels: { online: "Online", phone: "Telefone", whatsapp: "WhatsApp", counter: "Balcão" },
     byAssistant: "WhatsApp (assistente)",
+    // La lista, por etapa: lo que hay que hacer con cada pedido.
+    sections: {
+      new: "Novos: aceite ou recuse",
+      confirmed: "Em preparo",
+      ready: "Prontos",
+      out_for_delivery: "Saíram para entrega",
+      delivered: "Entregues",
+      cancelled: "Cancelados",
+    },
+    // De dónde vino y, si lo cargó el equipo, quién.
+    source: { online: "Cardápio online", assistant: "Assistente do WhatsApp", phone: "Telefone", whatsapp: "WhatsApp", counter: "Balcão", table: "Salão" },
+    sourceBy: (source: string, name: string) => `${source}, por ${name}`,
+    hasNotes: "Tem observação",
+    paymentWithChange: (method: string, value: string) => `${method}, troco para ${value}`,
+    payAtTable: "Na conta da mesa",
     delivery: "Entrega",
     pickup: "Retirada",
     table: (number: number) => `Mesa ${number}`,
@@ -114,6 +129,7 @@ export const ptBR = {
     scheduled: (when: string) => `Agendado ${when}`,
     // Tiempo de cada pedido en la lista ("há 12 min", "Atrasado 7 min").
     ago: (time: string) => `há ${time}`,
+    justNow: "agora",
     waiting: (time: string) => `Aguardando há ${time}`,
     late: (time: string) => `Atrasado ${time}`,
     readySince: (time: string) => `Pronto há ${time}`,
@@ -151,6 +167,7 @@ export const ptBR = {
       keep: "Voltar",
       cancelledBecause: (reason: string) => `Motivo: ${reason}`,
       arrivedBy: (channel: string) => `Chegou por ${channel}`,
+      byPerson: (name: string) => `por ${name}`,
       viewConversation: "Ver a conversa",
     },
   },

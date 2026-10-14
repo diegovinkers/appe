@@ -11,7 +11,7 @@ import { ptBR } from "../../../i18n/pt-BR";
 import { formatMoney, formatTime, formatWhen } from "../../../lib/format";
 import { whatsappLink } from "../../../lib/whatsapp";
 import { usePanel } from "../PanelLayout";
-import { STATUS_TONE, fulfillmentLabel, isActive, nextLabel, nextStatus } from "./orderFlow";
+import { STATUS_TONE, fulfillmentLabel, isActive, nextLabel, nextStatus, orderSource, takenBy } from "./orderFlow";
 import { setDeviceSetting, useDeviceSettings } from "./deviceSettings";
 import { printTicket } from "./printTicket";
 import { useChangeStatus, useSaveNotes } from "./useOrders";
@@ -175,7 +175,8 @@ export function OrderDetail({
         <StatusChip order={order} />
         <span className="text-sm text-ink-muted">
           {formatTime(order.createdAt)}
-          {order.fulfillment !== "table" && <> · {t.orders.detail.arrivedBy(order.conversation ? t.orders.byAssistant : t.orders.channels[order.channel])}</>}
+          {" · "}
+          {takenBy(order) ? t.orders.sourceBy(t.orders.source[orderSource(order)], takenBy(order) ?? "") : t.orders.source[orderSource(order)]}
         </span>
         {order.conversation && (
           <Link to={conversationHref(order.conversation)} className="text-sm font-bold underline underline-offset-4">
@@ -278,6 +279,7 @@ export function OrderDetail({
             <li key={index} className="flex justify-between gap-3 text-sm">
               <span>
                 {t.orders.statuses[entry.status]}
+                {entry.byName && <span className="text-ink-muted"> {t.orders.detail.byPerson(entry.byName)}</span>}
                 {entry.reason && <span className="text-ink-muted"> — {entry.reason}</span>}
               </span>
               <span className="tabular-nums text-ink-muted">{formatTime(entry.at)}</span>

@@ -86,7 +86,7 @@ export async function quoteOrder({ store, input, origin = "customer", now = new 
  * @param {object} args.input       Pedido validado (createOrderSchema o manualOrderSchema).
  * @param {string} args.channel     online | phone | whatsapp | counter
  * @param {"customer"|"panel"} args.origin
- * @param {{ id: string }} [args.user]  Usuario del panel (obligatorio con origin "panel").
+ * @param {{ id: string, name?: string }} [args.user]  Usuario del panel (obligatorio con origin "panel").
  * @param {string|null} [args.account]  Cuenta del cliente que lo hace.
  * @param {string|null} [args.conversation]  Conversación del asistente que lo tomó.
  * @param {{ table: { _id, number, name }, tab: string }|null} [args.atTable]  Mesa y cuenta (pedidos de mesa).
@@ -98,8 +98,10 @@ export async function placeOrder({ store, input, channel, origin, user = null, a
   const { zone, stock, ...priced } = await priceFor({ store, input, origin, now });
 
   // Los cargados en el panel entran confirmados: el local ya los aceptó.
-  const history = [{ status: "new", at: now }];
-  if (manual) history.push({ status: "confirmed", at: now, by: user.id });
+  // Cargado en el panel: queda quién lo registró ("Telefone, por Ana").
+  const by = manual ? { by: user.id, ...(user.name && { byName: user.name }) } : {};
+  const history = [{ status: "new", at: now, ...by }];
+  if (manual) history.push({ status: "confirmed", at: now, ...by });
 
   // En una transacción: si algo falla (se acabó el stock o el cupón en el medio), el
   // stock, el cupón y el contador vuelven atrás y no quedan números salteados.

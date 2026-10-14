@@ -105,6 +105,21 @@ export const es: Dictionary = {
     },
     channels: { online: "Online", phone: "Teléfono", whatsapp: "WhatsApp", counter: "Mostrador" },
     byAssistant: "WhatsApp (asistente)",
+    // La lista, por etapa: lo que hay que hacer con cada pedido.
+    sections: {
+      new: "Nuevos: aceptalos o rechazalos",
+      confirmed: "En preparación",
+      ready: "Listos",
+      out_for_delivery: "Salieron para entrega",
+      delivered: "Entregados",
+      cancelled: "Cancelados",
+    },
+    // De dónde vino y, si lo cargó el equipo, quién.
+    source: { online: "Menú online", assistant: "Asistente de WhatsApp", phone: "Teléfono", whatsapp: "WhatsApp", counter: "Mostrador", table: "Salón" },
+    sourceBy: (source: string, name: string) => `${source}, por ${name}`,
+    hasNotes: "Tiene observación",
+    paymentWithChange: (method: string, value: string) => `${method}, cambio para ${value}`,
+    payAtTable: "En la cuenta de la mesa",
     delivery: "Envío",
     pickup: "Retiro",
     table: (number: number) => `Mesa ${number}`,
@@ -116,6 +131,7 @@ export const es: Dictionary = {
     scheduled: (when: string) => `Programado ${when}`,
     // Tiempo de cada pedido en la lista ("hace 12 min", "Atrasado 7 min").
     ago: (time: string) => `hace ${time}`,
+    justNow: "recién",
     waiting: (time: string) => `Esperando hace ${time}`,
     late: (time: string) => `Atrasado ${time}`,
     readySince: (time: string) => `Listo hace ${time}`,
@@ -152,6 +168,7 @@ export const es: Dictionary = {
       keep: "Volver",
       cancelledBecause: (reason: string) => `Motivo: ${reason}`,
       arrivedBy: (channel: string) => `Llegó por ${channel}`,
+      byPerson: (name: string) => `por ${name}`,
       viewConversation: "Ver la conversación",
     },
   },

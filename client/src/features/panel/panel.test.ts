@@ -3,7 +3,7 @@ import type { Opening, Order, OwnerStore } from "../../api/types";
 import { initials, readableTextOn } from "../../lib/color";
 import { setLanguage } from "../../i18n";
 import { formatMinutes, formatWhen, operatingDayISO } from "../../lib/format";
-import { byUrgency, orderTiming } from "./orders/orderFlow";
+import { byUrgency, orderSource, orderTiming, takenBy } from "./orders/orderFlow";
 import { getDeviceSettings, setDeviceSetting } from "./orders/deviceSettings";
 import { bottomBarFor, menuTabsFor, navFor, settingsFor } from "./nav";
 import { settingsReadiness } from "./settings/readiness";
@@ -177,5 +177,22 @@ describe("Configurações: qué falta revisar", () => {
       paymentMethods: ["cash", "pix"], pixKey: "  ",
     } as unknown as OwnerStore;
     expect(settingsReadiness(store)).toEqual({ storeInfo: true, hours: true, delivery: false, payments: false });
+  });
+});
+
+describe("de dónde vino cada pedido", () => {
+  const base = { channel: "online", conversation: null, fulfillment: "delivery" } as Pick<Order, "channel" | "conversation" | "fulfillment">;
+
+  it("cardápio, asistente, equipo y salón", () => {
+    expect(orderSource(base)).toBe("online");
+    expect(orderSource({ ...base, channel: "whatsapp", conversation: "c1" })).toBe("assistant");
+    expect(orderSource({ ...base, channel: "phone" })).toBe("phone");
+    expect(orderSource({ ...base, channel: "counter", fulfillment: "table" })).toBe("table");
+  });
+
+  it("quién lo registró, si lo cargó el equipo", () => {
+    const at = "2026-10-14T20:00:00Z";
+    expect(takenBy({ statusHistory: [{ status: "new", at, byName: "Ana" }, { status: "confirmed", at, byName: "Ana" }] })).toBe("Ana");
+    expect(takenBy({ statusHistory: [{ status: "new", at }, { status: "confirmed", at, byName: "Ana" }] })).toBeNull();
   });
 });

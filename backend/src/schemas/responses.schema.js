@@ -264,7 +264,7 @@ export const order = z.strictObject({
   estimatedMinutes,
   status: z.enum(ORDER_STATUSES),
   statusHistory: z.array(
-    z.strictObject({ status: z.enum(ORDER_STATUSES), at: date, by: id.optional(), reason: z.string().optional() })
+    z.strictObject({ status: z.enum(ORDER_STATUSES), at: date, by: id.optional(), byName: z.string().optional(), reason: z.string().optional() })
   ),
   ...timestamps,
 });

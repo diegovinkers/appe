@@ -16,6 +16,8 @@ export const authRequired = async (req, res, next) => {
 
   req.user = {
     id: String(user._id),
+    // El nombre queda en el historial de los pedidos ("Confirmado por Ana").
+    name: user.name,
     role: user.role,
     commerce: user.commerce ? String(user.commerce) : null,
   };
