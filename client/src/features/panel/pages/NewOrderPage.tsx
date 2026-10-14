@@ -16,6 +16,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { Field, button, input, textarea } from "../../../components/ui";
 import { errorText, useT } from "../../../i18n";
 import { formatMoney, operatingDayISO } from "../../../lib/format";
+import { paymentMethodsFor } from "../../../lib/payments";
 import { newId } from "../../../lib/id";
 import { parseMoney } from "../../../lib/money";
 import { matchesSearch } from "../../../lib/text";
@@ -70,7 +71,7 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
   const [fulfillment, setFulfillment] = useState<"delivery" | "pickup">(store.fulfillment.pickup ? "pickup" : "delivery");
   const [zoneId, setZoneId] = useState("");
   const [address, setAddress] = useState({ neighborhood: "", street: "", number: "", reference: "" });
-  const [payment, setPayment] = useState<PaymentMethod>(store.paymentMethods[0] ?? "cash");
+  const [chosenPayment, setPayment] = useState<PaymentMethod>(store.paymentMethods[0] ?? "cash");
   const [changeFor, setChangeFor] = useState("");
   const [notes, setNotes] = useState("");
   const [scheduledFor, setScheduledFor] = useState("");
@@ -81,6 +82,9 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
   const available = lines.filter((line) => line.available);
   const subtotalCents = available.reduce((sum, line) => sum + line.totalCents, 0);
   const totals = orderTotals({ store, subtotalCents, fulfillment, zoneId });
+  // Solo las formas de pago que valen para este modo; si la elegida no vale, la primera que sí.
+  const methods = paymentMethodsFor(store, fulfillment);
+  const payment = methods.includes(chosenPayment) ? chosenPayment : (methods[0] ?? chosenPayment);
 
   const create = useMutation<ManualOrderResponse, ApiError, ManualOrderInput>({
     mutationFn: (body) => api<ManualOrderResponse>("/owner/orders", { method: "POST", body }),
@@ -318,7 +322,7 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
         <fieldset>
           <legend className="mb-2 font-bold">{t.checkout.payment}</legend>
           <div className="flex flex-wrap gap-2">
-            {store.paymentMethods.map((method) => (
+            {methods.map((method) => (
               <button key={method} type="button" aria-pressed={payment === method} onClick={() => setPayment(method)} className={chip(payment === method)}>
                 {t.checkout.methods[method]}
               </button>

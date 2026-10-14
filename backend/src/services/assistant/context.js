@@ -14,9 +14,25 @@ import { localized } from "../../lib/translations.js";
 import { WEEKDAYS, getOpeningStatus, isCategoryAvailable } from "../opening.service.js";
 import { STATUS_LABELS } from "../orderStatus.js";
 import { activePromoPrice, effectivePrice, fromPrice } from "../pricing.service.js";
+import { paymentMethodsFor } from "../payments.service.js";
 
 const WEEKDAY_NAMES = { sun: "dom", mon: "seg", tue: "ter", wed: "qua", thu: "qui", fri: "sex", sat: "sáb" };
 const PAYMENT_NAMES = { cash: "dinheiro", pix: "Pix", card: "cartão (maquininha)" };
+
+// Formas de pago para entrega y para retiro (pueden ser distintas), con la nota del local.
+function paymentLines(store) {
+  const named = (method) => {
+    const note = store.paymentOptions?.[method]?.note;
+    return note ? `${PAYMENT_NAMES[method]} (${note})` : PAYMENT_NAMES[method];
+  };
+  const lines = [];
+  for (const [mode, label] of [["delivery", "na entrega"], ["pickup", "na retirada"]]) {
+    if (!store.fulfillment[mode]) continue;
+    lines.push(`Pagamento ${label}: ${paymentMethodsFor(store, mode).map(named).join(", ")}`);
+  }
+  if (store.paymentMethods.includes("cash") && store.paymentOptions?.cash?.askChange === false) lines.push("Em dinheiro, não pergunte sobre troco.");
+  return lines;
+}
 const PRICING_NOTES = { max: " (cobra só a mais cara)", average: " (cobra a média dos preços)" };
 
 // Una línea sin saltos y cortada: las descripciones largas gastan tokens en cada mensaje.
@@ -138,7 +154,7 @@ export function storeInfo(store, lang) {
   const { estimates } = store;
   lines.push(
     `Tempo estimado: entrega ${estimates.deliveryMin}–${estimates.deliveryMax} min; retirada ${estimates.pickupMin}–${estimates.pickupMax} min`,
-    `Pagamento (na entrega ou retirada): ${store.paymentMethods.map((method) => PAYMENT_NAMES[method]).join(", ")}`
+    ...paymentLines(store)
   );
   if (store.paymentMethods.includes("pix") && store.pixKey) lines.push(`Chave Pix: ${store.pixKey}`);
   lines.push(

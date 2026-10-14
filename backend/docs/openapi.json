@@ -2269,6 +2269,84 @@
                         "pixKey": {
                           "type": "string"
                         },
+                        "paymentOptions": {
+                          "type": "object",
+                          "properties": {
+                            "cash": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                },
+                                "askChange": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note",
+                                "askChange"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "cash",
+                            "pix",
+                            "card"
+                          ],
+                          "additionalProperties": false
+                        },
                         "scheduling": {
                           "type": "object",
                           "properties": {
@@ -2355,6 +2433,7 @@
                         "minOrderCents",
                         "paymentMethods",
                         "pixKey",
+                        "paymentOptions",
                         "scheduling",
                         "rating"
                       ],
@@ -3094,6 +3173,9 @@
                         },
                         "secondaryColor": {
                           "type": "string"
+                        },
+                        "pixKey": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -3102,7 +3184,8 @@
                         "whatsapp",
                         "logoUrl",
                         "primaryColor",
-                        "secondaryColor"
+                        "secondaryColor",
+                        "pixKey"
                       ],
                       "additionalProperties": false
                     },
@@ -5958,6 +6041,84 @@
                         "pixKey": {
                           "type": "string"
                         },
+                        "paymentOptions": {
+                          "type": "object",
+                          "properties": {
+                            "cash": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                },
+                                "askChange": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note",
+                                "askChange"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "cash",
+                            "pix",
+                            "card"
+                          ],
+                          "additionalProperties": false
+                        },
                         "scheduling": {
                           "type": "object",
                           "properties": {
@@ -6057,6 +6218,7 @@
                         "minOrderCents",
                         "paymentMethods",
                         "pixKey",
+                        "paymentOptions",
                         "scheduling",
                         "translations",
                         "createdAt",
@@ -6402,6 +6564,65 @@
                   "pixKey": {
                     "type": "string",
                     "maxLength": 140
+                  },
+                  "paymentOptions": {
+                    "type": "object",
+                    "properties": {
+                      "cash": {
+                        "type": "object",
+                        "properties": {
+                          "fulfillment": {
+                            "type": "string",
+                            "enum": [
+                              "both",
+                              "delivery",
+                              "pickup"
+                            ]
+                          },
+                          "note": {
+                            "type": "string",
+                            "maxLength": 80
+                          },
+                          "askChange": {
+                            "type": "boolean"
+                          }
+                        }
+                      },
+                      "pix": {
+                        "type": "object",
+                        "properties": {
+                          "fulfillment": {
+                            "type": "string",
+                            "enum": [
+                              "both",
+                              "delivery",
+                              "pickup"
+                            ]
+                          },
+                          "note": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
+                        }
+                      },
+                      "card": {
+                        "type": "object",
+                        "properties": {
+                          "fulfillment": {
+                            "type": "string",
+                            "enum": [
+                              "both",
+                              "delivery",
+                              "pickup"
+                            ]
+                          },
+                          "note": {
+                            "type": "string",
+                            "maxLength": 80
+                          }
+                        }
+                      }
+                    }
                   },
                   "scheduling": {
                     "type": "object",
@@ -6916,6 +7137,84 @@
                         "pixKey": {
                           "type": "string"
                         },
+                        "paymentOptions": {
+                          "type": "object",
+                          "properties": {
+                            "cash": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                },
+                                "askChange": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note",
+                                "askChange"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "cash",
+                            "pix",
+                            "card"
+                          ],
+                          "additionalProperties": false
+                        },
                         "scheduling": {
                           "type": "object",
                           "properties": {
@@ -7015,6 +7314,7 @@
                         "minOrderCents",
                         "paymentMethods",
                         "pixKey",
+                        "paymentOptions",
                         "scheduling",
                         "translations",
                         "createdAt",
@@ -7889,6 +8189,84 @@
                         "pixKey": {
                           "type": "string"
                         },
+                        "paymentOptions": {
+                          "type": "object",
+                          "properties": {
+                            "cash": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                },
+                                "askChange": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note",
+                                "askChange"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "cash",
+                            "pix",
+                            "card"
+                          ],
+                          "additionalProperties": false
+                        },
                         "scheduling": {
                           "type": "object",
                           "properties": {
@@ -7988,6 +8366,7 @@
                         "minOrderCents",
                         "paymentMethods",
                         "pixKey",
+                        "paymentOptions",
                         "scheduling",
                         "translations",
                         "createdAt",
@@ -8656,6 +9035,84 @@
                         "pixKey": {
                           "type": "string"
                         },
+                        "paymentOptions": {
+                          "type": "object",
+                          "properties": {
+                            "cash": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                },
+                                "askChange": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note",
+                                "askChange"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "cash",
+                            "pix",
+                            "card"
+                          ],
+                          "additionalProperties": false
+                        },
                         "scheduling": {
                           "type": "object",
                           "properties": {
@@ -8755,6 +9212,7 @@
                         "minOrderCents",
                         "paymentMethods",
                         "pixKey",
+                        "paymentOptions",
                         "scheduling",
                         "translations",
                         "createdAt",
@@ -21949,6 +22407,84 @@
                           "pixKey": {
                             "type": "string"
                           },
+                          "paymentOptions": {
+                            "type": "object",
+                            "properties": {
+                              "cash": {
+                                "type": "object",
+                                "properties": {
+                                  "fulfillment": {
+                                    "type": "string",
+                                    "enum": [
+                                      "both",
+                                      "delivery",
+                                      "pickup"
+                                    ]
+                                  },
+                                  "note": {
+                                    "type": "string"
+                                  },
+                                  "askChange": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "fulfillment",
+                                  "note",
+                                  "askChange"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "pix": {
+                                "type": "object",
+                                "properties": {
+                                  "fulfillment": {
+                                    "type": "string",
+                                    "enum": [
+                                      "both",
+                                      "delivery",
+                                      "pickup"
+                                    ]
+                                  },
+                                  "note": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "fulfillment",
+                                  "note"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "card": {
+                                "type": "object",
+                                "properties": {
+                                  "fulfillment": {
+                                    "type": "string",
+                                    "enum": [
+                                      "both",
+                                      "delivery",
+                                      "pickup"
+                                    ]
+                                  },
+                                  "note": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "fulfillment",
+                                  "note"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": [
+                              "cash",
+                              "pix",
+                              "card"
+                            ],
+                            "additionalProperties": false
+                          },
                           "scheduling": {
                             "type": "object",
                             "properties": {
@@ -22075,6 +22611,7 @@
                           "minOrderCents",
                           "paymentMethods",
                           "pixKey",
+                          "paymentOptions",
                           "scheduling",
                           "translations",
                           "createdAt",
@@ -22650,6 +23187,84 @@
                         "pixKey": {
                           "type": "string"
                         },
+                        "paymentOptions": {
+                          "type": "object",
+                          "properties": {
+                            "cash": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                },
+                                "askChange": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note",
+                                "askChange"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "cash",
+                            "pix",
+                            "card"
+                          ],
+                          "additionalProperties": false
+                        },
                         "scheduling": {
                           "type": "object",
                           "properties": {
@@ -22749,6 +23364,7 @@
                         "minOrderCents",
                         "paymentMethods",
                         "pixKey",
+                        "paymentOptions",
                         "scheduling",
                         "translations",
                         "createdAt",
@@ -23356,6 +23972,84 @@
                         "pixKey": {
                           "type": "string"
                         },
+                        "paymentOptions": {
+                          "type": "object",
+                          "properties": {
+                            "cash": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                },
+                                "askChange": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note",
+                                "askChange"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "cash",
+                            "pix",
+                            "card"
+                          ],
+                          "additionalProperties": false
+                        },
                         "scheduling": {
                           "type": "object",
                           "properties": {
@@ -23455,6 +24149,7 @@
                         "minOrderCents",
                         "paymentMethods",
                         "pixKey",
+                        "paymentOptions",
                         "scheduling",
                         "translations",
                         "createdAt",

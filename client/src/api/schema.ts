@@ -992,6 +992,24 @@ export interface paths {
                                 minOrderCents: number;
                                 paymentMethods: ("cash" | "pix" | "card")[];
                                 pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
                                 scheduling: {
                                     enabled: boolean;
                                     minLeadMinutes: number;
@@ -1392,6 +1410,7 @@ export interface paths {
                                 logoUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
+                                pixKey: string;
                             };
                             order: {
                                 number: number;
@@ -2561,6 +2580,24 @@ export interface paths {
                                 minOrderCents: number;
                                 paymentMethods: ("cash" | "pix" | "card")[];
                                 pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
                                 scheduling: {
                                     enabled: boolean;
                                     minLeadMinutes: number;
@@ -2675,6 +2712,24 @@ export interface paths {
                         minOrderCents?: number;
                         paymentMethods?: ("cash" | "pix" | "card")[];
                         pixKey?: string;
+                        paymentOptions?: {
+                            cash?: {
+                                /** @enum {string} */
+                                fulfillment?: "both" | "delivery" | "pickup";
+                                note?: string;
+                                askChange?: boolean;
+                            };
+                            pix?: {
+                                /** @enum {string} */
+                                fulfillment?: "both" | "delivery" | "pickup";
+                                note?: string;
+                            };
+                            card?: {
+                                /** @enum {string} */
+                                fulfillment?: "both" | "delivery" | "pickup";
+                                note?: string;
+                            };
+                        };
                         scheduling?: {
                             enabled?: boolean;
                             minLeadMinutes?: number;
@@ -2789,6 +2844,24 @@ export interface paths {
                                 minOrderCents: number;
                                 paymentMethods: ("cash" | "pix" | "card")[];
                                 pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
                                 scheduling: {
                                     enabled: boolean;
                                     minLeadMinutes: number;
@@ -3017,6 +3090,24 @@ export interface paths {
                                 minOrderCents: number;
                                 paymentMethods: ("cash" | "pix" | "card")[];
                                 pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
                                 scheduling: {
                                     enabled: boolean;
                                     minLeadMinutes: number;
@@ -3218,6 +3309,24 @@ export interface paths {
                                 minOrderCents: number;
                                 paymentMethods: ("cash" | "pix" | "card")[];
                                 pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
                                 scheduling: {
                                     enabled: boolean;
                                     minLeadMinutes: number;
@@ -8381,6 +8490,24 @@ export interface paths {
                                 minOrderCents: number;
                                 paymentMethods: ("cash" | "pix" | "card")[];
                                 pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
                                 scheduling: {
                                     enabled: boolean;
                                     minLeadMinutes: number;
@@ -8554,6 +8681,24 @@ export interface paths {
                                 minOrderCents: number;
                                 paymentMethods: ("cash" | "pix" | "card")[];
                                 pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
                                 scheduling: {
                                     enabled: boolean;
                                     minLeadMinutes: number;
@@ -8749,6 +8894,24 @@ export interface paths {
                                 minOrderCents: number;
                                 paymentMethods: ("cash" | "pix" | "card")[];
                                 pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
                                 scheduling: {
                                     enabled: boolean;
                                     minLeadMinutes: number;

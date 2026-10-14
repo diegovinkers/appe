@@ -11,6 +11,7 @@ import { type Dictionary, useT } from "../../i18n";
 import { readableTextOn } from "../../lib/color";
 import { formatMoney, formatTime } from "../../lib/format";
 import { whatsappLink } from "../../lib/whatsapp";
+import { CopyButton } from "../../components/CopyButton";
 import { SignupCard } from "../account/SignupCard";
 import { ReviewCard } from "./ReviewCard";
 
@@ -37,8 +38,8 @@ function stepsFor(order: TrackedOrder, t: Dictionary): { status: TrackedOrder["s
 
 const FINAL = ["delivered", "cancelled"];
 
-// /pedido/:token — el seguimiento del pedido. Justo después de pedir, muestra primero
-// el botón para mandarlo por WhatsApp y, al que no tiene cuenta, guardar sus datos.
+// /pedido/:token — el seguimiento del pedido: primero cómo va, después (justo al pedir) el
+// botón para mandarlo por WhatsApp y el Pix; guardar los datos en una cuenta va al final.
 export function TrackingPage() {
   const t = useT();
   const { token = "" } = useParams();
@@ -85,20 +86,6 @@ export function TrackingPage() {
       </header>
 
       <main className="mx-auto max-w-xl space-y-4 px-4 py-6">
-        {whatsappUrl && (
-          <section className="space-y-3 rounded-2xl bg-surface p-4 ring-1 ring-line">
-            <p className="text-lg font-bold">{t.tracking.placed}</p>
-            <a href={whatsappUrl} target="_blank" rel="noreferrer" className={`${button} bg-(--brand) text-(--on-brand)`}>
-              <MessageCircle aria-hidden className="size-5" />
-              {t.tracking.sendWhatsapp}
-            </a>
-            <p className="text-sm text-ink-muted">{t.tracking.sendHint}</p>
-          </section>
-        )}
-        {whatsappUrl && <SignupCard token={token} />}
-
-        <ReviewCard token={token} review={query.data.review} canReview={query.data.canReview} />
-
         <section className="rounded-2xl bg-surface p-4 ring-1 ring-line">
           <h1 className="text-2xl font-bold tracking-tight">{t.tracking.title(order.number)}</h1>
           {order.eta && !cancelled && (
@@ -135,6 +122,32 @@ export function TrackingPage() {
             </ol>
           )}
         </section>
+
+        {whatsappUrl && (
+          <section className="space-y-3 rounded-2xl bg-surface p-4 ring-1 ring-line">
+            <p className="text-lg font-bold">{t.tracking.placed}</p>
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" className={`${button} bg-(--brand) text-(--on-brand)`}>
+              <MessageCircle aria-hidden className="size-5" />
+              {t.tracking.sendWhatsapp}
+            </a>
+            <p className="text-sm text-ink-muted">{t.tracking.sendHint}</p>
+          </section>
+        )}
+        {order.paymentMethod === "pix" && store.pixKey && !FINAL.includes(order.status) && (
+          <section className="space-y-3 rounded-2xl bg-surface p-4 ring-1 ring-line">
+            <h2 className="font-bold">{t.tracking.payWithPix}</h2>
+            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-paper px-4 py-3">
+              <p className="min-w-48 flex-1">
+                <span className="block text-sm text-ink-muted">{t.checkout.pixKey}</span>
+                <span className="block break-all font-bold">{store.pixKey}</span>
+              </p>
+              <CopyButton text={store.pixKey} label={t.checkout.copyPix} copiedLabel={t.checkout.pixCopied} />
+            </div>
+            <p className="text-sm text-ink-muted">{t.tracking.pixHint(formatMoney(order.totalCents))}</p>
+          </section>
+        )}
+
+        <ReviewCard token={token} review={query.data.review} canReview={query.data.canReview} />
 
         <section className="rounded-2xl bg-surface p-4 ring-1 ring-line">
           <h2 className="font-bold">{t.tracking.items}</h2>
@@ -174,7 +187,7 @@ export function TrackingPage() {
           <p className="mt-1 text-sm text-ink-muted">{t.tracking.payment(t.checkout.methods[order.paymentMethod])}</p>
         </section>
 
-        {!whatsappUrl && <SignupCard token={token} />}
+        <SignupCard token={token} />
         {!whatsappUrl && store.whatsapp && (
           <a href={whatsappLink(store.whatsapp)} target="_blank" rel="noreferrer" className={`${button} bg-surface ring-1 ring-line`}>
             <MessageCircle aria-hidden className="size-5" />

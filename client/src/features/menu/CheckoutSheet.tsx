@@ -2,6 +2,8 @@ import { useMutation } from "@tanstack/react-query";
 import { type FormEvent, type ReactNode, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
 import { type ApiError, api } from "../../api/client";
+import { CopyButton } from "../../components/CopyButton";
+import { paymentMethodsFor } from "../../lib/payments";
 import type { Coupon, CouponCheck, CustomerAddress, OrderReceipt, PaymentMethod, PublicOrderInput, PublicStore } from "../../api/types";
 import { Sheet } from "../../components/Sheet";
 import { errorText, useLanguage, useT } from "../../i18n";
@@ -134,6 +136,10 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
     setAddressChoice(first?._id ?? OTHER);
   }
   const [changeFor, setChangeFor] = useState("");
+  // Las formas de pago de este modo (entrega o retiro). Si la elegida no vale para el modo, no cuenta.
+  const methods = form.fulfillment ? paymentMethodsFor(store, form.fulfillment) : store.paymentMethods;
+  const payment = form.paymentMethod && methods.includes(form.paymentMethod) ? form.paymentMethod : undefined;
+  const askChange = payment === "cash" && store.paymentOptions.cash.askChange;
   const [notes, setNotes] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<Coupon | null>(null);
@@ -198,9 +204,9 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
     if (!form.name.trim()) found.name = t.checkout.required;
     if (!form.phone.trim()) found.phone = t.checkout.required;
     else if (form.phone.replace(/\D/g, "").length < 8) found.phone = t.checkout.invalidPhone;
-    if (!form.paymentMethod) found.payment = t.checkout.chooseOne;
+    if (!payment) found.payment = t.checkout.chooseOne;
     const change = parseMoney(changeFor);
-    if (form.paymentMethod === "cash" && change != null && change < totals.totalCents) found.changeFor = t.checkout.changeTooLow;
+    if (askChange && change != null && change < totals.totalCents) found.changeFor = t.checkout.changeTooLow;
     return found;
   }
 
@@ -227,8 +233,8 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
           ...(form.reference.trim() && { reference: form.reference.trim() }),
         },
       }),
-      paymentMethod: form.paymentMethod!,
-      ...(form.paymentMethod === "cash" && change != null && { changeForCents: change }),
+      paymentMethod: payment!,
+      ...(askChange && change != null && { changeForCents: change }),
       ...(notes.trim() && { notes: notes.trim() }),
       items: lines.map(({ line }) => ({
         productId: line.productId,
@@ -450,19 +456,29 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
         <Section title={t.checkout.payment}>
           <p className="-mt-2 text-sm text-ink-muted">{t.checkout.paymentHint}</p>
           <div role="radiogroup" aria-label={t.checkout.payment} className="grid gap-2 sm:grid-cols-3">
-            {store.paymentMethods.map((method: PaymentMethod, index) => (
+            {methods.map((method: PaymentMethod, index) => (
               <Choice
                 key={method}
                 id={index === 0 ? fieldId("payment") : undefined}
                 name="pagamento"
-                checked={form.paymentMethod === method}
+                checked={payment === method}
                 onChange={() => update("paymentMethod", method)}
                 title={t.checkout.methods[method]}
+                detail={store.paymentOptions[method].note || undefined}
               />
             ))}
           </div>
           {errors.payment && <p className="text-sm font-bold text-error">{errors.payment}</p>}
-          {form.paymentMethod === "cash" && (
+          {payment === "pix" && store.pixKey && (
+            <div className="flex flex-wrap items-center gap-3 rounded-xl bg-paper px-4 py-3">
+              <p className="min-w-48 flex-1">
+                <span className="block text-sm text-ink-muted">{t.checkout.pixKey}</span>
+                <span className="block break-all font-bold">{store.pixKey}</span>
+              </p>
+              <CopyButton text={store.pixKey} label={t.checkout.copyPix} copiedLabel={t.checkout.pixCopied} />
+            </div>
+          )}
+          {askChange && (
             <Field name="changeFor" label={t.checkout.changeFor} error={errors.changeFor} hint={t.checkout.changeHint}>
               <input
                 id={fieldId("changeFor")}

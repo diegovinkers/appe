@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { PAYMENT_FULFILLMENTS } from "../services/payments.service.js";
 
 export const PAYMENT_METHODS = ["cash", "pix", "card"];
 export const COMMERCE_STATUSES = ["active", "suspended"];
@@ -45,6 +46,18 @@ const deliveryZoneSchema = new mongoose.Schema({
   estimateMax: { type: Number, default: null },
   active: { type: Boolean, default: true },
 });
+
+// Opciones de una forma de pago: para qué vale (las dos, solo entrega o solo retiro) y una
+// nota corta que ve el cliente ("crédito e débito"). En dinero, si se pregunta por el troco.
+const paymentOption = (extra = {}) =>
+  new mongoose.Schema(
+    {
+      fulfillment: { type: String, enum: PAYMENT_FULFILLMENTS, default: "both" },
+      note: { type: String, trim: true, maxlength: 80, default: "" },
+      ...extra,
+    },
+    { _id: false }
+  );
 
 const commerceSchema = new mongoose.Schema(
   {
@@ -101,6 +114,11 @@ const commerceSchema = new mongoose.Schema(
     minOrderCents: cents,
     paymentMethods: { type: [{ type: String, enum: PAYMENT_METHODS }], default: ["cash", "card"] },
     pixKey: { type: String, trim: true, maxlength: 140, default: "" },
+    paymentOptions: {
+      cash: { type: paymentOption({ askChange: { type: Boolean, default: true } }), default: () => ({}) },
+      pix: { type: paymentOption(), default: () => ({}) },
+      card: { type: paymentOption(), default: () => ({}) },
+    },
 
     // Pedidos programados (se usan desde la fase de pedidos completos).
     scheduling: {

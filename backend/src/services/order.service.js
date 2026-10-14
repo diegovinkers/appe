@@ -5,6 +5,7 @@ import { badRequest, conflict } from "../lib/errors.js";
 import { isCategoryAvailable } from "./opening.service.js";
 import { couponDiscount } from "./coupon.service.js";
 import { effectivePrice, groupCost } from "./pricing.service.js";
+import { paymentMethodsFor } from "./payments.service.js";
 
 const byId = (docs) => new Map(docs.map((doc) => [String(doc._id), doc]));
 
@@ -44,6 +45,10 @@ export function priceOrder({
   }
   if (!store.paymentMethods.includes(input.paymentMethod)) {
     throw badRequest("PAYMENT_METHOD_NOT_AVAILABLE", "Forma de pagamento não aceita neste estabelecimento");
+  }
+  if (!paymentMethodsFor(store, input.fulfillment).includes(input.paymentMethod)) {
+    const label = input.fulfillment === "delivery" ? "entrega" : "retirada";
+    throw badRequest("PAYMENT_METHOD_NOT_AVAILABLE", `Essa forma de pagamento não é aceita na ${label}`);
   }
 
   const isDelivery = input.fulfillment === "delivery";

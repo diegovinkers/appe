@@ -235,6 +235,8 @@ export const getOrderTracking = async (req, res) => {
       logoUrl: store.logoUrl,
       primaryColor: store.primaryColor,
       secondaryColor: store.secondaryColor,
+      // Para pagar desde el seguimiento: solo si el pedido es con Pix.
+      pixKey: order.paymentMethod === "pix" ? store.pixKey : "",
     },
     order: {
       number: order.number,

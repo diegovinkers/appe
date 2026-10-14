@@ -12,8 +12,17 @@ import { ROLES } from "../models/user.model.js";
 import { CONVERSATION_CHANNELS, CONVERSATION_STATUSES } from "../models/conversation.model.js";
 import { MESSAGE_KINDS, MESSAGE_ROLES } from "../models/conversationMessage.model.js";
 import { ORDER_STATUSES } from "../services/orderStatus.js";
+import { PAYMENT_FULFILLMENTS } from "../services/payments.service.js";
 
 const id = z.string().regex(/^[a-f\d]{24}$/i);
+
+// Opciones de cada forma de pago del local.
+const paymentOption = { fulfillment: z.enum(PAYMENT_FULFILLMENTS), note: z.string() };
+const paymentOptions = z.strictObject({
+  cash: z.strictObject({ ...paymentOption, askChange: z.boolean() }),
+  pix: z.strictObject(paymentOption),
+  card: z.strictObject(paymentOption),
+});
 const date = z.iso.datetime();
 const cents = z.number().int().min(0);
 const timestamps = { createdAt: date, updatedAt: date };
@@ -93,6 +102,7 @@ export const store = z.strictObject({
   minOrderCents: cents,
   paymentMethods: z.array(z.enum(PAYMENT_METHODS)),
   pixKey: z.string(),
+  paymentOptions,
   scheduling,
   translations: z.strictObject({
     es: z.strictObject({ description: z.string(), about: z.string(), notice: z.string() }),
@@ -353,6 +363,7 @@ export const trackingResponse = z.strictObject({
     logoUrl: z.string(),
     primaryColor: z.string(),
     secondaryColor: z.string(),
+    pixKey: z.string(),
   }),
   order: z.strictObject({
     number: z.number().int(),
@@ -449,6 +460,7 @@ export const publicStoreResponse = z.strictObject({
     minOrderCents: cents,
     paymentMethods: z.array(z.enum(PAYMENT_METHODS)),
     pixKey: z.string(),
+    paymentOptions,
     scheduling,
     rating,
   }),

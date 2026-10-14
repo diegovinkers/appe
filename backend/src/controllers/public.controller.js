@@ -81,6 +81,15 @@ function publicStore(commerce, lang, now) {
     minOrderCents: commerce.minOrderCents,
     paymentMethods: commerce.paymentMethods,
     pixKey: commerce.pixKey,
+    paymentOptions: {
+      cash: {
+        fulfillment: commerce.paymentOptions?.cash?.fulfillment ?? "both",
+        note: commerce.paymentOptions?.cash?.note ?? "",
+        askChange: commerce.paymentOptions?.cash?.askChange ?? true,
+      },
+      pix: { fulfillment: commerce.paymentOptions?.pix?.fulfillment ?? "both", note: commerce.paymentOptions?.pix?.note ?? "" },
+      card: { fulfillment: commerce.paymentOptions?.card?.fulfillment ?? "both", note: commerce.paymentOptions?.card?.note ?? "" },
+    },
     scheduling: {
       enabled: commerce.scheduling.enabled,
       minLeadMinutes: commerce.scheduling.minLeadMinutes,

@@ -6,14 +6,28 @@ import { PageHeader } from "../../../components/PageHeader";
 import { Field, Switch, button, input } from "../../../components/ui";
 import { useDirtyForm } from "../../../hooks/useDirtyForm";
 import { errorText, useT } from "../../../i18n";
+import { paymentMethodsFor } from "../../../lib/payments";
+import { isValidPixKey } from "../../../lib/pix";
 import { usePanel } from "../PanelLayout";
 import { ownerStoreKey } from "../useOwnerStore";
 import { SettingsSection } from "./StorePage";
 
 const METHODS: PaymentMethod[] = ["cash", "pix", "card"];
-const fields = (store: OwnerStore) => ({ paymentMethods: [...store.paymentMethods], pixKey: store.pixKey });
+const FULFILLMENTS = ["both", "delivery", "pickup"] as const;
 
-// Cómo pagan los clientes: dinero, Pix (con su clave) y tarjeta.
+const fields = (store: OwnerStore) => ({
+  paymentMethods: [...store.paymentMethods],
+  pixKey: store.pixKey,
+  paymentOptions: {
+    cash: { ...store.paymentOptions.cash },
+    pix: { ...store.paymentOptions.pix },
+    card: { ...store.paymentOptions.card },
+  },
+});
+type Draft = ReturnType<typeof fields>;
+
+// Cómo pagan los clientes: qué formas acepta el local, para entrega, retiro o las dos, con una
+// nota para el cliente, la chave Pix y si se pregunta por el troco.
 export function PaymentsPage() {
   const t = useT();
   const c = t.paymentSettings;
@@ -25,7 +39,7 @@ export function PaymentsPage() {
   const dirty = JSON.stringify(draft) !== JSON.stringify(baseline);
   useDirtyForm(dirty);
 
-  const save = useMutation<OwnerStoreResponse, ApiError, typeof draft>({
+  const save = useMutation<OwnerStoreResponse, ApiError, Draft>({
     mutationFn: (body) => api("/owner/store", { method: "PATCH", body }),
     onSuccess: (response) => {
       cache.setQueryData(ownerStoreKey, response);
@@ -36,22 +50,31 @@ export function PaymentsPage() {
     },
   });
 
-  const change = (next: Partial<typeof draft>) => {
+  const change = (next: Partial<Draft>) => {
     setDraft((current) => ({ ...current, ...next }));
     setLocalError("");
     save.reset();
   };
+  const changeOption = <M extends PaymentMethod>(method: M, value: Partial<Draft["paymentOptions"][M]>) =>
+    change({ paymentOptions: { ...draft.paymentOptions, [method]: { ...draft.paymentOptions[method], ...value } } });
 
   function submit(event: FormEvent) {
     event.preventDefault();
     if (save.isPending) return;
+    const pixKey = draft.pixKey.trim();
     if (!draft.paymentMethods.length) return setLocalError(c.methodsRequired);
-    if (draft.paymentMethods.includes("pix") && !draft.pixKey.trim()) {
-      setLocalError(c.pixRequired);
-      document.getElementById("payments-pixKey")?.focus();
-      return;
+    if (draft.paymentMethods.includes("pix")) {
+      if (!pixKey) return setLocalError(c.pixRequired);
+      // Una chave nueva tiene que tener formato válido; la que ya estaba no se revisa.
+      if (pixKey !== baseline.pixKey && !isValidPixKey(pixKey)) {
+        document.getElementById("payments-pixKey")?.focus();
+        return setLocalError(c.pixInvalid);
+      }
     }
-    save.mutate({ ...draft, pixKey: draft.pixKey.trim() });
+    for (const mode of ["delivery", "pickup"] as const) {
+      if (store.fulfillment[mode] && !paymentMethodsFor(draft, mode).length) return setLocalError(c.noneFor(mode));
+    }
+    save.mutate({ ...draft, pixKey });
   }
 
   return (
@@ -59,27 +82,67 @@ export function PaymentsPage() {
       <PageHeader title={t.pages.payments.title} description={t.pages.payments.description} />
       <form onSubmit={submit} className="space-y-5">
         <fieldset disabled={save.isPending} className="space-y-5 disabled:opacity-70">
-          <SettingsSection title={c.methods}>
-            <p className="text-sm text-ink-muted">{c.methodsHint}</p>
-            {METHODS.map((method) => (
-              <Switch
-                key={method}
-                label={c[method]}
-                checked={draft.paymentMethods.includes(method)}
-                onChange={(on) =>
-                  change({ paymentMethods: on ? [...draft.paymentMethods, method] : draft.paymentMethods.filter((value) => value !== method) })
-                }
-              />
-            ))}
-            {draft.paymentMethods.includes("pix") && (
-              <Field id="payments-pixKey" label={c.pixKey} hint={c.pixHint}>
-                <input id="payments-pixKey" className={input} value={draft.pixKey} maxLength={140} onChange={(event) => change({ pixKey: event.target.value })} />
-              </Field>
-            )}
-          </SettingsSection>
+          <p className="text-sm text-ink-muted">{c.methodsHint}</p>
+          {METHODS.map((method) => {
+            const enabled = draft.paymentMethods.includes(method);
+            const option = draft.paymentOptions[method];
+            return (
+              <SettingsSection key={method} title={c[method]}>
+                <Switch
+                  label={c[method]}
+                  showLabel={false}
+                  checked={enabled}
+                  onChange={(on) =>
+                    change({ paymentMethods: on ? [...draft.paymentMethods, method] : draft.paymentMethods.filter((value) => value !== method) })
+                  }
+                />
+                {enabled && (
+                  <>
+                    {store.fulfillment.delivery && store.fulfillment.pickup && (
+                      <div role="radiogroup" aria-label={`${c.validFor}: ${c[method]}`}>
+                        <p className="mb-1.5 font-bold">{c.validFor}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {FULFILLMENTS.map((value) => (
+                            <button
+                              key={value}
+                              type="button"
+                              role="radio"
+                              aria-checked={option.fulfillment === value}
+                              onClick={() => changeOption(method, { fulfillment: value })}
+                              className={`h-11 rounded-full px-4 text-sm ${option.fulfillment === value ? "bg-action font-bold text-white" : "bg-surface ring-1 ring-line hover:bg-paper"}`}
+                            >
+                              {c.fulfillments[value]}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {method === "pix" && (
+                      <Field id="payments-pixKey" label={c.pixKey} hint={c.pixHint}>
+                        <input id="payments-pixKey" className={input} value={draft.pixKey} maxLength={140} onChange={(event) => change({ pixKey: event.target.value })} />
+                      </Field>
+                    )}
+                    {method === "cash" && (
+                      <Switch label={c.askChange} checked={draft.paymentOptions.cash.askChange} onChange={(askChange) => changeOption("cash", { askChange })} />
+                    )}
+                    <Field id={`payments-note-${method}`} label={c.note}>
+                      <input
+                        id={`payments-note-${method}`}
+                        className={input}
+                        value={option.note}
+                        maxLength={80}
+                        placeholder={c.notePlaceholders[method]}
+                        onChange={(event) => changeOption(method, { note: event.target.value })}
+                      />
+                    </Field>
+                  </>
+                )}
+              </SettingsSection>
+            );
+          })}
         </fieldset>
         {(localError || save.isError) && (
-          <p role="alert" className="text-error">
+          <p role="alert" className="font-bold text-error">
             {localError || errorText(save.error, t)}
           </p>
         )}

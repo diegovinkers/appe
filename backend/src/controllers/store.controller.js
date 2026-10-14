@@ -3,6 +3,8 @@ import { audit, diffFields } from "../lib/audit.js";
 import { checkImageUrl } from "../lib/cloudinary.js";
 import { todayIn } from "../lib/dates.js";
 import { badRequest } from "../lib/errors.js";
+import { isValidPixKey } from "../lib/pix.js";
+import { paymentMethodsFor } from "../services/payments.service.js";
 import { storeUrl } from "../lib/links.js";
 import { getOpeningStatus } from "../services/opening.service.js";
 
@@ -27,6 +29,7 @@ const AUDITED_FIELDS = [
   "minOrderCents",
   "paymentMethods",
   "pixKey",
+  "paymentOptions",
   "scheduling",
   "translations",
 ];
@@ -55,6 +58,12 @@ function checkConsistency(store) {
   if (store.paymentMethods.includes("pix") && !store.pixKey) {
     throw badRequest("PIX_KEY_REQUIRED", "Informe a chave Pix para aceitar Pix");
   }
+  for (const mode of ["delivery", "pickup"]) {
+    if (store.fulfillment[mode] && !paymentMethodsFor(store, mode).length) {
+      const label = mode === "delivery" ? "a entrega" : "a retirada";
+      throw badRequest("NO_PAYMENT_FOR_FULFILLMENT", `Deixe pelo menos uma forma de pagamento para ${label}`);
+    }
+  }
   const { deliveryMin, deliveryMax, pickupMin, pickupMax } = store.estimates;
   if (deliveryMin > deliveryMax || pickupMin > pickupMax) {
     throw badRequest("INVALID_ESTIMATES", "O tempo mínimo não pode ser maior que o máximo");
@@ -73,16 +82,28 @@ export const getStore = (req, res) => {
 };
 
 export const updateStore = async (req, res) => {
-  const { fulfillment, estimates, scheduling, translations, ...changes } = req.valid.body;
+  const { fulfillment, estimates, scheduling, translations, paymentOptions, ...changes } = req.valid.body;
   const store = req.commerce;
   const before = store.toObject();
   checkImageUrl(changes.logoUrl, store._id, "logoUrl");
   checkImageUrl(changes.coverUrl, store._id, "coverUrl");
 
   if (changes.deliveryZones) checkZones(store, changes.deliveryZones);
+  // Solo se valida una chave nueva: las que ya estaban guardadas siguen andando.
+  if (changes.pixKey && changes.pixKey !== store.pixKey && !isValidPixKey(changes.pixKey)) {
+    throw badRequest("INVALID_PIX_KEY", "Chave Pix inválida. Use CPF, CNPJ, e-mail, celular ou chave aleatória.");
+  }
   store.set(changes);
   // Los objetos anidados se combinan con lo que ya había, campo por campo.
-  const nested = { fulfillment, estimates, scheduling, "translations.es": translations?.es };
+  const nested = {
+    fulfillment,
+    estimates,
+    scheduling,
+    "translations.es": translations?.es,
+    "paymentOptions.cash": paymentOptions?.cash,
+    "paymentOptions.pix": paymentOptions?.pix,
+    "paymentOptions.card": paymentOptions?.card,
+  };
   for (const [group, values] of Object.entries(nested)) {
     for (const [field, value] of Object.entries(values ?? {})) store.set(`${group}.${field}`, value);
   }

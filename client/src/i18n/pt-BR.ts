@@ -284,6 +284,13 @@ export const ptBR = {
     discard: "Descartar alterações",
     discardConfirm: "Descartar as alterações não salvas?",
     unsaved: "Há alterações não salvas.",
+    validFor: "Vale para",
+    fulfillments: { both: "Entrega e retirada", delivery: "Só entrega", pickup: "Só retirada" },
+    note: "Observação para o cliente (opcional)",
+    notePlaceholders: { cash: "Ex.: levamos troco até R$ 100", pix: "Ex.: mande o comprovante pelo WhatsApp", card: "Ex.: crédito e débito" },
+    askChange: "Perguntar se precisa de troco",
+    pixInvalid: "Chave Pix inválida. Use CPF, CNPJ, e-mail, celular ou chave aleatória.",
+    noneFor: (mode: "delivery" | "pickup") => `Deixe pelo menos uma forma de pagamento para ${mode === "delivery" ? "a entrega" : "a retirada"}.`,
   },
 
   manualOrder: {
@@ -709,6 +716,9 @@ export const ptBR = {
     methods: { cash: "Dinheiro", pix: "Pix", card: "Cartão" },
     changeFor: "Troco para quanto? (opcional)",
     changeHint: "Deixe em branco se não precisar de troco.",
+    pixKey: "Chave Pix da loja",
+    copyPix: "Copiar chave",
+    pixCopied: "Chave copiada",
     changeTooLow: "O troco precisa ser para um valor maior que o total.",
     notes: "Observações do pedido (opcional)",
     coupon: "Cupom de desconto (opcional)",
@@ -731,6 +741,8 @@ export const ptBR = {
   },
 
   tracking: {
+    payWithPix: "Pague com Pix",
+    pixHint: (total: string) => `Valor: ${total}. Quem confirma o pagamento é a loja.`,
     title: (number: number) => `Pedido #${number}`,
     placed: "Pedido registrado. Aguarde a loja aceitar.",
     sendWhatsapp: "Enviar pelo WhatsApp",
@@ -771,6 +783,7 @@ export const ptBR = {
     UPLOAD_FAILED: "Não foi possível enviar a foto. Tente de novo.",
     EMAIL_TAKEN: "Esse e-mail já está em uso.",
     INVALID_PASSWORD: "A senha atual está incorreta.",
+    INVALID_PIX_KEY: "Chave Pix inválida. Use CPF, CNPJ, e-mail, celular ou chave aleatória.",
   } as Record<string, string>,
 };
 

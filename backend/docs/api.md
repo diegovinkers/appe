@@ -100,6 +100,7 @@ El local y el menú entero en una sola respuesta. `404 STORE_NOT_FOUND` si no ex
     "deliveryZones": [ { "_id": "…", "name": "Centro", "feeCents": 400, "minOrderCents": null, "estimateMin": null, "estimateMax": null } ],
     "freeDeliveryFromCents": 8000, "minOrderCents": 2000,
     "paymentMethods": ["cash", "pix", "card"], "pixKey": "+5555999998888",
+    "paymentOptions": { "cash": { "fulfillment": "both", "note": "", "askChange": true }, "pix": { "fulfillment": "both", "note": "" }, "card": { "fulfillment": "pickup", "note": "Crédito e débito" } },
     "scheduling": { "enabled": false, "minLeadMinutes": 30, "maxDaysAhead": 2, "slotMinutes": 30 }
   },
   "featuredProductIds": ["<id de X-Bacon>"],
@@ -159,7 +160,7 @@ Franjas disponibles para un pedido programado: `{ "enabled": true, "slotMinutes"
 Body: `{ "code": "demo10", "phone"?: "55 99999-1234" }`. Si el cupón se puede usar, devuelve `{ "coupon": { "code", "type", "value", "minOrderCents" } }`. Con el teléfono, también chequea si ese cliente ya lo usó. Sirve para mostrar el descuento antes de pedir; el pedido lo vuelve a validar con el total real. Rate limit: 30 cada 10 min por IP. Errores: los de cupón de la tabla de abajo.
 
 ### `GET /api/public/orders/:token`
-Seguimiento del pedido, para el link que recibe el cliente (`trackingUrl`). Devuelve `{ "store": { "name", "slug", "whatsapp", "logoUrl", "primaryColor", "secondaryColor" }, "order": {...} }`. El `order` trae:
+Seguimiento del pedido, para el link que recibe el cliente (`trackingUrl`). Devuelve `{ "store": { "name", "slug", "whatsapp", "logoUrl", "primaryColor", "secondaryColor", "pixKey" }, "order": {...} }` (`pixKey` solo si el pedido se paga con Pix; si no, vacío). El `order` trae:
 - `number`, `status` y `statusHistory: [{ status, at }]`;
 - `fulfillment`, `neighborhood` (solo el barrio) y `customerName` (solo el primer nombre);
 - `scheduledFor`, `estimatedMinutes` y `eta: { from, to }`: la ventana estimada de entrega o retiro, `null` si ya terminó;
@@ -278,13 +279,13 @@ Las cuatro rutas que cambian el local devuelven lo mismo que `GET`: `{ "store", 
 - `PATCH /api/owner/store` (`store:write`). Cualquier subconjunto de:
   - **Presentación:** `name`, `description`, `about`, `notice`, `logoUrl` y `coverUrl` (URL http/https, o `""` para borrar), `instagram` (con o sin @), `primaryColor` y `secondaryColor` (`#RRGGBB`), `whatsapp`, `address`.
   - **Entrega:** `fulfillment` (`{ "delivery"?, "pickup"? }`), `estimates` (`{ "deliveryMin"?, "deliveryMax"?, "pickupMin"?, "pickupMax"? }`, en minutos), `deliveryMode` (`"fixed"` o `"zones"`), `deliveryFeeCents`, `deliveryZones`, `freeDeliveryFromCents` (`null` = nunca), `minOrderCents`.
-  - **Pagos:** `paymentMethods`, `pixKey`.
+  - **Pagos:** `paymentMethods`, `pixKey` y `paymentOptions: { cash, pix, card }`: cada una con `fulfillment` (`both`, `delivery` o `pickup`: para qué vale) y `note` (hasta 80 caracteres, la ve el cliente); `cash` también `askChange` (si se pregunta por el troco). Se combinan campo por campo; un local sin opciones guardadas acepta todo para entrega y retiro. Un pedido con una forma de pago que no vale para su modo da `400 PAYMENT_METHOD_NOT_AVAILABLE`.
   - **Programación:** `scheduling` (`{ "enabled"?, "minLeadMinutes"?, "maxDaysAhead"?, "slotMinutes"?: 15 | 30 | 60 }`).
   - **Español:** `translations` (`{ "es": { "description"?, "about"?, "notice"? } }`).
   - Los objetos (`fulfillment`, `estimates`, `scheduling`) se combinan campo por campo con lo actual.
   - `deliveryZones` reemplaza la lista entera: `[{ "_id"?, "name", "feeCents", "minOrderCents"?, "estimateMin"?, "estimateMax"?, "active"? }]`. Mandá el `_id` de los barrios que se mantienen.
   - El `slug` y el `status` los cambia solo el superadmin; los horarios y la apertura tienen sus rutas (acá se ignoran).
-  - Errores (400): `NO_FULFILLMENT` si quedan las dos formas de entrega apagadas; `PIX_KEY_REQUIRED` si acepta Pix sin chave; `INVALID_ESTIMATES` si un mínimo supera al máximo; `NO_DELIVERY_ZONES` si entrega por barrio sin ningún barrio activo; `DUPLICATE_ZONE` si hay barrios con el mismo nombre; `INVALID_ZONE` si un `_id` no es de un barrio del local.
+  - Errores (400): `NO_FULFILLMENT` si quedan las dos formas de entrega apagadas; `PIX_KEY_REQUIRED` si acepta Pix sin chave; `INVALID_PIX_KEY` si la chave nueva no es un CPF, CNPJ, e-mail, celular o chave aleatória (la que ya estaba guardada no se revalida); `NO_PAYMENT_FOR_FULFILLMENT` si la entrega o la retirada activa queda sin ninguna forma de pago; `INVALID_ESTIMATES` si un mínimo supera al máximo; `NO_DELIVERY_ZONES` si entrega por barrio sin ningún barrio activo; `DUPLICATE_ZONE` si hay barrios con el mismo nombre; `INVALID_ZONE` si un `_id` no es de un barrio del local.
 - `PUT /api/owner/store/hours` (`store:write`). Reemplaza los horarios. Las excepciones de días que ya pasaron se descartan.
   ```json
   {

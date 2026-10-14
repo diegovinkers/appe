@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { useT } from "../../i18n";
@@ -24,9 +25,14 @@ export function SignupCard({ token }: { token: string }) {
   if (customer.isPending || customer.data) return null;
 
   return (
-    <section className="rounded-2xl bg-surface p-4 ring-1 ring-line">
-      <h2 className="text-lg font-bold">{t.account.saveTitle}</h2>
-      <p className="mt-1 text-ink-muted">{t.account.saveText}</p>
+    <details className="group rounded-2xl bg-surface p-4 ring-1 ring-line">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0 flex-1">
+          <span className="block text-lg font-bold">{t.account.saveTitle}</span>
+          <span className="mt-1 block text-ink-muted">{t.account.saveText}</span>
+        </span>
+        <ChevronDown aria-hidden className="size-5 shrink-0 transition-transform group-open:rotate-180" />
+      </summary>
       <div className="mt-4">
         <SignupForm idPrefix="salvar" onDone={() => setCreated(true)} />
       </div>
@@ -36,6 +42,6 @@ export function SignupCard({ token }: { token: string }) {
       >
         {t.account.haveAccount}
       </Link>
-    </section>
+    </details>
   );
 }

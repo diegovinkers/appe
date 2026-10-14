@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PAYMENT_FULFILLMENTS } from "../services/payments.service.js";
 import { DELIVERY_MODES, PAYMENT_METHODS, SLOT_MINUTES } from "../models/commerce.model.js";
 import { isValidDay } from "../lib/dates.js";
 import { WEEKDAYS } from "../services/opening.service.js";
@@ -45,6 +46,8 @@ const zoneSchema = z
 
 // Datos del local que puede cambiar el dueño. El slug y el estado los maneja el
 // superadmin; los horarios y la apertura manual tienen sus propios endpoints.
+const paymentFulfillment = z.enum(PAYMENT_FULFILLMENTS);
+
 export const updateStoreSchema = z
   .object({
     name: requiredText(80),
@@ -67,6 +70,13 @@ export const updateStoreSchema = z
     minOrderCents: cents,
     paymentMethods: z.array(z.enum(PAYMENT_METHODS)).min(1).refine(unique, "Forma de pagamento repetida"),
     pixKey: optionalText(140),
+    paymentOptions: z
+      .object({
+        cash: z.object({ fulfillment: paymentFulfillment, note: optionalText(80), askChange: z.boolean() }).partial(),
+        pix: z.object({ fulfillment: paymentFulfillment, note: optionalText(80) }).partial(),
+        card: z.object({ fulfillment: paymentFulfillment, note: optionalText(80) }).partial(),
+      })
+      .partial(),
     scheduling: z
       .object({
         enabled: z.boolean(),

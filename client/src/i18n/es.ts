@@ -285,6 +285,13 @@ export const es: Dictionary = {
     discard: "Descartar cambios",
     discardConfirm: "¿Descartar los cambios sin guardar?",
     unsaved: "Hay cambios sin guardar.",
+    validFor: "Vale para",
+    fulfillments: { both: "Envío y retiro", delivery: "Solo envío", pickup: "Solo retiro" },
+    note: "Nota para el cliente (opcional)",
+    notePlaceholders: { cash: "Ej.: llevamos cambio hasta R$ 100", pix: "Ej.: mandá el comprobante por WhatsApp", card: "Ej.: crédito y débito" },
+    askChange: "Preguntar si necesita cambio",
+    pixInvalid: "Clave Pix inválida. Usá CPF, CNPJ, e-mail, celular o clave aleatoria.",
+    noneFor: (mode: "delivery" | "pickup") => `Dejá al menos una forma de pago para ${mode === "delivery" ? "el envío" : "el retiro"}.`,
   },
 
   manualOrder: {
@@ -709,6 +716,9 @@ export const es: Dictionary = {
     methods: { cash: "Efectivo", pix: "Pix", card: "Tarjeta" },
     changeFor: "¿Con cuánto pagas? (opcional)",
     changeHint: "Déjalo vacío si no necesitas cambio.",
+    pixKey: "Clave Pix del local",
+    copyPix: "Copiar clave",
+    pixCopied: "Clave copiada",
     changeTooLow: "El monto tiene que ser mayor que el total.",
     notes: "Aclaraciones del pedido (opcional)",
     coupon: "Cupón de descuento (opcional)",
@@ -731,6 +741,8 @@ export const es: Dictionary = {
   },
 
   tracking: {
+    payWithPix: "Pagá con Pix",
+    pixHint: (total: string) => `Importe: ${total}. El local es quien confirma el pago.`,
     title: (number: number) => `Pedido #${number}`,
     placed: "Pedido registrado. Esperá que el comercio lo acepte.",
     sendWhatsapp: "Enviar por WhatsApp",
@@ -776,6 +788,7 @@ export const es: Dictionary = {
     FORBIDDEN: "No tienes permiso para hacer esto.",
     EMAIL_TAKEN: "Ese e-mail ya está en uso.",
     INVALID_PASSWORD: "La contraseña actual no es correcta.",
+    INVALID_PIX_KEY: "Clave Pix inválida. Usá CPF, CNPJ, e-mail, celular o clave aleatoria.",
     COMMERCE_SUSPENDED: "Este local está suspendido. Habla con soporte.",
     NO_COMMERCE: "Tu cuenta no tiene un local.",
     ASSISTANT_UNAVAILABLE: "El asistente no está configurado en este servidor.",

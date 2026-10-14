@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { validateHours, type StoreHours } from "./hoursForm";
 import { deliveryCents, validateDelivery, type DeliveryDraft } from "./delivery";
+import type { PaymentMethod } from "../../../api/types";
+import { paymentMethodsFor } from "../../../lib/payments";
+import { isValidPixKey } from "../../../lib/pix";
 
 const hours = (): StoreHours => ({ weekly: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] }, exceptions: [] });
 const delivery = (): DeliveryDraft => ({ delivery: true, pickup: true, mode: "fixed", fee: "5,50", minimum: "0", freeEnabled: false, freeFrom: "", deliveryMin: "30", deliveryMax: "60", pickupMin: "10", pickupMax: "20", zones: [] });
@@ -36,5 +39,20 @@ describe("configuración de entrega", () => {
     expect(validateDelivery(d).errors["zone-a-estimateMax"]).toBe("range");
     d.zones[0].estimateMin = "";
     expect(validateDelivery(d).body?.deliveryZones?.[0]).toMatchObject({ _id: "abc", minOrderCents: null });
+  });
+});
+
+describe("pagos: chave Pix y formas por entrega o retiro (mismos casos que el backend)", () => {
+  it("valida la chave Pix", () => {
+    for (const key of ["529.982.247-25", "11.222.333/0001-81", "loja@exemplo.com.br", "+55 55 99999-1234", "123e4567-e89b-12d3-a456-426614174000"]) {
+      expect(isValidPixKey(key), key).toBe(true);
+    }
+    for (const key of ["", "x", "529.982.247-26", "12345", "loja@", "minha chave"]) expect(isValidPixKey(key), key).toBe(false);
+  });
+
+  it("filtra las formas de pago por modo", () => {
+    const store = { paymentMethods: ["cash", "pix", "card"] as PaymentMethod[], paymentOptions: { card: { fulfillment: "pickup" as const } } };
+    expect(paymentMethodsFor(store, "delivery")).toEqual(["cash", "pix"]);
+    expect(paymentMethodsFor(store, "pickup")).toEqual(["cash", "pix", "card"]);
   });
 });
