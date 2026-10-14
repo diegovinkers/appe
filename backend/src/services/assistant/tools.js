@@ -4,6 +4,7 @@
 //
 // Cada herramienta devuelve un objeto que vuelve a la IA: { ok: true, ... } o
 // { ok: false, erros: [...] } con el problema explicado para contárselo al cliente.
+import ConversationMessage from "../../models/conversationMessage.model.js";
 import Order from "../../models/order.model.js";
 import { AppError } from "../../lib/errors.js";
 import { trackingUrl } from "../../lib/links.js";
@@ -215,6 +216,18 @@ async function cotarPedido(args, { store, conversation, menu }) {
   };
 }
 
+// Cuánto vale una cotización para crear el pedido.
+const DRAFT_TTL_MS = 30 * 60 * 1000;
+
+// Algún mensaje del asistente desde la cotización muestra su total ("R$ 1.234,56" o "1234,56").
+async function customerSawTotal(conversation, draft) {
+  const amount = formatBRL(draft.totalCents).replace(/[^\d,]/g, "");
+  const shown = await ConversationMessage.find({ conversation: conversation._id, role: "assistant", createdAt: { $gte: draft.quotedAt } })
+    .select("text")
+    .lean();
+  return shown.some((message) => String(message.text ?? "").replace(/\./g, "").includes(amount));
+}
+
 async function criarPedido(args, { store, conversation }) {
   const draft = conversation.draft;
   if (!draft) return failure("Não há pedido cotado. Use cotar_pedido primeiro.");
@@ -224,6 +237,16 @@ async function criarPedido(args, { store, conversation }) {
   // El cliente tuvo que ver el resumen: la cotización es anterior a su último mensaje.
   if (!(conversation.lastCustomerMessageAt > draft.quotedAt)) {
     return failure("O cliente ainda não viu este resumo. Mostre o resumo e pergunte se confirma; crie o pedido só depois da resposta dele.");
+  }
+  // Una cotización vieja no es lo que el cliente está confirmando ahora.
+  if (Date.now() - draft.quotedAt.getTime() > DRAFT_TTL_MS) {
+    conversation.draft = null;
+    await conversation.save();
+    return failure("Esse resumo é antigo. Cote de novo com cotar_pedido, mostre o resumo e peça confirmação.");
+  }
+  // Y tuvo que ver el total de esta cotización (no un resumen escrito sin cotizar).
+  if (!(await customerSawTotal(conversation, draft))) {
+    return failure(`O cliente não viu o total deste pedido (${formatBRL(draft.totalCents)}). Mostre o resumo que cotar_pedido devolveu e peça confirmação.`);
   }
   const input = { ...draft.input, clientOrderId: `assistente-${conversation._id}-${draft.version}` };
 

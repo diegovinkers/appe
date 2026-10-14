@@ -352,7 +352,7 @@ describe("WhatsApp desde el panel", () => {
       nome: "Maria",
       idioma: "pt-BR",
     };
-    fakeAi([use("cotar_pedido", quote), say("Resumo... Confirma?")]);
+    fakeAi([use("cotar_pedido", quote), say("Resumo... Total R$ 25,00. Confirma?")]);
     await webhook(incoming({ body: "um x-burger ao ponto, retiro, pix" }));
     await flushReplies();
     fakeAi([use("criar_pedido", { versao: 1 }), say("Pedido #1 confirmado!")]);

@@ -114,9 +114,36 @@ describe("asistente: tomar un pedido", () => {
     expect(await Order.countDocuments({ commerce: commerce._id })).toBe(0);
   });
 
+  it("no crea un pedido con un resumen que el cliente no vio (escrito sin cotizar)", async () => {
+    const { commerce, send } = await setup();
+    fakeAi([use("cotar_pedido", pickupQuote), say("Anotado! Quer confirmar?")]);
+    const first = await send({ text: "um x-burger ao ponto e uma coca, pix, retiro", realOrders: true });
+    fakeAi([use("criar_pedido", { versao: 1 }), say("Vou revisar o resumo.")]);
+    const second = await send({ conversationId: first.body.conversation._id, text: "sim", realOrders: true });
+    const create = second.body.messages[1].toolCalls[0];
+    expect(create.output.ok).toBe(false);
+    expect(create.output.erros[0]).toContain("não viu o total");
+    expect(await Order.countDocuments({ commerce: commerce._id })).toBe(0);
+  });
+
+  it("una cotización vieja no se crea: hay que cotizar de nuevo", async () => {
+    const { commerce, send } = await setup();
+    fakeAi([use("cotar_pedido", pickupQuote), say("Total R$ 31,00. Confirma?")]);
+    const first = await send({ text: "um x-burger ao ponto e uma coca, pix, retiro", realOrders: true });
+    const id = first.body.conversation._id;
+    const old = new Date(Date.now() - 31 * 60 * 1000);
+    await Conversation.updateOne({ _id: id }, { $set: { "draft.quotedAt": old } });
+    await ConversationMessage.updateMany({ conversation: id }, { $set: { createdAt: old } });
+    fakeAi([use("criar_pedido", { versao: 1 }), say("Vou cotar de novo.")]);
+    const second = await send({ conversationId: id, text: "confirmo", realOrders: true });
+    expect(second.body.messages[1].toolCalls[0].output.erros[0]).toContain("antigo");
+    expect(await Order.countDocuments({ commerce: commerce._id })).toBe(0);
+    expect((await Conversation.findById(id).lean()).draft).toBeNull();
+  });
+
   it("en modo prueba cotiza pero no guarda el pedido", async () => {
     const { commerce, send } = await setup();
-    fakeAi([use("cotar_pedido", pickupQuote), say("Confirma?")]);
+    fakeAi([use("cotar_pedido", pickupQuote), say("Total R$ 31,00. Confirma?")]);
     const first = await send({ text: "um x-burger e uma coca" });
     expect(first.body.conversation.testMode).toBe(true);
     fakeAi([use("criar_pedido", { versao: 1 }), say("Pedido confirmado!")]);
@@ -257,7 +284,7 @@ describe("asistente: panel", () => {
 
   it("configura el asistente y muestra el gasto del mes", async () => {
     const { agent, send } = await setup();
-    fakeAi([use("cotar_pedido", pickupQuote), say("Confirma?")]);
+    fakeAi([use("cotar_pedido", pickupQuote), say("Total R$ 31,00. Confirma?")]);
     const first = await send({ text: "x-burger e coca", realOrders: true });
     fakeAi([use("criar_pedido", { versao: 1 }), say("Feito!")]);
     await send({ conversationId: first.body.conversation._id, text: "sim", realOrders: true });
