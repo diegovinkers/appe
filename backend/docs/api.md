@@ -337,6 +337,13 @@ Las cuatro rutas que cambian el local devuelven lo mismo que `GET`: `{ "store", 
   - Límites: `minSelect` ≤ `maxSelect` ≤ unidades posibles (la suma de los `maxQuantity`).
 - `PATCH /api/owner/option-groups/:id` → `{ "optionGroup" }`. `options` reemplaza la lista entera: mandá el `_id` de las opciones que se mantienen (conservan su id); las que no lo traen se crean.
 - `PATCH /api/owner/option-groups/:id/options/:optionId` → `{ "optionGroup" }`. Body: `{ "available": false }`. Marca la opción agotada en todos los productos.
+
+### Disponibilidade (agotados)
+Para atender: dueño y empleado (`menu:read` para ver, `menu:availability` para cambiar).
+- `GET /api/owner/availability` → `{ "products": [...], "options": [...] }`. Productos en el orden del menú: `_id`, `name`, `category` (nombre), `available` y `soldOut` (stock controlado en 0). Opciones juntadas por nombre sin mayúsculas ni acentos ("Queijo" en tres grupos es una sola): `key`, `name`, `available` (false si está agotada en algún grupo), `unavailable` (en cuántos) y `groups: [{ groupId, group, optionId, available }]`.
+- `PATCH /api/owner/availability/options` → la misma vista. Body: `{ "name": "queijo", "available": false }`. La cambia en todos los grupos del local que la tienen, en una transacción. `404` si ninguna opción del local se llama así.
+- `POST /api/owner/availability/restore` → la misma vista. Vuelve a ofrecer todos los productos y opciones agotados a mano; el stock controlado no se toca.
+- Los productos se agotan uno por uno con `PATCH /api/owner/products/:id/availability`.
 - `DELETE /api/owner/option-groups/:id` → `204`. Lo saca de los productos que lo usaban.
 
 ### Planilla del menú (CSV)

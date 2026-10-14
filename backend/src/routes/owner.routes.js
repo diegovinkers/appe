@@ -8,6 +8,7 @@ import {
   updateCategory,
 } from "../controllers/category.controller.js";
 import { exportMenu, importMenu } from "../controllers/menu.controller.js";
+import { getAvailability, restoreAvailability, setOptionAvailabilityByName } from "../controllers/availability.controller.js";
 import { createUploadSignature } from "../controllers/upload.controller.js";
 import {
   createProduct,
@@ -48,6 +49,7 @@ import {
   createOptionGroupSchema,
   createProductSchema,
   importMenuSchema,
+  optionAvailabilityByNameSchema,
   listProductsQuery,
   optionParams,
   reorderProductsSchema,
@@ -147,6 +149,11 @@ router.patch(
   validate({ params: optionParams, body: availabilitySchema }),
   setOptionAvailability
 );
+
+// Disponibilidade: agotar productos e ingredientes en un solo lugar (también el empleado).
+router.get("/availability", can("menu:read"), getAvailability);
+router.patch("/availability/options", can("menu:availability"), validate({ body: optionAvailabilityByNameSchema }), setOptionAvailabilityByName);
+router.post("/availability/restore", can("menu:availability"), restoreAvailability);
 
 router.get("/menu/export", can("menu:read"), exportMenu);
 router.post("/menu/import", can("menu:write"), validate({ body: importMenuSchema }), importMenu);

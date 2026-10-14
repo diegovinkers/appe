@@ -157,6 +157,9 @@ describe("contrato de las respuestas", () => {
       "/api/owner/option-groups/:id/options/:optionId"
     );
     check(await owner.delete(`/api/owner/option-groups/${spareGroup._id}`), "delete", "/api/owner/option-groups/:id");
+    check(await owner.get("/api/owner/availability"), "get", "/api/owner/availability");
+    check(await owner.patch("/api/owner/availability/options").send({ name: "bacon", available: false }), "patch", "/api/owner/availability/options");
+    check(await owner.post("/api/owner/availability/restore"), "post", "/api/owner/availability/restore");
 
     const product = check(
       await owner.post("/api/owner/products").send({ category: category._id, name: "X-Burger", priceCents: 2500, optionGroups: [group._id] }),

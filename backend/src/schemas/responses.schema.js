@@ -526,6 +526,22 @@ export const auditEntry = z.strictObject({
 });
 
 // Envoltorios: los recursos siempre vienen dentro de un objeto.
+// Disponibilidade: productos y opciones (juntadas por nombre) con lo que está en falta.
+export const availabilityResponse = z.strictObject({
+  products: z.array(
+    z.strictObject({ _id: id, name: z.string(), category: z.string(), available: z.boolean(), soldOut: z.boolean() })
+  ),
+  options: z.array(
+    z.strictObject({
+      key: z.string(),
+      name: z.string(),
+      available: z.boolean(),
+      unavailable: z.number().int().min(0),
+      groups: z.array(z.strictObject({ groupId: id, group: z.string(), optionId: id, available: z.boolean() })),
+    })
+  ),
+});
+
 export const wrap = (key, schema) => z.strictObject({ [key]: schema });
 export const wrapList = (key, schema) => z.strictObject({ [key]: z.array(schema) });
 

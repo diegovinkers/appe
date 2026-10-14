@@ -4,6 +4,7 @@ import {
   ChartColumn,
   CirclePlus,
   ClipboardList,
+  CircleSlash,
   Clock,
   CreditCard,
   FileSpreadsheet,
@@ -37,7 +38,9 @@ const NAV_GROUPS: NavGroupDef[] = [
   {
     items: [
       { to: "/painel/pedidos", label: "orders", icon: ClipboardList, permission: "orders:read" },
-      { to: "/painel/cardapio", label: "menuGroup", icon: UtensilsCrossed, permission: "menu:read" },
+      { to: "/painel/disponibilidade", label: "availability", icon: CircleSlash, permission: "menu:availability" },
+      // Editar el cardápio es del dueño; el empleado agota en Disponibilidade.
+      { to: "/painel/cardapio", label: "menuGroup", icon: UtensilsCrossed, permission: "menu:write" },
       { to: "/painel/assistente", label: "assistant", icon: Bot, permission: "orders:read" },
     ],
   },
@@ -77,7 +80,7 @@ const SETTINGS: (NavItemDef & { key: SettingsKey })[] = [
 const BOTTOM_BAR: NavItemDef[] = [
   { to: "/painel/pedidos", label: "orders", icon: ClipboardList, permission: "orders:read" },
   { to: "/painel/pedidos/novo", label: "newOrder", icon: CirclePlus, permission: "orders:manual" },
-  { to: "/painel/cardapio", label: "menuGroup", icon: UtensilsCrossed, permission: "menu:read" },
+  { to: "/painel/disponibilidade", label: "soldOut", icon: CircleSlash, permission: "menu:availability" },
 ];
 export const MORE_ICON = Menu;
 

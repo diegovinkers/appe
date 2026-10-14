@@ -40,6 +40,8 @@ export const ptBR = {
     payments: "Pagamentos",
     qr: "Link e QR code",
     settings: "Configurações",
+    availability: "Disponibilidade",
+    soldOut: "Esgotados",
     // Barra de abajo en el celular: abre el menú completo.
     more: "Mais",
     menuTabs: "Seções do cardápio",
@@ -158,6 +160,23 @@ export const ptBR = {
     paper: "Papel da impressora",
     deviceHint: "Vale só para este aparelho.",
     print: (number: number) => `Imprimir comanda do pedido #${number}`,
+  },
+
+  // Disponibilidade: agotar productos e ingredientes.
+  availability: {
+    search: "Buscar produto ou ingrediente",
+    products: "Produtos",
+    options: "Ingredientes e opções",
+    outNow: (count: number) => `Esgotados agora (${count})`,
+    allAvailable: "Nada esgotado. Tudo disponível no cardápio.",
+    available: "Disponível",
+    restoreAll: "Reativar todos",
+    restoreConfirm: "Voltar a oferecer todos os produtos e ingredientes esgotados?",
+    noStock: "Sem estoque",
+    inGroups: (count: number, names: string) => (count === 1 ? `Em ${names}` : `Em ${count} grupos: ${names}`),
+    partly: (count: number) => `Esgotado em ${count}`,
+    noResults: "Nada encontrado com esse nome.",
+    empty: "Seu cardápio ainda não tem produtos nem adicionais.",
   },
 
   // Configurações (la lista de tarjetas) y la página de Pagamentos.
@@ -348,6 +367,7 @@ export const ptBR = {
     platform: { title: "Plataforma", description: "O painel da plataforma chega na próxima etapa." },
     payments: { title: "Pagamentos", description: "Como seus clientes pagam. O dinheiro vai direto para a loja." },
     subscription: { title: "Assinatura", description: "Seu plano na plataforma e os pagamentos registrados." },
+    availability: { title: "Disponibilidade", description: "O que está em falta hoje. Fica assim até você reativar." },
     settings: { title: "Configurações", description: "O que se configura uma vez. As que dizem “Revisar” ainda precisam de atenção." },
   },
 

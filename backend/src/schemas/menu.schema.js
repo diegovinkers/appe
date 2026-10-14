@@ -115,6 +115,9 @@ export const optionParams = z.object({ id: objectId, optionId: objectId });
 // Marcar disponible o agotado (producto u opción).
 export const availabilitySchema = z.object({ available: z.boolean() });
 
+// Disponibilidade: una opción por su nombre, en todos los grupos que la tienen.
+export const optionAvailabilityByNameSchema = z.object({ name: requiredText(60), available: z.boolean() });
+
 // Import de la planilla del menú: el CSV va como texto dentro del JSON.
 export const importMenuSchema = z.object({
   csv: z.string().min(1, "A planilha está vazia").max(95_000, "Planilha grande demais"),

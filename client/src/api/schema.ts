@@ -4823,6 +4823,244 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/owner/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Disponibilidade: productos y opciones (juntadas por nombre) con lo que está agotado
+         * @description Con sesión y el permiso `menu:read`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            products: {
+                                _id: string;
+                                name: string;
+                                category: string;
+                                available: boolean;
+                                soldOut: boolean;
+                            }[];
+                            options: {
+                                key: string;
+                                name: string;
+                                available: boolean;
+                                unavailable: number;
+                                groups: {
+                                    groupId: string;
+                                    group: string;
+                                    optionId: string;
+                                    available: boolean;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/availability/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Agotar o volver a ofrecer una opción por nombre, en todos sus grupos
+         * @description Con sesión y el permiso `menu:availability`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        available: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            products: {
+                                _id: string;
+                                name: string;
+                                category: string;
+                                available: boolean;
+                                soldOut: boolean;
+                            }[];
+                            options: {
+                                key: string;
+                                name: string;
+                                available: boolean;
+                                unavailable: number;
+                                groups: {
+                                    groupId: string;
+                                    group: string;
+                                    optionId: string;
+                                    available: boolean;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/owner/availability/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Volver a ofrecer todos los productos y opciones agotados a mano
+         * @description Con sesión y el permiso `menu:availability`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            products: {
+                                _id: string;
+                                name: string;
+                                category: string;
+                                available: boolean;
+                                soldOut: boolean;
+                            }[];
+                            options: {
+                                key: string;
+                                name: string;
+                                available: boolean;
+                                unavailable: number;
+                                groups: {
+                                    groupId: string;
+                                    group: string;
+                                    optionId: string;
+                                    available: boolean;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/owner/option-groups/{id}/options/{optionId}": {
         parameters: {
             query?: never;

@@ -42,6 +42,8 @@ export const es: Dictionary = {
     payments: "Pagos",
     qr: "Link y código QR",
     settings: "Configuración",
+    availability: "Disponibilidad",
+    soldOut: "Agotados",
     // Barra de abajo en el celular: abre el menú completo.
     more: "Más",
     menuTabs: "Secciones del menú",
@@ -159,6 +161,23 @@ export const es: Dictionary = {
     paper: "Papel de la impresora",
     deviceHint: "Vale solo para este aparato.",
     print: (number: number) => `Imprimir comanda del pedido #${number}`,
+  },
+
+  // Disponibilidad: agotar productos e ingredientes.
+  availability: {
+    search: "Buscar producto o ingrediente",
+    products: "Productos",
+    options: "Ingredientes y opciones",
+    outNow: (count: number) => `Agotados ahora (${count})`,
+    allAvailable: "Nada agotado. Todo disponible en el menú.",
+    available: "Disponible",
+    restoreAll: "Reactivar todos",
+    restoreConfirm: "¿Volver a ofrecer todos los productos e ingredientes agotados?",
+    noStock: "Sin stock",
+    inGroups: (count: number, names: string) => (count === 1 ? `En ${names}` : `En ${count} grupos: ${names}`),
+    partly: (count: number) => `Agotado en ${count}`,
+    noResults: "No hay nada con ese nombre.",
+    empty: "Tu menú todavía no tiene productos ni adicionales.",
   },
 
   // Configuración (la lista de tarjetas) y la página de Pagos.
@@ -349,6 +368,7 @@ export const es: Dictionary = {
     platform: { title: "Plataforma", description: "El panel de la plataforma llega en la próxima etapa." },
     payments: { title: "Pagos", description: "Cómo te pagan tus clientes. El dinero va directo al local." },
     subscription: { title: "Suscripción", description: "Tu plan en la plataforma y los pagos registrados." },
+    availability: { title: "Disponibilidad", description: "Lo que falta hoy. Queda así hasta que lo reactives." },
     settings: { title: "Configuración", description: "Lo que se configura una vez. Las que dicen “Revisar” todavía necesitan atención." },
   },
 

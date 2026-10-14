@@ -9,6 +9,7 @@ import { changePasswordSchema, loginSchema } from "../schemas/auth.schema.js";
 import { idParams } from "../schemas/common.schema.js";
 import {
   availabilitySchema,
+  optionAvailabilityByNameSchema,
   createCategorySchema,
   createOptionGroupSchema,
   createProductSchema,
@@ -41,6 +42,7 @@ import { conversationAutomationBlockSchema, conversationsQuery, simulatorAudioSc
 import { d360WebhookBody, d360WebhookParams, twilioWebhookBody, webhookBody, webhookVerifyQuery } from "../schemas/whatsapp.schema.js";
 import {
   auditEntry,
+  availabilityResponse,
   category,
   errorResponse,
   coupon,
@@ -151,6 +153,9 @@ export const operations = [
   { method: "get", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Un grupo de opciones", auth: "menu:read", params: idParams, responses: { 200: wrap("optionGroup", optionGroup) } },
   { method: "patch", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Editar grupo (options reemplaza la lista)", auth: "menu:write", params: idParams, body: updateOptionGroupSchema, responses: { 200: wrap("optionGroup", optionGroup) } },
   { method: "delete", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Borrar grupo (lo saca de los productos)", auth: "menu:write", params: idParams, responses: { 204: NO_CONTENT } },
+  { method: "get", path: "/api/owner/availability", tag: "Panel: menú", summary: "Disponibilidade: productos y opciones (juntadas por nombre) con lo que está agotado", auth: "menu:read", responses: { 200: availabilityResponse } },
+  { method: "patch", path: "/api/owner/availability/options", tag: "Panel: menú", summary: "Agotar o volver a ofrecer una opción por nombre, en todos sus grupos", auth: "menu:availability", body: optionAvailabilityByNameSchema, responses: { 200: availabilityResponse } },
+  { method: "post", path: "/api/owner/availability/restore", tag: "Panel: menú", summary: "Volver a ofrecer todos los productos y opciones agotados a mano", auth: "menu:availability", responses: { 200: availabilityResponse } },
   { method: "patch", path: "/api/owner/option-groups/:id/options/:optionId", tag: "Panel: menú", summary: "Marcar opción disponible o agotada", auth: "menu:availability", params: optionParams, body: availabilitySchema, responses: { 200: wrap("optionGroup", optionGroup) } },
 
   { method: "get", path: "/api/owner/menu/export", tag: "Panel: menú", summary: "Planilla CSV del menú", auth: "menu:read", responses: { 200: binary("text/csv") } },

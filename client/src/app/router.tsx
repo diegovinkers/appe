@@ -21,6 +21,7 @@ import { ReportsPage } from "../features/panel/pages/ReportsPage";
 import { ReviewsPage } from "../features/panel/pages/ReviewsPage";
 import { SettingsPage } from "../features/panel/pages/SettingsPage";
 import { PaymentsPage } from "../features/panel/pages/PaymentsPage";
+import { AvailabilityPage } from "../features/panel/pages/AvailabilityPage";
 import { SubscriptionPage } from "../features/panel/pages/SubscriptionPage";
 import { MenuLayout } from "../features/panel/layouts/MenuLayout";
 import { SettingsLayout } from "../features/panel/layouts/SettingsLayout";
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
           { path: "pedidos", element: guarded("orders:read", <OrdersPage />) },
           { path: "pedidos/novo", element: guarded("orders:manual", <NewOrderPage />) },
           { path: "assistente", element: guarded("orders:read", <AssistantPage />) },
+          { path: "disponibilidade", element: guarded("menu:availability", <AvailabilityPage />) },
           {
             path: "cardapio",
             element: <MenuLayout />,

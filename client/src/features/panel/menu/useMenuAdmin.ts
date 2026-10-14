@@ -28,6 +28,7 @@ export function useMenuChange<Result = unknown>() {
     onSuccess: () => {
       for (const key of Object.values(KEYS)) queryClient.invalidateQueries({ queryKey: key });
       queryClient.invalidateQueries({ queryKey: ["public-store"] });
+      queryClient.invalidateQueries({ queryKey: ["availability"] });
     },
   });
 }
