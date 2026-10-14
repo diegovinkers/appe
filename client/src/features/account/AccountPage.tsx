@@ -6,6 +6,7 @@ import { api } from "../../api/client";
 import type { CustomerAccount, CustomerOrder, PublicStoreResponse } from "../../api/types";
 import { FullScreenMessage, Spinner } from "../../components/FullScreenMessage";
 import { LanguageSwitch } from "../../components/LanguageSwitch";
+import { PasswordInput } from "../../components/PasswordInput";
 import { StoreMark } from "../../components/StoreMark";
 import { Field, button, input } from "../../components/ui";
 import { type Dictionary, errorText, useLanguage, useT } from "../../i18n";
@@ -332,9 +333,8 @@ function DeleteAccount() {
       <form onSubmit={submit} className="mt-3 space-y-3">
         <p className="text-ink-muted">{t.account.deleteText}</p>
         <Field id="conta-excluir" label={t.account.deleteConfirm}>
-          <input
+          <PasswordInput
             id="conta-excluir"
-            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"

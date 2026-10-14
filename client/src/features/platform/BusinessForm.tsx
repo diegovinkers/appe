@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { PasswordInput } from "../../components/PasswordInput";
 import { useState, type FormEvent } from "react";
 import { api, type ApiError } from "../../api/client";
 import { button, Field, input } from "../../components/ui";
@@ -26,7 +27,7 @@ export function BusinessForm({ title, fields, initial, path, method, body, onSav
   return <form onSubmit={submit} className="space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-6">
     <h2 className="text-lg font-bold">{title}</h2>
     <fieldset disabled={mutation.isPending} className="space-y-3">
-      {fields.map((field) => <Field key={field.key} id={`business-${field.key}`} label={field.label}>{field.options ? <select id={`business-${field.key}`} className={input} value={draft[field.key]} onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })}>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : <input id={`business-${field.key}`} className={input} type={field.type ?? "text"} required={field.required} minLength={field.minLength} maxLength={field.maxLength} autoComplete={field.type === "password" ? "new-password" : "off"} value={draft[field.key]} onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })} />}</Field>)}
+      {fields.map((field) => <Field key={field.key} id={`business-${field.key}`} label={field.label}>{field.options ? <select id={`business-${field.key}`} className={input} value={draft[field.key]} onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })}>{field.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : (field.type === "password" ? <PasswordInput id={`business-${field.key}`} className={input} required={field.required} minLength={field.minLength} maxLength={field.maxLength} autoComplete="new-password" value={draft[field.key]} onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })} /> : <input id={`business-${field.key}`} className={input} type={field.type ?? "text"} required={field.required} minLength={field.minLength} maxLength={field.maxLength} autoComplete={field.type === "password" ? "new-password" : "off"} value={draft[field.key]} onChange={(e) => setDraft({ ...draft, [field.key]: e.target.value })} />)}</Field>)}
       <div className="flex flex-wrap gap-3"><button className={button.primary} disabled={mutation.isPending}>{mutation.isPending ? es ? "Guardando…" : "Salvando…" : es ? "Guardar" : "Salvar"}</button>{onBack && <button type="button" className={button.secondary} onClick={() => { if (!dirty || window.confirm(es ? "¿Descartar cambios?" : "Descartar alterações?")) onBack(); }}>{es ? "Volver" : "Voltar"}</button>}</div>
     </fieldset>
     {(error || mutation.isError) && <p role="alert" className="text-error">{error || errorText(mutation.error, t)}</p>}
