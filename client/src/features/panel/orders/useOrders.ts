@@ -1,6 +1,8 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ApiError, api } from "../../../api/client";
 import type { Order, OrderResponse, OrdersResponse, OrderStatus } from "../../../api/types";
+import { getDeviceSettings } from "./deviceSettings";
+import { printTicket } from "./printTicket";
 
 export const ordersKey = (day: string) => ["orders", day];
 
@@ -30,11 +32,20 @@ function replaceOrder(queryClient: QueryClient, order: Order) {
   queryClient.setQueryData(["order", order._id], order);
 }
 
+// Con "imprimir al confirmar" prendido en este aparato, la comanda sale sola.
+export function printIfConfirmed(order: Pick<Order, "_id" | "status">) {
+  const { autoPrint, paper } = getDeviceSettings();
+  if (autoPrint && order.status === "confirmed") printTicket(order._id, paper);
+}
+
 export function useChangeStatus() {
   const queryClient = useQueryClient();
   return useMutation<OrderResponse, ApiError, { id: string; status: OrderStatus; reason?: string }>({
     mutationFn: ({ id, ...body }) => api<OrderResponse>(`/owner/orders/${id}/status`, { method: "PATCH", body }),
-    onSuccess: ({ order }) => replaceOrder(queryClient, order),
+    onSuccess: ({ order }) => {
+      replaceOrder(queryClient, order);
+      printIfConfirmed(order);
+    },
     // Otro aparato ya lo cambió: se trae la lista de nuevo.
     onError: (error) => {
       if (error.code === "INVALID_STATUS_TRANSITION") queryClient.invalidateQueries({ queryKey: ["orders"] });

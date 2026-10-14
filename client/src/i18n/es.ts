@@ -133,6 +133,29 @@ export const es: Dictionary = {
     },
   },
 
+  // Aviso de pedidos nuevos (barra fina) y opciones de sonido e impresión de cada aparato.
+  alerts: {
+    label: "Avisos de pedidos",
+    pending: (count: number) => (count === 1 ? "1 pedido nuevo esperando" : `${count} pedidos nuevos esperando`),
+    view: "Ver",
+    tapToEnable: "Tocá la pantalla para activar el sonido",
+    offline: "Los pedidos no se están actualizando. Revisá internet.",
+    retry: "Actualizar",
+    limit: "La lista muestra hasta 500 pedidos del día.",
+    tabTitle: (count: number) => `(${count}) Pedido nuevo`,
+    settings: "Sonido e impresión",
+    soundOn: "Sonido activado",
+    soundOff: "Sonido desactivado",
+    sound: "Sonar con pedido nuevo",
+    soundHint: "Suena cada 15 segundos hasta que alguien lo acepte.",
+    test: "Probar sonido",
+    testFailed: "El sonido no salió. Tocá la pantalla y revisá el volumen.",
+    autoPrint: "Imprimir la comanda al confirmar",
+    paper: "Papel de la impresora",
+    deviceHint: "Vale solo para este aparato.",
+    print: (number: number) => `Imprimir comanda del pedido #${number}`,
+  },
+
   manualOrder: {
     channel: "¿Cómo llegó el pedido?",
     products: "Productos",

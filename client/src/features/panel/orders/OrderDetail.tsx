@@ -12,7 +12,8 @@ import { formatMoney, formatTime, formatWhen } from "../../../lib/format";
 import { whatsappLink } from "../../../lib/whatsapp";
 import { usePanel } from "../PanelLayout";
 import { STATUS_TONE, isActive, nextLabel, nextStatus } from "./orderFlow";
-import { printTicket, readPaperWidth, savePaperWidth } from "./printTicket";
+import { setDeviceSetting, useDeviceSettings } from "./deviceSettings";
+import { printTicket } from "./printTicket";
 import { useChangeStatus, useSaveNotes } from "./useOrders";
 
 // Pedido entregado: WhatsApp del cliente con el link del seguimiento, donde deja su reseña.
@@ -85,7 +86,7 @@ export function OrderDetail({ order, onClose }: { order: Order; onClose: () => v
   const notes = useSaveNotes();
   const [draft, setDraft] = useState(order.internalNotes);
   const [cancelling, setCancelling] = useState(false);
-  const [paper, setPaper] = useState(readPaperWidth);
+  const { paper } = useDeviceSettings();
   const canWrite = can(user.role, "orders:write");
   const next = nextStatus(order);
   const label = nextLabel(order, t);
@@ -126,8 +127,7 @@ export function OrderDetail({ order, onClose }: { order: Order; onClose: () => v
               value={paper}
               onChange={(event) => {
                 const width = Number(event.target.value) === 58 ? 58 : 80;
-                setPaper(width);
-                savePaperWidth(width);
+                setDeviceSetting("paper", width);
               }}
               className="h-11 rounded-lg border border-line bg-surface px-2"
             >

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, LogOut } from "lucide-react";
+import { Check, LogOut, Moon, Sun } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { api } from "../../api/client";
@@ -8,10 +8,12 @@ import { useDismiss } from "../../hooks/useDismiss";
 import { LANGUAGES, setLanguage, useLanguage, useT } from "../../i18n";
 import { initials } from "../../lib/color";
 import { ThemeSwitch } from "../../components/ThemeSwitch";
+import { setTheme, useTheme } from "../../lib/theme";
 
 export function UserMenu({ user }: { user: SessionUser }) {
   const t = useT();
   const language = useLanguage();
+  const dark = useTheme() === "dark";
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const close = useCallback(() => setOpen(false), []);
@@ -30,7 +32,10 @@ export function UserMenu({ user }: { user: SessionUser }) {
 
   return (
     <div className="flex shrink-0 items-center gap-2">
-      <ThemeSwitch />
+      {/* En el celular el tema va dentro del menú: el encabezado no tiene lugar. */}
+      <div className="hidden sm:block">
+        <ThemeSwitch />
+      </div>
     <div ref={ref} className="relative">
       <button
         type="button"
@@ -73,6 +78,15 @@ export function UserMenu({ user }: { user: SessionUser }) {
             </button>
           ))}
           <hr className="my-1 border-line" />
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => setTheme(dark ? "light" : "dark")}
+            className="flex h-11 w-full items-center gap-2 rounded-lg px-3 text-left hover:bg-paper sm:hidden"
+          >
+            {dark ? <Sun aria-hidden className="size-4" /> : <Moon aria-hidden className="size-4" />}
+            {dark ? t.theme.useLight : t.theme.useDark}
+          </button>
           <button
             type="button"
             role="menuitem"

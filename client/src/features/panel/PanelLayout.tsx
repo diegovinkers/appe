@@ -16,6 +16,7 @@ import { StoreStatusControl } from "./StoreStatusControl";
 import { UserMenu } from "./UserMenu";
 import { useOwnerStore } from "./useOwnerStore";
 import { OrderAlerts } from "./orders/OrderAlerts";
+import { AlertSettingsControl } from "./orders/AlertSettingsControl";
 import { AssistantAlert } from "./assistant/AssistantAlert";
 
 export type PanelContext = { user: SessionUser; store: OwnerStore; opening: Opening; storeUrl: string };
@@ -122,6 +123,7 @@ export function PanelLayout() {
         </div>
 
         <StoreStatusControl store={store} opening={opening} canChange={can(user.role, "store:open")} />
+        {can(user.role, "orders:read") && <AlertSettingsControl />}
         <UserMenu user={user} />
       </header>
 
@@ -166,7 +168,7 @@ export function PanelLayout() {
 
         <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto max-w-5xl">
-            <OrderAlerts />
+            {can(user.role, "orders:read") && <OrderAlerts />}
             {can(user.role, "orders:read") && <AssistantAlert />}
             <Outlet context={context} />
           </div>

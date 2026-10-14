@@ -26,7 +26,7 @@ import { Price } from "../../menu/ProductList";
 import { ProductSheet, Stepper } from "../../menu/ProductSheet";
 import { orderTotals } from "../../menu/pricing";
 import { usePublicStore } from "../../menu/usePublicStore";
-import { ordersKey } from "../orders/useOrders";
+import { ordersKey, printIfConfirmed } from "../orders/useOrders";
 import { usePanel } from "../PanelLayout";
 
 type Channel = Exclude<OrderChannel, "online">;
@@ -88,6 +88,8 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
       cart.clear();
       setClientOrderId(newId());
       queryClient.invalidateQueries({ queryKey: ordersKey(operatingDayISO()) });
+      // Los cargados en el panel entran confirmados.
+      printIfConfirmed(order);
       navigate(`/painel/pedidos?pedido=${order._id}`);
     },
   });

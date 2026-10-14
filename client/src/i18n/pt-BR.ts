@@ -132,6 +132,29 @@ export const ptBR = {
     },
   },
 
+  // Aviso de pedidos novos (barra fina) y opciones de som e impressão de cada aparelho.
+  alerts: {
+    label: "Avisos de pedidos",
+    pending: (count: number) => (count === 1 ? "1 pedido novo aguardando" : `${count} pedidos novos aguardando`),
+    view: "Ver",
+    tapToEnable: "Toque na tela para ligar o som",
+    offline: "Os pedidos não estão atualizando. Confira a internet.",
+    retry: "Atualizar",
+    limit: "A lista mostra até 500 pedidos do dia.",
+    tabTitle: (count: number) => `(${count}) Pedido novo`,
+    settings: "Som e impressão",
+    soundOn: "Som ligado",
+    soundOff: "Som desligado",
+    sound: "Tocar com pedido novo",
+    soundHint: "Toca a cada 15 segundos até alguém aceitar.",
+    test: "Testar som",
+    testFailed: "O som não tocou. Toque na tela e confira o volume.",
+    autoPrint: "Imprimir a comanda ao confirmar",
+    paper: "Papel da impressora",
+    deviceHint: "Vale só para este aparelho.",
+    print: (number: number) => `Imprimir comanda do pedido #${number}`,
+  },
+
   manualOrder: {
     channel: "Como chegou o pedido?",
     products: "Produtos",

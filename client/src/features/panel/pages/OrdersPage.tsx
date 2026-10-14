@@ -1,3 +1,4 @@
+import { Printer } from "lucide-react";
 import { useSearchParams } from "react-router";
 import type { Order } from "../../../api/types";
 import { can } from "../../../auth/permissions";
@@ -9,6 +10,8 @@ import { useNow } from "../../../hooks/useNow";
 import { useParamSheet } from "../../../hooks/useParamSheet";
 import { OrderDetail, StatusChip } from "../orders/OrderDetail";
 import { ORDER_FILTERS, type OrderFilter, byUrgency, matchesFilter, nextLabel, nextStatus, orderTiming } from "../orders/orderFlow";
+import { useDeviceSettings } from "../orders/deviceSettings";
+import { printTicket } from "../orders/printTicket";
 import { useChangeStatus, useOrder, useOrders } from "../orders/useOrders";
 import { usePanel } from "../PanelLayout";
 
@@ -40,6 +43,7 @@ function OrderRow({ order, onOpen, now, today }: { order: Order; onOpen: () => v
   const next = nextStatus(order);
   const label = nextLabel(order, t);
   const late = orderTiming(order, now).late;
+  const { paper } = useDeviceSettings();
 
   return (
     <li className={`px-4 py-3 sm:flex sm:items-center sm:gap-4 ${late ? "border-l-4 border-l-error pl-3" : ""}`}>
@@ -58,12 +62,21 @@ function OrderRow({ order, onOpen, now, today }: { order: Order; onOpen: () => v
       <div className="mt-2 flex flex-wrap items-center justify-end gap-2 sm:mt-0">
         <LateChip order={order} now={now} />
         <StatusChip order={order} />
+        <button
+          type="button"
+          onClick={() => printTicket(order._id, paper)}
+          aria-label={t.alerts.print(order.number)}
+          title={t.alerts.print(order.number)}
+          className="grid size-11 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted hover:bg-paper hover:text-ink"
+        >
+          <Printer aria-hidden className="size-5" />
+        </button>
         {next && label && can(user.role, "orders:write") && (
           <button
             type="button"
             disabled={change.isPending}
             onClick={() => change.mutate({ id: order._id, status: next })}
-            className="h-10 min-w-32 rounded-lg bg-action px-3 text-sm font-bold text-white hover:bg-action-hover disabled:opacity-60"
+            className="h-11 min-w-32 rounded-lg bg-action px-3 text-sm font-bold text-white hover:bg-action-hover disabled:opacity-60"
           >
             {label}
           </button>

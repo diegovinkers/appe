@@ -1,57 +1,126 @@
+import { BellRing, WifiOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { button } from "../../../components/ui";
-import { useLanguage } from "../../../i18n";
+import { useT } from "../../../i18n";
 import { operatingDayISO } from "../../../lib/format";
+import { getDeviceSettings, useDeviceSettings } from "./deviceSettings";
+import { playAlert, unlockSound } from "./alertSound";
 import { useOrders } from "./useOrders";
 
-const copy = {
-  "pt-BR": { on: "Ativar som", off: "Desativar som", test: "Testar som", hint: "Os avisos funcionam enquanto este painel está aberto. Mantenha esta aba visível.", error: "Não foi possível reproduzir o som. Ative novamente ou confira o volume.", offline: "Sem atualização dos pedidos. Confira a conexão e tente novamente.", retry: "Atualizar", pending: "pedido(s) aguardando aceitação", received: "Novo pedido recebido", limit: "A lista mostra até 500 pedidos do dia." },
-  es: { on: "Activar sonido", off: "Desactivar sonido", test: "Probar sonido", hint: "Los avisos funcionan mientras este panel está abierto. Mantené esta pestaña visible.", error: "No se pudo reproducir el sonido. Activá de nuevo o revisá el volumen.", offline: "Los pedidos no se están actualizando. Revisá la conexión y reintentá.", retry: "Actualizar", pending: "pedido(s) esperando aceptación", received: "Nuevo pedido recibido", limit: "La lista muestra hasta 500 pedidos del día." },
-};
+// Mientras haya pedidos sin aceptar, el aviso vuelve a sonar cada tanto.
+const REPEAT_MS = 15_000;
 
+// Aviso de pedidos nuevos para todo el panel. Suena (y vibra) al llegar uno y repite hasta
+// que alguien lo acepte; el número queda en la pestaña y la pantalla no se apaga. Solo ocupa
+// lugar cuando hay algo que hacer: pedidos esperando, el sonido trabado o sin conexión.
 export function OrderAlerts() {
-  const c = copy[useLanguage()];
-  const day = operatingDayISO(); const query = useOrders(day, true);
-  const [sound, setSound] = useState(false); const [failed, setFailed] = useState(false); const [fresh, setFresh] = useState(false);
-  const audio = useRef<AudioContext | null>(null);
+  const t = useT();
+  const settings = useDeviceSettings();
+  const day = operatingDayISO();
+  const query = useOrders(day, true);
+  const [blocked, setBlocked] = useState(false);
   const seen = useRef<{ day: string; ids: Set<string> } | null>(null);
-  async function play() {
-    try {
-      const context = audio.current ?? (audio.current = new AudioContext());
-      await context.resume();
-      if (context.state !== "running") throw new Error("Audio unavailable");
-      for (const delay of [0, 0.25]) {
-        const oscillator = context.createOscillator(); const gain = context.createGain();
-        oscillator.frequency.value = 740; oscillator.connect(gain); gain.connect(context.destination);
-        const start = context.currentTime + delay; gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(0.12, start + 0.02); gain.gain.exponentialRampToValueAtTime(0.001, start + 0.18);
-        oscillator.start(start); oscillator.stop(start + 0.2);
-        oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
-      }
-      setFailed(false); return true;
-    } catch { setFailed(true); setSound(false); return false; }
+  const pending = query.data?.orders.filter((order) => order.status === "new").length ?? 0;
+
+  async function ring() {
+    if (!getDeviceSettings().sound) return;
+    setBlocked(!(await playAlert()));
   }
-  useEffect(() => () => { void audio.current?.close(); }, []);
+
+  // El primer toque en la página destraba el sonido.
+  useEffect(() => {
+    const unlock = () => void unlockSound().then((ok) => ok && setBlocked(false));
+    document.addEventListener("pointerdown", unlock);
+    document.addEventListener("keydown", unlock);
+    return () => {
+      document.removeEventListener("pointerdown", unlock);
+      document.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
+  // Pedido nuevo: suena y vibra enseguida. La primera respuesta (y la de un día nuevo) es la
+  // base: no suena por los que ya estaban, salvo que haya alguno esperando.
   useEffect(() => {
     if (!query.data) return;
     const orders = query.data.orders;
-    // First response and first response of a new day establish a silent baseline.
-    if (!seen.current || seen.current.day !== day) { seen.current = { day, ids: new Set(orders.map((order) => order._id)) }; return; }
+    if (!seen.current || seen.current.day !== day) {
+      seen.current = { day, ids: new Set(orders.map((order) => order._id)) };
+      if (orders.some((order) => order.status === "new")) void ring();
+      return;
+    }
     const arrived = orders.some((order) => order.status === "new" && !seen.current!.ids.has(order._id));
     orders.forEach((order) => seen.current!.ids.add(order._id));
-    if (arrived) { setFresh(true); if (sound) void play(); }
-  }, [query.data, day, sound]);
-  const pending = query.data?.orders.filter((order) => order.status === "new").length ?? 0;
-  return <section aria-label={c.received} className="mb-5 space-y-2 rounded-xl border border-line bg-surface p-3">
-    <div className="flex flex-wrap items-center gap-2">
-      <button type="button" className={button.secondary} aria-pressed={sound} onClick={async () => { if (sound) setSound(false); else if (await play()) setSound(true); }}>{sound ? c.off : c.on}</button>
-      <button type="button" className={button.quiet} onClick={() => void play()}>{c.test}</button>
-      {pending > 0 && <Link to="/painel/pedidos?filtro=new" className="rounded-lg bg-paper px-3 py-2 font-bold text-warning" onClick={() => setFresh(false)}>{pending} {c.pending}</Link>}
+    if (arrived) {
+      void ring();
+      navigator.vibrate?.([200, 100, 200]);
+    }
+  }, [query.data, day]);
+
+  // Repite mientras haya pedidos esperando.
+  useEffect(() => {
+    if (!pending || !settings.sound) return;
+    const id = setInterval(() => void ring(), REPEAT_MS);
+    return () => clearInterval(id);
+  }, [pending, settings.sound]);
+
+  // "(2) Pedido novo" en la pestaña.
+  useEffect(() => {
+    if (!pending) return;
+    const base = document.title;
+    document.title = t.alerts.tabTitle(pending);
+    return () => {
+      document.title = base;
+    };
+  }, [pending, t]);
+
+  // La pantalla no se apaga con el panel abierto (si el aparato lo permite).
+  useEffect(() => {
+    let lock: WakeLockSentinel | null = null;
+    const request = async () => {
+      if (document.visibilityState !== "visible" || !("wakeLock" in navigator)) return;
+      try {
+        lock = await navigator.wakeLock.request("screen");
+      } catch {
+        // Batería baja o sin permiso: sigue sin mantenerla prendida.
+      }
+    };
+    void request();
+    document.addEventListener("visibilitychange", request);
+    return () => {
+      document.removeEventListener("visibilitychange", request);
+      void lock?.release();
+    };
+  }, []);
+
+  const offline = query.isError || query.fetchStatus === "paused";
+  const full = (query.data?.orders.length ?? 0) >= 500;
+  if (!pending && !offline && !full) return null;
+
+  return (
+    <div aria-label={t.alerts.label} className="sticky top-18 z-20 mb-5 space-y-2">
+      {pending > 0 && (
+        <div role="status" className="flex min-h-12 items-center gap-3 rounded-xl bg-[#fff4d6] px-4 py-1.5 text-[#7a4e00] shadow-sm ring-1 ring-[#f0d48a]">
+          <BellRing aria-hidden className="size-5 shrink-0" />
+          <p className="min-w-0 flex-1 leading-tight">
+            <strong>{t.alerts.pending(pending)}</strong>
+            {blocked && settings.sound && <span className="block text-sm">{t.alerts.tapToEnable}</span>}
+          </p>
+          <Link to="/painel/pedidos?filtro=new" className="inline-flex h-11 shrink-0 items-center rounded-lg bg-[#7a4e00] px-4 font-bold text-white">
+            {t.alerts.view}
+          </Link>
+        </div>
+      )}
+      {offline && (
+        <div role="alert" className="flex min-h-12 items-center gap-3 rounded-xl bg-error-soft px-4 py-1.5 text-error ring-1 ring-error/30">
+          <WifiOff aria-hidden className="size-5 shrink-0" />
+          <p className="min-w-0 flex-1 font-bold leading-tight">{t.alerts.offline}</p>
+          <button type="button" className={button.secondary} onClick={() => void query.refetch()}>
+            {t.alerts.retry}
+          </button>
+        </div>
+      )}
+      {full && <p className="text-sm text-warning">{t.alerts.limit}</p>}
     </div>
-    <p className="text-xs text-ink-muted">{c.hint}</p>
-    {fresh && <p role="status" className="font-bold text-success">{c.received}</p>}
-    {failed && <p role="alert" className="text-error">{c.error}</p>}
-    {(query.isError || query.fetchStatus === "paused") && <div role="alert" className="text-error">{c.offline} <button type="button" className={button.secondary} onClick={() => void query.refetch()}>{c.retry}</button></div>}
-    {query.data && query.data.orders.length >= 500 && <p className="text-warning">{c.limit}</p>}
-  </section>;
+  );
 }

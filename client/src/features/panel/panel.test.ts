@@ -4,6 +4,7 @@ import { initials, readableTextOn } from "../../lib/color";
 import { setLanguage } from "../../i18n";
 import { formatMinutes, formatWhen, operatingDayISO } from "../../lib/format";
 import { byUrgency, orderTiming } from "./orders/orderFlow";
+import { getDeviceSettings, setDeviceSetting } from "./orders/deviceSettings";
 import { navFor } from "./nav";
 import { statusActions, statusView } from "./storeStatus";
 
@@ -152,5 +153,14 @@ describe("tiempos de la lista de pedidos", () => {
 
   it("muestra los minutos en horas cuando pasan de 60", () => {
     expect([formatMinutes(7), formatMinutes(60), formatMinutes(95)]).toEqual(["7 min", "1 h", "1 h 35 min"]);
+  });
+});
+
+describe("sonido e impresión del aparato", () => {
+  it("el sonido viene prendido y los cambios se ven al instante", () => {
+    expect(getDeviceSettings()).toMatchObject({ sound: true, autoPrint: false, paper: 80 });
+    setDeviceSetting("autoPrint", true);
+    setDeviceSetting("paper", 58);
+    expect(getDeviceSettings()).toMatchObject({ sound: true, autoPrint: true, paper: 58 });
   });
 });
