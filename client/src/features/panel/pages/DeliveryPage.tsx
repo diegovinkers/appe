@@ -80,7 +80,7 @@ export function DeliveryPage() {
       {Object.keys(errors).length > 0 && <p role="alert" className="text-error">{c.fixErrors}</p>}
       {save.isError && <p role="alert" className="text-error">{errorText(save.error, t)}</p>}
       {save.isSuccess && <p role="status" className="text-success">{c.saved}</p>}
-      <div className="sticky bottom-0 flex flex-wrap items-center gap-3 border-t border-line bg-paper py-4"><button className={button.primary} disabled={save.isPending || !dirty}>{save.isPending ? c.saving : c.save}</button><button type="button" className={button.secondary} disabled={save.isPending || !dirty} onClick={() => { if (window.confirm(c.discardConfirm)) { setDraft(baseline); setErrors({}); save.reset(); } }}>{c.discard}</button><span className="text-sm text-ink-muted">{dirty ? c.unsaved : c.upToDate}</span></div>
+      <div className="sticky bottom-16 lg:bottom-0 flex flex-wrap items-center gap-3 border-t border-line bg-paper py-4"><button className={button.primary} disabled={save.isPending || !dirty}>{save.isPending ? c.saving : c.save}</button><button type="button" className={button.secondary} disabled={save.isPending || !dirty} onClick={() => { if (window.confirm(c.discardConfirm)) { setDraft(baseline); setErrors({}); save.reset(); } }}>{c.discard}</button><span className="text-sm text-ink-muted">{dirty ? c.unsaved : c.upToDate}</span></div>
     </form>
   </>;
 }

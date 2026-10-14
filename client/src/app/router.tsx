@@ -19,8 +19,11 @@ import { DeliveryPage } from "../features/panel/pages/DeliveryPage";
 import { CouponsPage } from "../features/panel/pages/CouponsPage";
 import { ReportsPage } from "../features/panel/pages/ReportsPage";
 import { ReviewsPage } from "../features/panel/pages/ReviewsPage";
-import { SetupPage } from "../features/panel/pages/SetupPage";
-import { SubscriptionView } from "../features/platform/SubscriptionView";
+import { SettingsPage } from "../features/panel/pages/SettingsPage";
+import { PaymentsPage } from "../features/panel/pages/PaymentsPage";
+import { SubscriptionPage } from "../features/panel/pages/SubscriptionPage";
+import { MenuLayout } from "../features/panel/layouts/MenuLayout";
+import { SettingsLayout } from "../features/panel/layouts/SettingsLayout";
 import { ProductsPage } from "../features/panel/pages/ProductsPage";
 import { QrPage } from "../features/panel/pages/QrPage";
 import { SpreadsheetPage } from "../features/panel/pages/SpreadsheetPage";
@@ -48,20 +51,40 @@ export const router = createBrowserRouter([
           { path: "pedidos", element: guarded("orders:read", <OrdersPage />) },
           { path: "pedidos/novo", element: guarded("orders:manual", <NewOrderPage />) },
           { path: "assistente", element: guarded("orders:read", <AssistantPage />) },
-          { path: "cardapio", element: <Navigate to="produtos" replace /> },
-          { path: "cardapio/produtos", element: guarded("menu:read", <ProductsPage />) },
-          { path: "cardapio/categorias", element: guarded("menu:write", <CategoriesPage />) },
-          { path: "cardapio/adicionais", element: guarded("menu:read", <OptionGroupsPage />) },
-          { path: "cardapio/planilha", element: guarded("menu:write", <SpreadsheetPage />) },
+          {
+            path: "cardapio",
+            element: <MenuLayout />,
+            children: [
+              { index: true, element: <Navigate to="produtos" replace /> },
+              { path: "produtos", element: guarded("menu:read", <ProductsPage />) },
+              { path: "categorias", element: guarded("menu:write", <CategoriesPage />) },
+              { path: "adicionais", element: guarded("menu:read", <OptionGroupsPage />) },
+              { path: "planilha", element: guarded("menu:write", <SpreadsheetPage />) },
+            ],
+          },
           { path: "cupons", element: guarded("coupons:manage", <CouponsPage />) },
-          { path: "loja", element: guarded("store:write", <StorePage />) },
-          { path: "loja/horarios", element: guarded("store:write", <HoursPage />) },
-          { path: "loja/entrega", element: guarded("store:write", <DeliveryPage />) },
-          { path: "loja/qr", element: guarded("store:read", <QrPage />) },
           { path: "relatorios", element: guarded("store:write", <ReportsPage />) },
           { path: "avaliacoes", element: guarded("orders:read", <ReviewsPage />) },
-          { path: "comecar", element: guarded("store:write", <SetupPage />) },
-          { path: "assinatura", element: guarded("store:write", <SubscriptionView />) },
+          {
+            path: "configuracoes",
+            element: <SettingsLayout />,
+            children: [
+              { index: true, element: guarded("store:write", <SettingsPage />) },
+              { path: "loja", element: guarded("store:write", <StorePage />) },
+              { path: "link-qr", element: guarded("store:read", <QrPage />) },
+              { path: "horarios", element: guarded("store:write", <HoursPage />) },
+              { path: "entrega", element: guarded("store:write", <DeliveryPage />) },
+              { path: "pagamentos", element: guarded("store:write", <PaymentsPage />) },
+              { path: "assinatura", element: guarded("store:write", <SubscriptionPage />) },
+            ],
+          },
+          // Direcciones de antes de Configurações: los links guardados siguen andando.
+          { path: "loja", element: <Navigate to="/painel/configuracoes/loja" replace /> },
+          { path: "loja/horarios", element: <Navigate to="/painel/configuracoes/horarios" replace /> },
+          { path: "loja/entrega", element: <Navigate to="/painel/configuracoes/entrega" replace /> },
+          { path: "loja/qr", element: <Navigate to="/painel/configuracoes/link-qr" replace /> },
+          { path: "assinatura", element: <Navigate to="/painel/configuracoes/assinatura" replace /> },
+          { path: "comecar", element: <Navigate to="/painel/configuracoes" replace /> },
         ],
       },
     ],

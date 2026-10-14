@@ -18,6 +18,7 @@ import { useOwnerStore } from "./useOwnerStore";
 import { OrderAlerts } from "./orders/OrderAlerts";
 import { AlertSettingsControl } from "./orders/AlertSettingsControl";
 import { AssistantAlert } from "./assistant/AssistantAlert";
+import { BottomBar } from "./BottomBar";
 
 export type PanelContext = { user: SessionUser; store: OwnerStore; opening: Opening; storeUrl: string };
 export const usePanel = () => useOutletContext<PanelContext>();
@@ -166,7 +167,7 @@ export function PanelLayout() {
           </>
         )}
 
-        <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+        <main className="min-w-0 flex-1 px-4 pt-6 pb-24 sm:px-6 lg:px-10 lg:py-8">
           <div className="mx-auto max-w-5xl">
             {can(user.role, "orders:read") && <OrderAlerts />}
             {can(user.role, "orders:read") && <AssistantAlert />}
@@ -174,6 +175,7 @@ export function PanelLayout() {
           </div>
         </main>
       </div>
+      {!isDesktop && <BottomBar role={user.role} onMore={() => setDrawerOpen(true)} />}
     </div>
   );
 }

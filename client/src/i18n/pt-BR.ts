@@ -18,7 +18,7 @@ export const ptBR = {
   },
 
   nav: {
-    reports: "Relatórios", setup: "Preparar loja", subscription: "Minha assinatura", reviews: "Avaliações",
+    reports: "Relatórios", subscription: "Assinatura", reviews: "Avaliações",
     label: "Menu do painel",
     open: "Abrir menu",
     close: "Fechar menu",
@@ -34,11 +34,16 @@ export const ptBR = {
     spreadsheet: "Planilha",
     salesGroup: "Vendas",
     coupons: "Cupons",
-    storeGroup: "Loja",
-    storeInfo: "Dados da loja",
+    storeInfo: "Loja",
     hours: "Horários",
-    delivery: "Entrega e pagamento",
+    delivery: "Entrega e retirada",
+    payments: "Pagamentos",
     qr: "Link e QR code",
+    settings: "Configurações",
+    // Barra de abajo en el celular: abre el menú completo.
+    more: "Mais",
+    menuTabs: "Seções do cardápio",
+    backToSettings: "Voltar para Configurações",
     viewMenu: "Ver cardápio",
   },
 
@@ -153,6 +158,31 @@ export const ptBR = {
     paper: "Papel da impressora",
     deviceHint: "Vale só para este aparelho.",
     print: (number: number) => `Imprimir comanda do pedido #${number}`,
+  },
+
+  // Configurações (la lista de tarjetas) y la página de Pagamentos.
+  settings: {
+    review: "Revisar",
+    noProducts: "Seu cardápio ainda não tem produtos disponíveis: os clientes não conseguem pedir.",
+    goToMenu: "Ir para o cardápio",
+    testMenu: "Testar meu cardápio",
+  },
+  paymentSettings: {
+    methods: "Formas de pagamento",
+    methodsHint: "O cliente paga direto para a loja, na entrega ou na retirada. Isto não muda sua assinatura da plataforma.",
+    cash: "Dinheiro",
+    pix: "Pix",
+    card: "Cartão (maquininha)",
+    pixKey: "Chave Pix",
+    pixHint: "Confira a chave antes de salvar. Quem confere se o Pix chegou é a loja.",
+    methodsRequired: "Ative pelo menos uma forma de pagamento.",
+    pixRequired: "Informe a chave Pix para aceitar Pix.",
+    save: "Salvar",
+    saving: "Salvando…",
+    saved: "Pagamentos salvos.",
+    discard: "Descartar alterações",
+    discardConfirm: "Descartar as alterações não salvas?",
+    unsaved: "Há alterações não salvas.",
   },
 
   manualOrder: {
@@ -303,11 +333,11 @@ export const ptBR = {
       description: "Baixe o cardápio em planilha, edite no Excel e envie de volta.",
     },
     coupons: { title: "Cupons", description: "Descontos com código para divulgar nas redes." },
-    storeInfo: { title: "Dados da loja", description: "Nome, logo, capa, cores, WhatsApp e endereço." },
+    storeInfo: { title: "Loja", description: "Nome, logo, capa, cores, contato e textos em espanhol." },
     hours: { title: "Horários", description: "Os horários de cada dia e as datas especiais, como feriados." },
     delivery: {
-      title: "Entrega e pagamento",
-      description: "Bairros, taxas, pedido mínimo, tempos e formas de pagamento.",
+      title: "Entrega e retirada",
+      description: "Bairros, taxas, pedido mínimo e tempos estimados."
     },
     qr: { title: "Link e QR code", description: "O endereço do seu cardápio para compartilhar." },
     reviews: { title: "Avaliações", description: "O que os clientes disseram depois de receber o pedido." },
@@ -316,6 +346,9 @@ export const ptBR = {
       description: "Atende os clientes e anota pedidos com IA. Teste aqui antes de ligar no WhatsApp.",
     },
     platform: { title: "Plataforma", description: "O painel da plataforma chega na próxima etapa." },
+    payments: { title: "Pagamentos", description: "Como seus clientes pagam. O dinheiro vai direto para a loja." },
+    subscription: { title: "Assinatura", description: "Seu plano na plataforma e os pagamentos registrados." },
+    settings: { title: "Configurações", description: "O que se configura uma vez. As que dizem “Revisar” ainda precisam de atenção." },
   },
 
   // Cuenta del cliente (el que compra).

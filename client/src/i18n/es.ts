@@ -20,7 +20,7 @@ export const es: Dictionary = {
   },
 
   nav: {
-    reports: "Reportes", setup: "Preparar comercio", subscription: "Mi suscripción", reviews: "Reseñas",
+    reports: "Reportes", subscription: "Suscripción", reviews: "Reseñas",
     label: "Menú del panel",
     open: "Abrir menú",
     close: "Cerrar menú",
@@ -36,11 +36,16 @@ export const es: Dictionary = {
     spreadsheet: "Planilla",
     salesGroup: "Ventas",
     coupons: "Cupones",
-    storeGroup: "Local",
-    storeInfo: "Datos del local",
+    storeInfo: "Local",
     hours: "Horarios",
-    delivery: "Envío y pago",
+    delivery: "Envío y retiro",
+    payments: "Pagos",
     qr: "Link y código QR",
+    settings: "Configuración",
+    // Barra de abajo en el celular: abre el menú completo.
+    more: "Más",
+    menuTabs: "Secciones del menú",
+    backToSettings: "Volver a Configuración",
     viewMenu: "Ver menú",
   },
 
@@ -154,6 +159,31 @@ export const es: Dictionary = {
     paper: "Papel de la impresora",
     deviceHint: "Vale solo para este aparato.",
     print: (number: number) => `Imprimir comanda del pedido #${number}`,
+  },
+
+  // Configuración (la lista de tarjetas) y la página de Pagos.
+  settings: {
+    review: "Revisar",
+    noProducts: "Tu menú todavía no tiene productos disponibles: los clientes no pueden pedir.",
+    goToMenu: "Ir al menú",
+    testMenu: "Probar mi menú",
+  },
+  paymentSettings: {
+    methods: "Formas de pago",
+    methodsHint: "El cliente le paga directo al local, al recibir o al retirar. Esto no cambia tu suscripción a la plataforma.",
+    cash: "Efectivo",
+    pix: "Pix",
+    card: "Tarjeta (máquina)",
+    pixKey: "Clave Pix",
+    pixHint: "Revisá la clave antes de guardar. El local es quien confirma que el Pix llegó.",
+    methodsRequired: "Activá al menos una forma de pago.",
+    pixRequired: "Ingresá la clave Pix para aceptar Pix.",
+    save: "Guardar",
+    saving: "Guardando…",
+    saved: "Pagos guardados.",
+    discard: "Descartar cambios",
+    discardConfirm: "¿Descartar los cambios sin guardar?",
+    unsaved: "Hay cambios sin guardar.",
   },
 
   manualOrder: {
@@ -304,11 +334,11 @@ export const es: Dictionary = {
       description: "Descarga el menú en una planilla, edítalo en Excel y súbelo de nuevo.",
     },
     coupons: { title: "Cupones", description: "Descuentos con código para compartir en las redes." },
-    storeInfo: { title: "Datos del local", description: "Nombre, logo, portada, colores, WhatsApp y dirección." },
+    storeInfo: { title: "Local", description: "Nombre, logo, portada, colores, contacto y textos en español." },
     hours: { title: "Horarios", description: "El horario de cada día y las fechas especiales, como feriados." },
     delivery: {
-      title: "Envío y pago",
-      description: "Barrios, costos de envío, pedido mínimo, tiempos y formas de pago.",
+      title: "Envío y retiro",
+      description: "Barrios, costos de envío, pedido mínimo y tiempos estimados."
     },
     qr: { title: "Link y código QR", description: "La dirección de tu menú para compartir." },
     reviews: { title: "Reseñas", description: "Lo que dijeron los clientes después de recibir su pedido." },
@@ -317,6 +347,9 @@ export const es: Dictionary = {
       description: "Atiende a los clientes y toma pedidos con IA. Pruébalo acá antes de activarlo en WhatsApp.",
     },
     platform: { title: "Plataforma", description: "El panel de la plataforma llega en la próxima etapa." },
+    payments: { title: "Pagos", description: "Cómo te pagan tus clientes. El dinero va directo al local." },
+    subscription: { title: "Suscripción", description: "Tu plan en la plataforma y los pagos registrados." },
+    settings: { title: "Configuración", description: "Lo que se configura una vez. Las que dicen “Revisar” todavía necesitan atención." },
   },
 
   // Cuenta del cliente (el que compra).

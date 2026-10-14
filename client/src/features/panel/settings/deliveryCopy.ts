@@ -38,7 +38,7 @@ const pt: Copy = {
 };
 
 const es: Copy = {
-  title: "Entrega y retiro", description: "Definí dónde entregar, cuánto cobrar y los plazos que verán tus clientes.",
+  title: "Envío y retiro", description: "Definí dónde entregar, cuánto cobrar y los plazos que verán tus clientes.",
   fulfillment: "Cómo recibe el cliente", delivery: "Aceptar pedidos con entrega", pickup: "Aceptar retiro en el local",
   charges: "Tarifas de entrega", mode: "Cómo calcular la tarifa", fixed: "Tarifa fija", byZone: "Por barrio",
   fixedFee: "Tarifa fija (R$)", minimum: "Pedido mínimo para entrega (R$)", minimumHint: "Usá 0 para no exigir un mínimo. No se aplica al retiro.",

@@ -41,12 +41,7 @@ describe("panel en español", () => {
   it("menú del empleado", () => {
     setLanguage("es");
     const labels = navFor("staff").map((group) => [group.label ?? "", group.items.map((item) => item.label)]);
-    expect(labels).toEqual([
-      ["", ["Pedidos", "Nuevo pedido", "Asistente"]],
-      ["Menú", ["Productos", "Adicionales"]],
-      ["Ventas", ["Reseñas"]],
-      ["Local", ["Link y código QR"]],
-    ]);
+    expect(labels).toEqual([["", ["Pedidos", "Menú", "Asistente"]]]);
   });
 
   it("cartel de estado y sus acciones", () => {

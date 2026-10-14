@@ -1,8 +1,9 @@
-import { Printer } from "lucide-react";
-import { useSearchParams } from "react-router";
+import { Plus, Printer } from "lucide-react";
+import { Link, useSearchParams } from "react-router";
 import type { Order } from "../../../api/types";
 import { can } from "../../../auth/permissions";
 import { Spinner } from "../../../components/FullScreenMessage";
+import { button } from "../../../components/ui";
 import { PageHeader } from "../../../components/PageHeader";
 import { errorText, useT } from "../../../i18n";
 import { formatDay, formatMinutes, formatMoney, formatTime, formatWhen, operatingDayISO } from "../../../lib/format";
@@ -101,6 +102,7 @@ export function OrdersPage() {
   const t = useT();
   const [params, setParams] = useSearchParams();
   const now = useNow();
+  const { user } = usePanel();
   const today = operatingDayISO(new Date(now));
   const day = params.get("dia") ?? today;
   const filter = (ORDER_FILTERS as string[]).includes(params.get("filtro") ?? "") ? (params.get("filtro") as OrderFilter) : "active";
@@ -125,6 +127,13 @@ export function OrdersPage() {
         title={day === today ? t.pages.orders.title : t.orders.titleForDay(formatDay(day))}
         description={t.pages.orders.description}
         actions={
+          <div className="flex flex-wrap items-center gap-3">
+          {can(user.role, "orders:manual") && (
+            <Link to="/painel/pedidos/novo" className={button.primary}>
+              <Plus aria-hidden className="size-5" />
+              {t.nav.newOrder}
+            </Link>
+          )}
           <label className="flex items-center gap-2 text-sm font-bold">
             {t.orders.day}
             <input
@@ -135,6 +144,7 @@ export function OrdersPage() {
               className="h-11 rounded-lg border border-line bg-surface px-3 font-normal"
             />
           </label>
+          </div>
         }
       />
 

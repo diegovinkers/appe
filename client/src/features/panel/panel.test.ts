@@ -5,7 +5,8 @@ import { setLanguage } from "../../i18n";
 import { formatMinutes, formatWhen, operatingDayISO } from "../../lib/format";
 import { byUrgency, orderTiming } from "./orders/orderFlow";
 import { getDeviceSettings, setDeviceSetting } from "./orders/deviceSettings";
-import { navFor } from "./nav";
+import { bottomBarFor, menuTabsFor, navFor, settingsFor } from "./nav";
+import { settingsReadiness } from "./settings/readiness";
 import { statusActions, statusView } from "./storeStatus";
 
 // Estos tests miran los textos en portugués; los de español están en i18n.test.ts.
@@ -15,22 +16,21 @@ const labels = (role: Parameters<typeof navFor>[0]) =>
   navFor(role).map((group) => [group.label ?? "", group.items.map((item) => item.label)]);
 
 describe("menú por rol", () => {
-  it("el dueño ve todas las secciones", () => {
+  it("el dueño ve lo diario arriba y lo que se configura una vez en Configurações", () => {
     expect(labels("owner")).toEqual([
-      ["", ["Pedidos", "Novo pedido", "Assistente", "Preparar loja", "Relatórios"]],
-      ["Cardápio", ["Produtos", "Categorias", "Adicionais", "Planilha"]],
-      ["Vendas", ["Cupons", "Avaliações"]],
-      ["Loja", ["Dados da loja", "Horários", "Entrega e pagamento", "Link e QR code", "Minha assinatura"]],
+      ["", ["Pedidos", "Cardápio", "Assistente"]],
+      ["Vendas", ["Relatórios", "Cupons", "Avaliações"]],
+      ["", ["Configurações"]],
     ]);
+    expect(menuTabsFor("owner").map((tab) => tab.label)).toEqual(["Produtos", "Categorias", "Adicionais", "Planilha"]);
+    expect(settingsFor("owner").map((card) => card.label)).toEqual(["Loja", "Link e QR code", "Horários", "Entrega e retirada", "Pagamentos", "Assinatura"]);
+    expect(bottomBarFor("owner").map((item) => item.label)).toEqual(["Pedidos", "Novo pedido", "Cardápio"]);
   });
 
-  it("el empleado ve solo lo que puede usar", () => {
-    expect(labels("staff")).toEqual([
-      ["", ["Pedidos", "Novo pedido", "Assistente"]],
-      ["Cardápio", ["Produtos", "Adicionais"]],
-      ["Vendas", ["Avaliações"]],
-      ["Loja", ["Link e QR code"]],
-    ]);
+  it("el empleado ve solo lo que necesita para atender", () => {
+    expect(labels("staff")).toEqual([["", ["Pedidos", "Cardápio", "Assistente"]]]);
+    expect(menuTabsFor("staff").map((tab) => tab.label)).toEqual(["Produtos", "Adicionais"]);
+    expect(settingsFor("staff").map((card) => card.label)).toEqual(["Link e QR code"]);
   });
 
   it("el superadmin no tiene menú de loja", () => {
@@ -162,5 +162,17 @@ describe("sonido e impresión del aparato", () => {
     setDeviceSetting("autoPrint", true);
     setDeviceSetting("paper", 58);
     expect(getDeviceSettings()).toMatchObject({ sound: true, autoPrint: true, paper: 58 });
+  });
+});
+
+describe("Configurações: qué falta revisar", () => {
+  it("marca Pix sin clave y la entrega por barrio sin barrios", () => {
+    const store = {
+      name: "Loja", whatsapp: "+5555999990000", address: "Rua 1",
+      hours: { weekly: { sun: [], mon: [{ open: "18:00", close: "23:00" }], tue: [], wed: [], thu: [], fri: [], sat: [] }, exceptions: [] },
+      fulfillment: { delivery: true, pickup: false }, deliveryMode: "zones", deliveryZones: [],
+      paymentMethods: ["cash", "pix"], pixKey: "  ",
+    } as unknown as OwnerStore;
+    expect(settingsReadiness(store)).toEqual({ storeInfo: true, hours: true, delivery: false, payments: false });
   });
 });
