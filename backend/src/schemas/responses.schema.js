@@ -526,6 +526,16 @@ export const auditEntry = z.strictObject({
 });
 
 // Envoltorios: los recursos siempre vienen dentro de un objeto.
+// Equipe: dueño y empleados del local.
+export const teamMember = z.strictObject({
+  _id: id,
+  name: z.string(),
+  email: z.string(),
+  role: z.enum(["owner", "staff"]),
+  active: z.boolean(),
+  createdAt: date,
+});
+
 // Disponibilidade: productos y opciones (juntadas por nombre) con lo que está en falta.
 export const availabilityResponse = z.strictObject({
   products: z.array(

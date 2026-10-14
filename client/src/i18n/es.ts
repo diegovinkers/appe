@@ -40,6 +40,7 @@ export const es: Dictionary = {
     hours: "Horarios",
     delivery: "Envío y retiro",
     payments: "Pagos",
+    team: "Equipo",
     qr: "Link y código QR",
     settings: "Configuración",
     availability: "Disponibilidad",
@@ -77,6 +78,7 @@ export const es: Dictionary = {
   user: {
     roles: { owner: "Dueño", staff: "Empleado", superadmin: "Plataforma" },
     menu: "Cuenta",
+    myAccount: "Mi cuenta",
     logout: "Salir",
   },
 
@@ -178,6 +180,47 @@ export const es: Dictionary = {
     partly: (count: number) => `Agotado en ${count}`,
     noResults: "No hay nada con ese nombre.",
     empty: "Tu menú todavía no tiene productos ni adicionales.",
+  },
+
+  // Equipo: el dueño da de alta a los empleados.
+  team: {
+    add: "Agregar persona",
+    addTitle: "Nueva persona en el equipo",
+    addHint: "La persona entra en /entrar con este e-mail y esta contraseña. Ve pedidos, disponibilidad y el asistente; no toca precios ni configuración.",
+    name: "Nombre",
+    email: "E-mail",
+    password: "Contraseña inicial",
+    passwordHint: "Al menos 8 caracteres. Pasásela a la persona; después la puede cambiar en Mi cuenta.",
+    create: "Agregar",
+    edit: "Editar",
+    editTitle: (name: string) => `Editar a ${name}`,
+    active: "Puede entrar al panel",
+    inactive: "Desactivado",
+    you: "Vos",
+    newPassword: "Nueva contraseña",
+    newPasswordTitle: (name: string) => `Nueva contraseña para ${name}`,
+    newPasswordHint: "La persona sale de todos los aparatos y vuelve a entrar con esta contraseña.",
+    save: "Guardar",
+    saving: "Guardando…",
+    added: (name: string) => `${name} se agregó al equipo.`,
+    saved: "Cambios guardados.",
+    passwordSaved: "Contraseña cambiada.",
+    empty: "Todavía no hay nadie más que vos. Agregá a quien atiende los pedidos.",
+  },
+
+  // Mi cuenta: cambiar la contraseña.
+  myAccount: {
+    access: "Acceso",
+    role: "Rol",
+    changePassword: "Cambiar contraseña",
+    currentPassword: "Contraseña actual",
+    newPassword: "Nueva contraseña",
+    newPasswordHint: "Al menos 8 caracteres.",
+    confirmPassword: "Repetí la nueva contraseña",
+    mismatch: "Las contraseñas nuevas no coinciden.",
+    save: "Cambiar contraseña",
+    saving: "Cambiando…",
+    saved: "Contraseña cambiada. Los otros aparatos van a pedir que vuelvas a entrar.",
   },
 
   // Configuración (la lista de tarjetas) y la página de Pagos.
@@ -369,6 +412,8 @@ export const es: Dictionary = {
     payments: { title: "Pagos", description: "Cómo te pagan tus clientes. El dinero va directo al local." },
     subscription: { title: "Suscripción", description: "Tu plan en la plataforma y los pagos registrados." },
     availability: { title: "Disponibilidad", description: "Lo que falta hoy. Queda así hasta que lo reactives." },
+    team: { title: "Equipo", description: "Quién atiende con vos. Cada persona entra con su propio e-mail." },
+    myAccount: { title: "Mi cuenta", description: "Tus datos de acceso al panel." },
     settings: { title: "Configuración", description: "Lo que se configura una vez. Las que dicen “Revisar” todavía necesitan atención." },
   },
 
@@ -689,6 +734,8 @@ export const es: Dictionary = {
     VALIDATION_ERROR: "Hay datos inválidos. Revisa y intenta de nuevo.",
     UNAUTHENTICATED: "Tu sesión terminó. Entra de nuevo.",
     FORBIDDEN: "No tienes permiso para hacer esto.",
+    EMAIL_TAKEN: "Ese e-mail ya está en uso.",
+    INVALID_PASSWORD: "La contraseña actual no es correcta.",
     COMMERCE_SUSPENDED: "Este local está suspendido. Habla con soporte.",
     NO_COMMERCE: "Tu cuenta no tiene un local.",
     ASSISTANT_UNAVAILABLE: "El asistente no está configurado en este servidor.",

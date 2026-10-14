@@ -6,6 +6,7 @@ import { z } from "zod";
 import { subscriptionInput, subscriptionPaymentInput, subscriptionResponse, reportsQuery, reportResponse } from "../schemas/business.schema.js";
 import { auditQuery, createCommerceSchema, resetPasswordSchema, updateCommerceSchema } from "../schemas/admin.schema.js";
 import { changePasswordSchema, loginSchema } from "../schemas/auth.schema.js";
+import { createMemberSchema, memberPasswordSchema, updateMemberSchema } from "../schemas/team.schema.js";
 import { idParams } from "../schemas/common.schema.js";
 import {
   availabilitySchema,
@@ -43,6 +44,7 @@ import { d360WebhookBody, d360WebhookParams, twilioWebhookBody, webhookBody, web
 import {
   auditEntry,
   availabilityResponse,
+  teamMember,
   category,
   errorResponse,
   coupon,
@@ -153,6 +155,10 @@ export const operations = [
   { method: "get", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Un grupo de opciones", auth: "menu:read", params: idParams, responses: { 200: wrap("optionGroup", optionGroup) } },
   { method: "patch", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Editar grupo (options reemplaza la lista)", auth: "menu:write", params: idParams, body: updateOptionGroupSchema, responses: { 200: wrap("optionGroup", optionGroup) } },
   { method: "delete", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Borrar grupo (lo saca de los productos)", auth: "menu:write", params: idParams, responses: { 204: NO_CONTENT } },
+  { method: "get", path: "/api/owner/team", tag: "Panel: local", summary: "Equipe: el dueño y los empleados del local", auth: "team:manage", responses: { 200: z.strictObject({ members: z.array(teamMember) }) } },
+  { method: "post", path: "/api/owner/team", tag: "Panel: local", summary: "Dar de alta un empleado (409 si el e-mail ya existe)", auth: "team:manage", body: createMemberSchema, responses: { 201: z.strictObject({ member: teamMember }) } },
+  { method: "patch", path: "/api/owner/team/:id", tag: "Panel: local", summary: "Cambiar el nombre de un empleado o desactivarlo", auth: "team:manage", params: idParams, body: updateMemberSchema, responses: { 200: z.strictObject({ member: teamMember }) } },
+  { method: "put", path: "/api/owner/team/:id/password", tag: "Panel: local", summary: "Poner una contraseña nueva a un empleado (cierra sus sesiones)", auth: "team:manage", params: idParams, body: memberPasswordSchema, responses: { 204: NO_CONTENT } },
   { method: "get", path: "/api/owner/availability", tag: "Panel: menú", summary: "Disponibilidade: productos y opciones (juntadas por nombre) con lo que está agotado", auth: "menu:read", responses: { 200: availabilityResponse } },
   { method: "patch", path: "/api/owner/availability/options", tag: "Panel: menú", summary: "Agotar o volver a ofrecer una opción por nombre, en todos sus grupos", auth: "menu:availability", body: optionAvailabilityByNameSchema, responses: { 200: availabilityResponse } },
   { method: "post", path: "/api/owner/availability/restore", tag: "Panel: menú", summary: "Volver a ofrecer todos los productos y opciones agotados a mano", auth: "menu:availability", responses: { 200: availabilityResponse } },

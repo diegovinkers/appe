@@ -17,6 +17,7 @@ import {
   Star,
   Store,
   TicketPercent,
+  Users,
   UtensilsCrossed,
   type LucideIcon,
 } from "lucide-react";
@@ -66,13 +67,14 @@ const MENU_TABS: NavItemDef[] = [
 ];
 
 // Tarjetas de Configurações, en el orden en que se configura un local nuevo.
-export type SettingsKey = "storeInfo" | "qr" | "hours" | "delivery" | "payments" | "subscription";
+export type SettingsKey = "storeInfo" | "qr" | "hours" | "delivery" | "payments" | "team" | "subscription";
 const SETTINGS: (NavItemDef & { key: SettingsKey })[] = [
   { key: "storeInfo", to: "/painel/configuracoes/loja", label: "storeInfo", icon: Store, permission: "store:write" },
   { key: "qr", to: "/painel/configuracoes/link-qr", label: "qr", icon: QrCode, permission: "store:read" },
   { key: "hours", to: "/painel/configuracoes/horarios", label: "hours", icon: Clock, permission: "store:write" },
   { key: "delivery", to: "/painel/configuracoes/entrega", label: "delivery", icon: Bike, permission: "store:write" },
   { key: "payments", to: "/painel/configuracoes/pagamentos", label: "payments", icon: CreditCard, permission: "store:write" },
+  { key: "team", to: "/painel/configuracoes/equipe", label: "team", icon: Users, permission: "team:manage" },
   { key: "subscription", to: "/painel/configuracoes/assinatura", label: "subscription", icon: ReceiptText, permission: "store:write" },
 ];
 

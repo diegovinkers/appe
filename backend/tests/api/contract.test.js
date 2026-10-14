@@ -157,6 +157,14 @@ describe("contrato de las respuestas", () => {
       "/api/owner/option-groups/:id/options/:optionId"
     );
     check(await owner.delete(`/api/owner/option-groups/${spareGroup._id}`), "delete", "/api/owner/option-groups/:id");
+    const member = check(
+      await owner.post("/api/owner/team").send({ name: "Atendente", email: "atendente-contrato@test.local", password: "senha-forte-123" }),
+      "post",
+      "/api/owner/team"
+    ).body.member;
+    check(await owner.get("/api/owner/team"), "get", "/api/owner/team");
+    check(await owner.patch(`/api/owner/team/${member._id}`).send({ active: false }), "patch", "/api/owner/team/:id");
+    check(await owner.put(`/api/owner/team/${member._id}/password`).send({ password: "outra-senha-123" }), "put", "/api/owner/team/:id/password");
     check(await owner.get("/api/owner/availability"), "get", "/api/owner/availability");
     check(await owner.patch("/api/owner/availability/options").send({ name: "bacon", available: false }), "patch", "/api/owner/availability/options");
     check(await owner.post("/api/owner/availability/restore"), "post", "/api/owner/availability/restore");

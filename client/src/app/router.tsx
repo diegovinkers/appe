@@ -22,6 +22,8 @@ import { ReviewsPage } from "../features/panel/pages/ReviewsPage";
 import { SettingsPage } from "../features/panel/pages/SettingsPage";
 import { PaymentsPage } from "../features/panel/pages/PaymentsPage";
 import { AvailabilityPage } from "../features/panel/pages/AvailabilityPage";
+import { TeamPage } from "../features/panel/pages/TeamPage";
+import { MyAccountPage } from "../features/panel/pages/MyAccountPage";
 import { SubscriptionPage } from "../features/panel/pages/SubscriptionPage";
 import { MenuLayout } from "../features/panel/layouts/MenuLayout";
 import { SettingsLayout } from "../features/panel/layouts/SettingsLayout";
@@ -53,6 +55,8 @@ export const router = createBrowserRouter([
           { path: "pedidos/novo", element: guarded("orders:manual", <NewOrderPage />) },
           { path: "assistente", element: guarded("orders:read", <AssistantPage />) },
           { path: "disponibilidade", element: guarded("menu:availability", <AvailabilityPage />) },
+          // Minha conta: cualquiera con acceso al panel.
+          { path: "conta", element: <MyAccountPage /> },
           {
             path: "cardapio",
             element: <MenuLayout />,
@@ -77,6 +81,7 @@ export const router = createBrowserRouter([
               { path: "horarios", element: guarded("store:write", <HoursPage />) },
               { path: "entrega", element: guarded("store:write", <DeliveryPage />) },
               { path: "pagamentos", element: guarded("store:write", <PaymentsPage />) },
+              { path: "equipe", element: guarded("team:manage", <TeamPage />) },
               { path: "assinatura", element: guarded("store:write", <SubscriptionPage />) },
             ],
           },

@@ -9,6 +9,8 @@ import {
 } from "../controllers/category.controller.js";
 import { exportMenu, importMenu } from "../controllers/menu.controller.js";
 import { getAvailability, restoreAvailability, setOptionAvailabilityByName } from "../controllers/availability.controller.js";
+import { createMember, listTeam, resetMemberPassword, updateMember } from "../controllers/team.controller.js";
+import { createMemberSchema, memberPasswordSchema, updateMemberSchema } from "../schemas/team.schema.js";
 import { createUploadSignature } from "../controllers/upload.controller.js";
 import {
   createProduct,
@@ -175,6 +177,12 @@ router.patch(
 // Reseñas: el equipo las lee; ocultarlas es del dueño.
 router.get("/reviews", can("orders:read"), listOwnerReviews);
 router.patch("/reviews/:id", can("store:write"), validate({ params: idParams, body: updateReviewSchema }), updateReview);
+
+// Equipe: solo el dueño.
+router.get("/team", can("team:manage"), listTeam);
+router.post("/team", can("team:manage"), validate({ body: createMemberSchema }), createMember);
+router.patch("/team/:id", can("team:manage"), validate({ params: idParams, body: updateMemberSchema }), updateMember);
+router.put("/team/:id/password", can("team:manage"), validate({ params: idParams, body: memberPasswordSchema }), resetMemberPassword);
 
 router.get("/coupons", can("coupons:manage"), listCoupons);
 router.post("/coupons", can("coupons:manage"), validate({ body: createCouponSchema }), createCoupon);

@@ -23,7 +23,7 @@ describe("menú por rol", () => {
       ["", ["Configurações"]],
     ]);
     expect(menuTabsFor("owner").map((tab) => tab.label)).toEqual(["Produtos", "Categorias", "Adicionais", "Planilha"]);
-    expect(settingsFor("owner").map((card) => card.label)).toEqual(["Loja", "Link e QR code", "Horários", "Entrega e retirada", "Pagamentos", "Assinatura"]);
+    expect(settingsFor("owner").map((card) => card.label)).toEqual(["Loja", "Link e QR code", "Horários", "Entrega e retirada", "Pagamentos", "Equipe", "Assinatura"]);
     expect(bottomBarFor("owner").map((item) => item.label)).toEqual(["Pedidos", "Novo pedido", "Esgotados"]);
   });
 

@@ -13,6 +13,8 @@ export const ROLE_PERMISSIONS = {
     "orders:write",
     "orders:manual",
     "coupons:manage",
+    // Dar de alta, desactivar y cambiar la contraseña de los empleados.
+    "team:manage",
   ],
   // Empleado del local: atiende pedidos (también los que llegan por teléfono o en el
   // mostrador), abre o pausa el local y marca agotados. No cambia precios, cupones,

@@ -38,6 +38,7 @@ export const ptBR = {
     hours: "Horários",
     delivery: "Entrega e retirada",
     payments: "Pagamentos",
+    team: "Equipe",
     qr: "Link e QR code",
     settings: "Configurações",
     availability: "Disponibilidade",
@@ -75,6 +76,7 @@ export const ptBR = {
   user: {
     roles: { owner: "Dono", staff: "Atendente", superadmin: "Plataforma" },
     menu: "Conta",
+    myAccount: "Minha conta",
     logout: "Sair",
   },
 
@@ -177,6 +179,47 @@ export const ptBR = {
     partly: (count: number) => `Esgotado em ${count}`,
     noResults: "Nada encontrado com esse nome.",
     empty: "Seu cardápio ainda não tem produtos nem adicionais.",
+  },
+
+  // Equipe: el dueño da de alta a los empleados.
+  team: {
+    add: "Adicionar pessoa",
+    addTitle: "Nova pessoa na equipe",
+    addHint: "A pessoa entra em /entrar com este e-mail e esta senha. Ela vê pedidos, disponibilidade e o assistente; não mexe em preços nem configurações.",
+    name: "Nome",
+    email: "E-mail",
+    password: "Senha inicial",
+    passwordHint: "Pelo menos 8 caracteres. Passe para a pessoa; depois ela pode trocar em Minha conta.",
+    create: "Adicionar",
+    edit: "Editar",
+    editTitle: (name: string) => `Editar ${name}`,
+    active: "Pode entrar no painel",
+    inactive: "Desativado",
+    you: "Você",
+    newPassword: "Nova senha",
+    newPasswordTitle: (name: string) => `Nova senha para ${name}`,
+    newPasswordHint: "A pessoa sai de todos os aparelhos e entra de novo com esta senha.",
+    save: "Salvar",
+    saving: "Salvando…",
+    added: (name: string) => `${name} foi adicionada à equipe.`,
+    saved: "Alterações salvas.",
+    passwordSaved: "Senha trocada.",
+    empty: "Ainda não há ninguém além de você. Adicione quem atende os pedidos.",
+  },
+
+  // Minha conta: cambiar la contraseña.
+  myAccount: {
+    access: "Acesso",
+    role: "Função",
+    changePassword: "Trocar senha",
+    currentPassword: "Senha atual",
+    newPassword: "Nova senha",
+    newPasswordHint: "Pelo menos 8 caracteres.",
+    confirmPassword: "Repita a nova senha",
+    mismatch: "As senhas novas não são iguais.",
+    save: "Trocar senha",
+    saving: "Trocando…",
+    saved: "Senha trocada. Os outros aparelhos vão pedir login de novo.",
   },
 
   // Configurações (la lista de tarjetas) y la página de Pagamentos.
@@ -368,6 +411,8 @@ export const ptBR = {
     payments: { title: "Pagamentos", description: "Como seus clientes pagam. O dinheiro vai direto para a loja." },
     subscription: { title: "Assinatura", description: "Seu plano na plataforma e os pagamentos registrados." },
     availability: { title: "Disponibilidade", description: "O que está em falta hoje. Fica assim até você reativar." },
+    team: { title: "Equipe", description: "Quem atende com você. Cada pessoa entra com o próprio e-mail." },
+    myAccount: { title: "Minha conta", description: "Seus dados de acesso ao painel." },
     settings: { title: "Configurações", description: "O que se configura uma vez. As que dizem “Revisar” ainda precisam de atenção." },
   },
 
@@ -684,6 +729,8 @@ export const ptBR = {
     NETWORK_ERROR: "Sem conexão. Verifique a internet e tente de novo.",
     UNKNOWN: "Algo deu errado. Tente de novo.",
     UPLOAD_FAILED: "Não foi possível enviar a foto. Tente de novo.",
+    EMAIL_TAKEN: "Esse e-mail já está em uso.",
+    INVALID_PASSWORD: "A senha atual está incorreta.",
   } as Record<string, string>,
 };
 

@@ -264,6 +264,7 @@ Cada ruta pide un permiso (la lista está en `src/lib/permissions.js` y en la de
 | `orders:read` / `orders:write` | ✓ | ✓ | Ver pedidos, cambiar su estado, notas internas y comanda. |
 | `orders:manual` | ✓ | ✓ | Cargar pedidos que llegan por teléfono, WhatsApp o en el mostrador. |
 | `coupons:manage` | ✓ | | Crear y editar cupones. |
+| `team:manage` | ✓ | | Dar de alta, desactivar y cambiar la contraseña de los empleados. |
 
 En el front, mostrá u ocultá las acciones según el `role` de `/api/auth/me`.
 
@@ -403,6 +404,13 @@ Para cargarle el menú rápido a un local: se exporta, se edita en Excel y se im
   - `html` (por defecto): una página lista para imprimir con Ctrl+P, con el ancho de papel fijado.
   - `text`: texto plano de 48 columnas (80 mm) o 32 (58 mm).
   - Trae todo lo que necesitan la cocina y el repartidor: cliente y teléfono, dirección completa, ítems con sus opciones, totales, pago con troco, observaciones y notas internas.
+
+### Equipe (`team:manage`, solo el dueño)
+Cada miembro: `{ _id, name, email, role: "owner" | "staff", active, createdAt }`. Al dueño no se lo modifica desde acá; para un empleado de otro local o el dueño, `404`. Todo queda en la auditoría (`team.member_created`, `team.member_updated`, `team.password_reset`).
+- `GET /api/owner/team` → `{ "members": [...] }`: el dueño y los empleados del local.
+- `POST /api/owner/team` → `201 { "member" }`. Body: `{ "name", "email", "password" }` (8+ caracteres). Siempre crea un empleado (`staff`) del local. `409 EMAIL_TAKEN` si el e-mail ya está en uso.
+- `PATCH /api/owner/team/:id` → `{ "member" }`. Body: `{ "name"?, "active"? }`. Desactivado no puede entrar y pierde la sesión abierta.
+- `PUT /api/owner/team/:id/password` → `204`. Body: `{ "password" }`. Cierra las sesiones del empleado.
 
 ### Cupones (`coupons:manage`, solo el dueño)
 - `GET /api/owner/coupons` → `{ "coupons": [...] }`, los más nuevos primero.

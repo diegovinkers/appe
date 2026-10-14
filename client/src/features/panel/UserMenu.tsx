@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, LogOut, Moon, Sun } from "lucide-react";
+import { Check, CircleUser, LogOut, Moon, Sun } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { api } from "../../api/client";
 import type { SessionUser } from "../../api/types";
 import { useDismiss } from "../../hooks/useDismiss";
@@ -61,6 +61,17 @@ export function UserMenu({ user }: { user: SessionUser }) {
             <p className="break-all text-sm text-ink-muted">{user.email}</p>
             <p className="text-sm text-ink-muted">{t.user.roles[user.role]}</p>
           </div>
+          {user.role !== "superadmin" && (
+            <Link
+              to="/painel/conta"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex h-11 w-full items-center gap-2 rounded-lg px-3 text-left hover:bg-paper"
+            >
+              <CircleUser aria-hidden className="size-4" />
+              {t.user.myAccount}
+            </Link>
+          )}
           <hr className="my-1 border-line" />
           <p className="px-3 pt-1.5 pb-1 text-sm text-ink-muted">{t.language}</p>
           {LANGUAGES.map(({ code, name }) => (
