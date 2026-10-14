@@ -413,6 +413,21 @@ Para cargarle el menú rápido a un local: se exporta, se edita en Excel y se im
   - `payments: [{ method, count, salesCents }]` (`cash`, `pix`, `card`), `fulfillment: [{ type, count, salesCents }]` y `days: [{ day, count, salesCents }]`.
   - `products` (los 20 más vendidos, valor antes de cupones) y `sources` (de dónde vino el pedido).
 
+### Salão: mesas y la cuenta de la mesa
+Las mesas las arma el dueño (`tables:manage`); abrir la cuenta, cargar pedidos, pedir la cuenta, moverla y cerrarla lo hace todo el equipo (`orders:read`, `orders:manual`, `orders:write`). Todo es del local de la sesión: una mesa o cuenta de otro local da `404`.
+- Mesa: `{ _id, number, name, seats, x, y, active }`. `x` e `y` son la celda en una grilla de 24 × 24; dos mesas activas no pueden ocupar la misma (`409 TABLE_POSITION_TAKEN`). El número es único en el local (`409 TABLE_NUMBER_TAKEN`).
+- `GET /api/owner/tables` → `{ "tables": [...] }`: cada mesa con `state` (`free`, `occupied`, `kitchen`, `ready` o `bill`) y `tab` (la cuenta abierta con `lastItems`, o `null`).
+- `POST /api/owner/tables` → `201 { "table" }`. Body: `{ "number"?, "name"?, "seats"?, "x"?, "y"? }`; sin número, el siguiente; sin lugar, el primero libre (ordenadas de a dos celdas).
+- `PUT /api/owner/tables/layout` → `{ "tables" }`. Body: `{ "positions": [{ "id", "x", "y" }] }`, en una transacción.
+- `PATCH /api/owner/tables/:id` → `{ "table" }`. Desactivar o borrar (`DELETE`, `204`) con una cuenta abierta da `409 TABLE_HAS_OPEN_TAB`.
+- Cuenta: `{ _id, table, tableNumber, status: "open" | "bill_requested" | "closed", openedAt, billRequestedAt, closedAt, paymentMethod, changeForCents, totalCents, ordersCount }`. Una sola abierta por mesa.
+- `GET /api/owner/tables/:id/tab` → `{ "table", "tab", "orders" }` (`tab: null` si está libre).
+- `POST /api/owner/tables/:id/orders` → `201 { "order", "tab" }` (200 si es un reenvío del mismo `clientOrderId`). Body: `{ "items", "notes"?, "clientOrderId"? }`. Abre la cuenta si no hay una. El pedido es `fulfillment: "table"`, con `table: { _id, number, name }` y `tab`; entra `confirmed`, sin envío ni mínimo y con `paymentMethod: null` hasta cerrar. Si la mesa había pedido la cuenta, vuelve a `open`.
+- `POST /api/owner/tabs/:id/bill` → `{ "tab" }`: pidió la cuenta. `GET /api/owner/tabs/:id/bill?format=html|text&width=80|58` → la precuenta para imprimir.
+- `POST /api/owner/tabs/:id/move` → `{ "tab" }`. Body: `{ "tableId" }`. La otra mesa tiene que estar libre (`409 TABLE_HAS_OPEN_TAB`).
+- `POST /api/owner/tabs/:id/close` → `{ "tab" }`. Body: `{ "paymentMethod", "changeForCents"? }` (sin consumo, la forma de pago puede faltar). Con pedidos todavía en cocina (`new` o `confirmed`), `409 TAB_HAS_PENDING_ORDERS` con `details.orders`. Al cerrar, los `ready` pasan a `delivered` (servidos) y todos los pedidos no cancelados toman la forma de pago: así entran en el cierre de caja de Relatórios. Una cuenta cerrada da `409 TAB_CLOSED`.
+- Los pedidos de mesa no tienen seguimiento público (`404`) ni se pueden crear desde el menú.
+
 ### Equipe (`team:manage`, solo el dueño)
 Cada miembro: `{ _id, name, email, role: "owner" | "staff", active, createdAt }`. Al dueño no se lo modifica desde acá; para un empleado de otro local o el dueño, `404`. Todo queda en la auditoría (`team.member_created`, `team.member_updated`, `team.password_reset`).
 - `GET /api/owner/team` → `{ "members": [...] }`: el dueño y los empleados del local.

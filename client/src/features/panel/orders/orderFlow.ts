@@ -5,6 +5,12 @@ import type { Dictionary } from "../../../i18n";
 export const ACTIVE: OrderStatus[] = ["new", "confirmed", "ready", "out_for_delivery"];
 export const isActive = (status: OrderStatus) => ACTIVE.includes(status);
 
+// "Entrega", "Retirada" o "Mesa 5".
+export function fulfillmentLabel(order: Pick<Order, "fulfillment" | "table">, t: Dictionary): string {
+  if (order.fulfillment === "table") return t.orders.table(order.table?.number ?? 0);
+  return order.fulfillment === "delivery" ? t.orders.delivery : t.orders.pickup;
+}
+
 export function nextStatus(order: Pick<Order, "status" | "fulfillment">): OrderStatus | null {
   switch (order.status) {
     case "new":
@@ -29,7 +35,7 @@ export function nextLabel(order: Pick<Order, "status" | "fulfillment">, t: Dicti
     case "confirmed":
       return next.confirmed;
     case "ready":
-      return order.fulfillment === "delivery" ? next.readyDelivery : next.readyPickup;
+      return order.fulfillment === "delivery" ? next.readyDelivery : order.fulfillment === "table" ? next.readyTable : next.readyPickup;
     case "out_for_delivery":
       return next.out_for_delivery;
     default:
@@ -75,7 +81,7 @@ export function orderTiming(order: TimedOrder, now = Date.now()): OrderTiming {
     const minutes = minutesBetween(createdAt, now);
     return { kind: "waiting", minutes, late: minutes >= ACCEPT_WITHIN_MINUTES, dueAt: dueAt(order) };
   }
-  if (order.status === "ready" && order.fulfillment === "pickup") {
+  if (order.status === "ready" && order.fulfillment !== "delivery") {
     const readyAt = Date.parse(reachedAt(order, "ready") ?? order.createdAt);
     return { kind: "ready", minutes: minutesBetween(readyAt, now), late: false, dueAt: null };
   }

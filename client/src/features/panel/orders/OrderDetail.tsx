@@ -11,7 +11,7 @@ import { ptBR } from "../../../i18n/pt-BR";
 import { formatMoney, formatTime, formatWhen } from "../../../lib/format";
 import { whatsappLink } from "../../../lib/whatsapp";
 import { usePanel } from "../PanelLayout";
-import { STATUS_TONE, isActive, nextLabel, nextStatus } from "./orderFlow";
+import { STATUS_TONE, fulfillmentLabel, isActive, nextLabel, nextStatus } from "./orderFlow";
 import { setDeviceSetting, useDeviceSettings } from "./deviceSettings";
 import { printTicket } from "./printTicket";
 import { useChangeStatus, useSaveNotes } from "./useOrders";
@@ -174,7 +174,8 @@ export function OrderDetail({
       <div className="flex flex-wrap items-center gap-2 px-4 pt-4">
         <StatusChip order={order} />
         <span className="text-sm text-ink-muted">
-          {formatTime(order.createdAt)} · {t.orders.detail.arrivedBy(order.conversation ? t.orders.byAssistant : t.orders.channels[order.channel])}
+          {formatTime(order.createdAt)}
+          {order.fulfillment !== "table" && <> · {t.orders.detail.arrivedBy(order.conversation ? t.orders.byAssistant : t.orders.channels[order.channel])}</>}
         </span>
         {order.conversation && (
           <Link to={conversationHref(order.conversation)} className="text-sm font-bold underline underline-offset-4">
@@ -189,7 +190,7 @@ export function OrderDetail({
       </div>
       {cancelEntry?.reason && <p className="px-4 pt-2 font-bold text-error">{t.orders.detail.cancelledBecause(cancelEntry.reason)}</p>}
 
-      <Section title={order.fulfillment === "delivery" ? t.orders.delivery : t.orders.pickup}>
+      <Section title={fulfillmentLabel(order, t)}>
         <p className="font-bold">{order.customer.name}</p>
         {order.customer.phone && (
           <div className="mt-1 flex flex-wrap gap-2">
@@ -260,7 +261,7 @@ export function OrderDetail({
           </div>
         </dl>
         <p className="mt-1 text-sm">
-          {t.tracking.payment(t.checkout.methods[order.paymentMethod])}
+          {order.paymentMethod ? t.tracking.payment(t.checkout.methods[order.paymentMethod]) : t.orders.tablePayment}
           {order.changeForCents != null && <strong> — {t.orders.detail.changeFor(formatMoney(order.changeForCents))}</strong>}
         </p>
       </Section>

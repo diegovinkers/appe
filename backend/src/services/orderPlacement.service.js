@@ -89,8 +89,9 @@ export async function quoteOrder({ store, input, origin = "customer", now = new 
  * @param {{ id: string }} [args.user]  Usuario del panel (obligatorio con origin "panel").
  * @param {string|null} [args.account]  Cuenta del cliente que lo hace.
  * @param {string|null} [args.conversation]  Conversación del asistente que lo tomó.
+ * @param {{ table: { _id, number, name }, tab: string }|null} [args.atTable]  Mesa y cuenta (pedidos de mesa).
  */
-export async function placeOrder({ store, input, channel, origin, user = null, account = null, conversation = null }) {
+export async function placeOrder({ store, input, channel, origin, user = null, account = null, conversation = null, atTable = null }) {
   if (!["customer", "panel"].includes(origin)) throw new Error(`origin inválido: ${origin}`);
   const now = new Date();
   const manual = origin === "panel";
@@ -153,7 +154,8 @@ export async function placeOrder({ store, input, channel, origin, user = null, a
           address: zone
             ? { ...input.address, neighborhood: zone.name, zoneId: zone._id }
             : input.address && { ...input.address, zoneId: undefined },
-          paymentMethod: input.paymentMethod,
+          paymentMethod: input.paymentMethod ?? null,
+          ...(atTable && { table: atTable.table, tab: atTable.tab }),
           notes: input.notes ?? "",
           scheduledFor: input.scheduledFor ?? null,
           ...priced,

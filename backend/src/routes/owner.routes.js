@@ -10,6 +10,8 @@ import {
 import { exportMenu, importMenu } from "../controllers/menu.controller.js";
 import { getAvailability, restoreAvailability, setOptionAvailabilityByName } from "../controllers/availability.controller.js";
 import { createMember, listTeam, resetMemberPassword, updateMember } from "../controllers/team.controller.js";
+import { closeTab, createTable, createTableOrder, deleteTable, getTabBill, getTableTab, listTables, moveTab, requestBill, setTableLayout, updateTable } from "../controllers/table.controller.js";
+import { closeTabSchema, createTableSchema, moveTabSchema, tableLayoutSchema, tableOrderSchema, updateTableSchema } from "../schemas/table.schema.js";
 import { createMemberSchema, memberPasswordSchema, updateMemberSchema } from "../schemas/team.schema.js";
 import { createUploadSignature } from "../controllers/upload.controller.js";
 import {
@@ -177,6 +179,19 @@ router.patch(
 // Reseñas: el equipo las lee; ocultarlas es del dueño.
 router.get("/reviews", can("orders:read"), listOwnerReviews);
 router.patch("/reviews/:id", can("store:write"), validate({ params: idParams, body: updateReviewSchema }), updateReview);
+
+// Salón: las mesas las arma el dueño; abrir, cargar, mover y cerrar cuentas, todo el equipo.
+router.get("/tables", can("orders:read"), listTables);
+router.post("/tables", can("tables:manage"), validate({ body: createTableSchema }), createTable);
+router.put("/tables/layout", can("tables:manage"), validate({ body: tableLayoutSchema }), setTableLayout);
+router.patch("/tables/:id", can("tables:manage"), validate({ params: idParams, body: updateTableSchema }), updateTable);
+router.delete("/tables/:id", can("tables:manage"), validate({ params: idParams }), deleteTable);
+router.get("/tables/:id/tab", can("orders:read"), validate({ params: idParams }), getTableTab);
+router.post("/tables/:id/orders", can("orders:manual"), validate({ params: idParams, body: tableOrderSchema }), createTableOrder);
+router.post("/tabs/:id/bill", can("orders:write"), validate({ params: idParams }), requestBill);
+router.get("/tabs/:id/bill", can("orders:read"), validate({ params: idParams, query: ticketQuery }), getTabBill);
+router.post("/tabs/:id/move", can("orders:write"), validate({ params: idParams, body: moveTabSchema }), moveTab);
+router.post("/tabs/:id/close", can("orders:write"), validate({ params: idParams, body: closeTabSchema }), closeTab);
 
 // Equipe: solo el dueño.
 router.get("/team", can("team:manage"), listTeam);

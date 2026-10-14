@@ -79,9 +79,24 @@ const orderSchema = new mongoose.Schema(
       // Puede faltar en pedidos de mostrador.
       phone: { type: String, default: "" },
     },
-    fulfillment: { type: String, enum: ["delivery", "pickup"], required: true },
+    // table: consumo en el local, cargado por el equipo en la cuenta de una mesa.
+    fulfillment: { type: String, enum: ["delivery", "pickup", "table"], required: true },
+    // La mesa (copiada, como los productos) y su cuenta, en los pedidos de mesa.
+    table: {
+      type: new mongoose.Schema({ _id: { type: ObjectId, ref: "Table" }, number: Number, name: { type: String, default: "" } }, { _id: false }),
+      default: undefined,
+    },
+    tab: { type: ObjectId, ref: "Tab", default: undefined },
     address: { type: addressSchema, default: undefined },
-    paymentMethod: { type: String, enum: PAYMENT_METHODS, required: true },
+    // En la mesa se define al cerrar la cuenta (hasta entonces, null).
+    paymentMethod: {
+      type: String,
+      enum: PAYMENT_METHODS,
+      default: null,
+      required: function () {
+        return this.fulfillment !== "table";
+      },
+    },
     // Solo en dinheiro: para cuánto hay que llevar cambio.
     changeForCents: { type: Number, default: null },
     notes: { type: String, default: "" },
@@ -132,5 +147,6 @@ orderSchema.index({ commerce: 1, createdAt: -1 });
 // "Meus pedidos" del cliente.
 orderSchema.index({ account: 1, createdAt: -1 });
 orderSchema.index({ commerce: 1, updatedAt: -1 });
+orderSchema.index({ commerce: 1, tab: 1 }, { partialFilterExpression: { tab: { $exists: true } } });
 
 export default mongoose.models.Order || mongoose.model("Order", orderSchema);

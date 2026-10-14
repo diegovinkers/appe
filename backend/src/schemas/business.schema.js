@@ -26,7 +26,7 @@ export const reportResponse = z.strictObject({
   subtotalCents: z.number().int().nonnegative(), deliveryFeeCents: z.number().int().nonnegative(), discountCents: z.number().int().nonnegative(),
   open: z.strictObject({ count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() }),
   payments: z.array(z.strictObject({ method: z.enum(PAYMENT_METHODS), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
-  fulfillment: z.array(z.strictObject({ type: z.enum(["delivery", "pickup"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
+  fulfillment: z.array(z.strictObject({ type: z.enum(["delivery", "pickup", "table"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
   days: z.array(z.strictObject({ day, count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
   products: z.array(z.strictObject({ productId: z.string(), name: z.string(), quantity: z.number().int().nonnegative(), totalCents: z.number().int().nonnegative() })),
   sources: z.array(z.strictObject({ source: z.enum(["direct", "directory", "unknown"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),

@@ -13,6 +13,8 @@ import { CONVERSATION_CHANNELS, CONVERSATION_STATUSES } from "../models/conversa
 import { MESSAGE_KINDS, MESSAGE_ROLES } from "../models/conversationMessage.model.js";
 import { ORDER_STATUSES } from "../services/orderStatus.js";
 import { PAYMENT_FULFILLMENTS } from "../services/payments.service.js";
+import { TABLE_STATES } from "../services/tables.service.js";
+import { TAB_STATUSES } from "../models/tab.model.js";
 
 const id = z.string().regex(/^[a-f\d]{24}$/i);
 
@@ -241,7 +243,10 @@ export const order = z.strictObject({
   cancelReason: z.string(),
   internalNotes: z.string(),
   customer: z.strictObject({ name: z.string(), phone: z.string() }),
-  fulfillment: z.enum(["delivery", "pickup"]),
+  fulfillment: z.enum(["delivery", "pickup", "table"]),
+  // Pedidos de mesa: la mesa (copiada) y su cuenta.
+  table: z.strictObject({ _id: id, number: z.number().int(), name: z.string() }).optional(),
+  tab: id.optional(),
   address: z
     .strictObject({
       street: z.string(),
@@ -251,7 +256,8 @@ export const order = z.strictObject({
       reference: z.string(),
     })
     .optional(),
-  paymentMethod: z.enum(PAYMENT_METHODS),
+  // null en la mesa hasta que se cierra la cuenta.
+  paymentMethod: z.enum(PAYMENT_METHODS).nullable(),
   changeForCents: cents.nullable(),
   notes: z.string(),
   ...orderTotals,
@@ -264,6 +270,40 @@ export const order = z.strictObject({
 });
 
 export const manualOrderResponse = z.strictObject({ order, trackingUrl: z.string().nullable() });
+
+// Salón: la mesa y la cuenta.
+export const table = z.strictObject({
+  _id: id,
+  number: z.number().int(),
+  name: z.string(),
+  seats: z.number().int(),
+  x: z.number().int(),
+  y: z.number().int(),
+  active: z.boolean(),
+});
+export const tab = z.strictObject({
+  _id: id,
+  table: id,
+  tableNumber: z.number().int(),
+  status: z.enum(TAB_STATUSES),
+  openedAt: date,
+  billRequestedAt: date.nullable(),
+  closedAt: date.nullable(),
+  paymentMethod: z.enum(PAYMENT_METHODS).nullable(),
+  changeForCents: cents.nullable(),
+  totalCents: cents,
+  ordersCount: z.number().int(),
+});
+export const tablesResponse = z.strictObject({
+  tables: z.array(
+    table.extend({
+      state: z.enum(TABLE_STATES),
+      tab: tab.extend({ lastItems: z.array(z.strictObject({ name: z.string(), quantity: z.number().int() })) }).nullable(),
+    })
+  ),
+});
+export const tableTabResponse = z.strictObject({ table, tab: tab.nullable(), orders: z.array(order) });
+export const tableOrderResponse = z.strictObject({ order, tab });
 
 export const coupon = z.strictObject({
   _id: id,

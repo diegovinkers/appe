@@ -392,7 +392,7 @@ export interface paths {
                             }[];
                             fulfillment: {
                                 /** @enum {string} */
-                                type: "delivery" | "pickup";
+                                type: "delivery" | "pickup" | "table";
                                 count: number;
                                 salesCents: number;
                             }[];
@@ -4957,6 +4957,1108 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/owner/tables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Mesas del salón con su estado y la cuenta abierta
+         * @description Con sesión y el permiso `orders:read`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tables: {
+                                _id: string;
+                                number: number;
+                                name: string;
+                                seats: number;
+                                x: number;
+                                y: number;
+                                active: boolean;
+                                /** @enum {string} */
+                                state: "free" | "occupied" | "kitchen" | "ready" | "bill";
+                                tab: {
+                                    _id: string;
+                                    table: string;
+                                    tableNumber: number;
+                                    /** @enum {string} */
+                                    status: "open" | "bill_requested" | "closed";
+                                    /** Format: date-time */
+                                    openedAt: string;
+                                    billRequestedAt: string | null;
+                                    closedAt: string | null;
+                                    paymentMethod: ("cash" | "pix" | "card") | null;
+                                    changeForCents: number | null;
+                                    totalCents: number;
+                                    ordersCount: number;
+                                    lastItems: {
+                                        name: string;
+                                        quantity: number;
+                                    }[];
+                                } | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Crear una mesa (número y lugar automáticos si faltan)
+         * @description Con sesión y el permiso `tables:manage`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        number?: number;
+                        /** @default  */
+                        name?: string;
+                        /** @default 4 */
+                        seats?: number;
+                        x?: number;
+                        y?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            table: {
+                                _id: string;
+                                number: number;
+                                name: string;
+                                seats: number;
+                                x: number;
+                                y: number;
+                                active: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/tables/layout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Acomodar varias mesas en el plano
+         * @description Con sesión y el permiso `tables:manage`.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        positions: {
+                            id: string;
+                            x: number;
+                            y: number;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tables: {
+                                _id: string;
+                                number: number;
+                                name: string;
+                                seats: number;
+                                x: number;
+                                y: number;
+                                active: boolean;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/tables/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Borrar una mesa sin cuenta abierta
+         * @description Con sesión y el permiso `tables:manage`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sin contenido */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Cambiar número, nombre, lugares, lugar o activar/desactivar una mesa
+         * @description Con sesión y el permiso `tables:manage`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        number?: number;
+                        name?: string;
+                        seats?: number;
+                        active?: boolean;
+                        x?: number;
+                        y?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            table: {
+                                _id: string;
+                                number: number;
+                                name: string;
+                                seats: number;
+                                x: number;
+                                y: number;
+                                active: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/owner/tables/{id}/tab": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La cuenta abierta de la mesa y sus pedidos
+         * @description Con sesión y el permiso `orders:read`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            table: {
+                                _id: string;
+                                number: number;
+                                name: string;
+                                seats: number;
+                                x: number;
+                                y: number;
+                                active: boolean;
+                            };
+                            tab: {
+                                _id: string;
+                                table: string;
+                                tableNumber: number;
+                                /** @enum {string} */
+                                status: "open" | "bill_requested" | "closed";
+                                /** Format: date-time */
+                                openedAt: string;
+                                billRequestedAt: string | null;
+                                closedAt: string | null;
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                totalCents: number;
+                                ordersCount: number;
+                            } | null;
+                            orders: {
+                                _id: string;
+                                commerce: string;
+                                account?: string | null;
+                                conversation?: string | null;
+                                number: number;
+                                clientOrderId: string;
+                                trackingToken?: string;
+                                /** @enum {string} */
+                                channel: "online" | "phone" | "whatsapp" | "counter";
+                                /** @enum {string} */
+                                acquisitionSource?: "direct" | "directory" | "unknown";
+                                /** @enum {string} */
+                                locale: "pt-BR" | "es";
+                                scheduledFor: string | null;
+                                cancelReason: string;
+                                internalNotes: string;
+                                customer: {
+                                    name: string;
+                                    phone: string;
+                                };
+                                /** @enum {string} */
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
+                                address?: {
+                                    street: string;
+                                    number: string;
+                                    neighborhood: string;
+                                    zoneId?: string;
+                                    reference: string;
+                                };
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                notes: string;
+                                items: {
+                                    product: string;
+                                    name: string;
+                                    unitPriceCents: number;
+                                    quantity: number;
+                                    options: {
+                                        groupId: string;
+                                        optionId: string;
+                                        group: string;
+                                        /** @enum {string} */
+                                        pricing: "sum" | "max" | "average";
+                                        name: string;
+                                        priceCents: number;
+                                        quantity: number;
+                                    }[];
+                                    optionsCents: number;
+                                    notes: string;
+                                    totalCents: number;
+                                    stockTracked: boolean;
+                                }[];
+                                subtotalCents: number;
+                                discountCents: number;
+                                coupon: {
+                                    code: string;
+                                    /** @enum {string} */
+                                    type: "percent" | "fixed" | "free_delivery";
+                                    value: number;
+                                } | null;
+                                deliveryFeeCents: number;
+                                totalCents: number;
+                                estimatedMinutes?: {
+                                    min: number;
+                                    max: number;
+                                };
+                                /** @enum {string} */
+                                status: "new" | "confirmed" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+                                statusHistory: {
+                                    /** @enum {string} */
+                                    status: "new" | "confirmed" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+                                    /** Format: date-time */
+                                    at: string;
+                                    by?: string;
+                                    reason?: string;
+                                }[];
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/tables/{id}/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pedido para la mesa (abre la cuenta si hace falta; 200 si es un reenvío)
+         * @description Con sesión y el permiso `orders:manual`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        clientOrderId?: string;
+                        items: {
+                            productId: string;
+                            quantity: number;
+                            /** @default [] */
+                            options?: {
+                                groupId: string;
+                                optionId: string;
+                                /** @default 1 */
+                                quantity?: number;
+                            }[];
+                            notes?: string;
+                        }[];
+                        notes?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            order: {
+                                _id: string;
+                                commerce: string;
+                                account?: string | null;
+                                conversation?: string | null;
+                                number: number;
+                                clientOrderId: string;
+                                trackingToken?: string;
+                                /** @enum {string} */
+                                channel: "online" | "phone" | "whatsapp" | "counter";
+                                /** @enum {string} */
+                                acquisitionSource?: "direct" | "directory" | "unknown";
+                                /** @enum {string} */
+                                locale: "pt-BR" | "es";
+                                scheduledFor: string | null;
+                                cancelReason: string;
+                                internalNotes: string;
+                                customer: {
+                                    name: string;
+                                    phone: string;
+                                };
+                                /** @enum {string} */
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
+                                address?: {
+                                    street: string;
+                                    number: string;
+                                    neighborhood: string;
+                                    zoneId?: string;
+                                    reference: string;
+                                };
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                notes: string;
+                                items: {
+                                    product: string;
+                                    name: string;
+                                    unitPriceCents: number;
+                                    quantity: number;
+                                    options: {
+                                        groupId: string;
+                                        optionId: string;
+                                        group: string;
+                                        /** @enum {string} */
+                                        pricing: "sum" | "max" | "average";
+                                        name: string;
+                                        priceCents: number;
+                                        quantity: number;
+                                    }[];
+                                    optionsCents: number;
+                                    notes: string;
+                                    totalCents: number;
+                                    stockTracked: boolean;
+                                }[];
+                                subtotalCents: number;
+                                discountCents: number;
+                                coupon: {
+                                    code: string;
+                                    /** @enum {string} */
+                                    type: "percent" | "fixed" | "free_delivery";
+                                    value: number;
+                                } | null;
+                                deliveryFeeCents: number;
+                                totalCents: number;
+                                estimatedMinutes?: {
+                                    min: number;
+                                    max: number;
+                                };
+                                /** @enum {string} */
+                                status: "new" | "confirmed" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+                                statusHistory: {
+                                    /** @enum {string} */
+                                    status: "new" | "confirmed" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+                                    /** Format: date-time */
+                                    at: string;
+                                    by?: string;
+                                    reason?: string;
+                                }[];
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            tab: {
+                                _id: string;
+                                table: string;
+                                tableNumber: number;
+                                /** @enum {string} */
+                                status: "open" | "bill_requested" | "closed";
+                                /** Format: date-time */
+                                openedAt: string;
+                                billRequestedAt: string | null;
+                                closedAt: string | null;
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                totalCents: number;
+                                ordersCount: number;
+                            };
+                        };
+                    };
+                };
+                /** @description OK */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            order: {
+                                _id: string;
+                                commerce: string;
+                                account?: string | null;
+                                conversation?: string | null;
+                                number: number;
+                                clientOrderId: string;
+                                trackingToken?: string;
+                                /** @enum {string} */
+                                channel: "online" | "phone" | "whatsapp" | "counter";
+                                /** @enum {string} */
+                                acquisitionSource?: "direct" | "directory" | "unknown";
+                                /** @enum {string} */
+                                locale: "pt-BR" | "es";
+                                scheduledFor: string | null;
+                                cancelReason: string;
+                                internalNotes: string;
+                                customer: {
+                                    name: string;
+                                    phone: string;
+                                };
+                                /** @enum {string} */
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
+                                address?: {
+                                    street: string;
+                                    number: string;
+                                    neighborhood: string;
+                                    zoneId?: string;
+                                    reference: string;
+                                };
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                notes: string;
+                                items: {
+                                    product: string;
+                                    name: string;
+                                    unitPriceCents: number;
+                                    quantity: number;
+                                    options: {
+                                        groupId: string;
+                                        optionId: string;
+                                        group: string;
+                                        /** @enum {string} */
+                                        pricing: "sum" | "max" | "average";
+                                        name: string;
+                                        priceCents: number;
+                                        quantity: number;
+                                    }[];
+                                    optionsCents: number;
+                                    notes: string;
+                                    totalCents: number;
+                                    stockTracked: boolean;
+                                }[];
+                                subtotalCents: number;
+                                discountCents: number;
+                                coupon: {
+                                    code: string;
+                                    /** @enum {string} */
+                                    type: "percent" | "fixed" | "free_delivery";
+                                    value: number;
+                                } | null;
+                                deliveryFeeCents: number;
+                                totalCents: number;
+                                estimatedMinutes?: {
+                                    min: number;
+                                    max: number;
+                                };
+                                /** @enum {string} */
+                                status: "new" | "confirmed" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+                                statusHistory: {
+                                    /** @enum {string} */
+                                    status: "new" | "confirmed" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+                                    /** Format: date-time */
+                                    at: string;
+                                    by?: string;
+                                    reason?: string;
+                                }[];
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            tab: {
+                                _id: string;
+                                table: string;
+                                tableNumber: number;
+                                /** @enum {string} */
+                                status: "open" | "bill_requested" | "closed";
+                                /** Format: date-time */
+                                openedAt: string;
+                                billRequestedAt: string | null;
+                                closedAt: string | null;
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                totalCents: number;
+                                ordersCount: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/tabs/{id}/bill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Precuenta para imprimir (HTML o texto, 58 u 80 mm)
+         * @description Con sesión y el permiso `orders:read`.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    format?: "html" | "text";
+                    width?: number;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Archivo */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/html": string;
+                        "text/plain": string;
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * La mesa pidió la cuenta
+         * @description Con sesión y el permiso `orders:write`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tab: {
+                                _id: string;
+                                table: string;
+                                tableNumber: number;
+                                /** @enum {string} */
+                                status: "open" | "bill_requested" | "closed";
+                                /** Format: date-time */
+                                openedAt: string;
+                                billRequestedAt: string | null;
+                                closedAt: string | null;
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                totalCents: number;
+                                ordersCount: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/tabs/{id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pasar la cuenta a otra mesa libre
+         * @description Con sesión y el permiso `orders:write`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        tableId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tab: {
+                                _id: string;
+                                table: string;
+                                tableNumber: number;
+                                /** @enum {string} */
+                                status: "open" | "bill_requested" | "closed";
+                                /** Format: date-time */
+                                openedAt: string;
+                                billRequestedAt: string | null;
+                                closedAt: string | null;
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                totalCents: number;
+                                ordersCount: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/tabs/{id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cerrar la cuenta cobrando (la forma de pago queda en cada pedido)
+         * @description Con sesión y el permiso `orders:write`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        paymentMethod?: "cash" | "pix" | "card";
+                        changeForCents?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tab: {
+                                _id: string;
+                                table: string;
+                                tableNumber: number;
+                                /** @enum {string} */
+                                status: "open" | "bill_requested" | "closed";
+                                /** Format: date-time */
+                                openedAt: string;
+                                billRequestedAt: string | null;
+                                closedAt: string | null;
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                totalCents: number;
+                                ordersCount: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/owner/team": {
         parameters: {
             query?: never;
@@ -5818,7 +6920,13 @@ export interface paths {
                                     phone: string;
                                 };
                                 /** @enum {string} */
-                                fulfillment: "delivery" | "pickup";
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
                                 address?: {
                                     street: string;
                                     number: string;
@@ -5826,8 +6934,7 @@ export interface paths {
                                     zoneId?: string;
                                     reference: string;
                                 };
-                                /** @enum {string} */
-                                paymentMethod: "cash" | "pix" | "card";
+                                paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
                                 notes: string;
                                 items: {
@@ -5994,7 +7101,13 @@ export interface paths {
                                     phone: string;
                                 };
                                 /** @enum {string} */
-                                fulfillment: "delivery" | "pickup";
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
                                 address?: {
                                     street: string;
                                     number: string;
@@ -6002,8 +7115,7 @@ export interface paths {
                                     zoneId?: string;
                                     reference: string;
                                 };
-                                /** @enum {string} */
-                                paymentMethod: "cash" | "pix" | "card";
+                                paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
                                 notes: string;
                                 items: {
@@ -6088,7 +7200,13 @@ export interface paths {
                                     phone: string;
                                 };
                                 /** @enum {string} */
-                                fulfillment: "delivery" | "pickup";
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
                                 address?: {
                                     street: string;
                                     number: string;
@@ -6096,8 +7214,7 @@ export interface paths {
                                     zoneId?: string;
                                     reference: string;
                                 };
-                                /** @enum {string} */
-                                paymentMethod: "cash" | "pix" | "card";
+                                paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
                                 notes: string;
                                 items: {
@@ -6305,7 +7422,13 @@ export interface paths {
                                     phone: string;
                                 };
                                 /** @enum {string} */
-                                fulfillment: "delivery" | "pickup";
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
                                 address?: {
                                     street: string;
                                     number: string;
@@ -6313,8 +7436,7 @@ export interface paths {
                                     zoneId?: string;
                                     reference: string;
                                 };
-                                /** @enum {string} */
-                                paymentMethod: "cash" | "pix" | "card";
+                                paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
                                 notes: string;
                                 items: {
@@ -6442,7 +7564,13 @@ export interface paths {
                                     phone: string;
                                 };
                                 /** @enum {string} */
-                                fulfillment: "delivery" | "pickup";
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
                                 address?: {
                                     street: string;
                                     number: string;
@@ -6450,8 +7578,7 @@ export interface paths {
                                     zoneId?: string;
                                     reference: string;
                                 };
-                                /** @enum {string} */
-                                paymentMethod: "cash" | "pix" | "card";
+                                paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
                                 notes: string;
                                 items: {
@@ -6603,7 +7730,13 @@ export interface paths {
                                     phone: string;
                                 };
                                 /** @enum {string} */
-                                fulfillment: "delivery" | "pickup";
+                                fulfillment: "delivery" | "pickup" | "table";
+                                table?: {
+                                    _id: string;
+                                    number: number;
+                                    name: string;
+                                };
+                                tab?: string;
                                 address?: {
                                     street: string;
                                     number: string;
@@ -6611,8 +7744,7 @@ export interface paths {
                                     zoneId?: string;
                                     reference: string;
                                 };
-                                /** @enum {string} */
-                                paymentMethod: "cash" | "pix" | "card";
+                                paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
                                 notes: string;
                                 items: {

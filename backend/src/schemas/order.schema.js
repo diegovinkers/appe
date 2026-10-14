@@ -26,6 +26,9 @@ const itemSchema = z.object({
   notes: line(140).optional(),
 });
 
+// Los productos de un pedido en la cuenta de una mesa (mismas reglas que los otros pedidos).
+export const tableItemsSchema = z.array(itemSchema).min(1, "O pedido está vazio").max(50);
+
 // Si el local entrega por barrio, el cliente elige uno de la lista (zoneId) y el
 // nombre sale del barrio; si no, escribe el suyo (neighborhood).
 const addressSchema = z.object({

@@ -211,7 +211,7 @@ export const getOrderTicket = async (req, res) => {
 // Seguimiento para el cliente: estado y resumen, sin teléfono ni dirección completa.
 export const getOrderTracking = async (req, res) => {
   const order = await Order.findOne({ trackingToken: req.valid.params.token });
-  const store = order && (await Commerce.findOne({ _id: order.commerce, status: "active" }));
+  const store = order && order.fulfillment !== "table" && (await Commerce.findOne({ _id: order.commerce, status: "active" }));
   if (!order || !store) throw new AppError(404, "ORDER_NOT_FOUND", "Pedido não encontrado");
 
   const review = await Review.findOne({ order: order._id }).lean();

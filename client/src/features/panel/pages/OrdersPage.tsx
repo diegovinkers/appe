@@ -14,7 +14,7 @@ import { useNow } from "../../../hooks/useNow";
 import { useParamSheet } from "../../../hooks/useParamSheet";
 import { Conversations } from "../assistant/Conversations";
 import { OrderDetail, StatusChip } from "../orders/OrderDetail";
-import { ORDER_FILTERS, type OrderFilter, byUrgency, matchesFilter, nextLabel, nextStatus, orderTiming } from "../orders/orderFlow";
+import { ORDER_FILTERS, type OrderFilter, byUrgency, fulfillmentLabel, matchesFilter, nextLabel, nextStatus, orderTiming } from "../orders/orderFlow";
 import { useDeviceSettings } from "../orders/deviceSettings";
 import { OrdersWorkspace } from "../orders/OrdersWorkspace";
 import { printTicket } from "../orders/printTicket";
@@ -62,8 +62,9 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
         <span className="min-w-0 flex-1">
           <span className="block truncate font-bold">{order.customer.name}</span>
           <span className="block text-sm text-ink-muted">
-            <TimeInfo order={order} now={now} today={today} /> · {order.fulfillment === "delivery" ? t.orders.delivery : t.orders.pickup} ·{" "}
-            {order.conversation ? t.orders.byAssistant : t.orders.channels[order.channel]}
+            <TimeInfo order={order} now={now} today={today} /> · {fulfillmentLabel(order, t)}
+            {/* En la mesa el canal sobra: siempre lo carga el equipo. */}
+            {order.fulfillment !== "table" && <> · {order.conversation ? t.orders.byAssistant : t.orders.channels[order.channel]}</>}
             {order.scheduledFor && <strong className="text-warning"> · {t.orders.scheduled(formatWhen(order.scheduledFor))}</strong>}
           </span>
         </span>

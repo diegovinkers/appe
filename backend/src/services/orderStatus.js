@@ -27,6 +27,12 @@ const NEXT = {
     confirmed: ["ready", "cancelled"],
     ready: ["delivered", "cancelled"],
   },
+  // En la mesa: entregado = servido.
+  table: {
+    new: ["confirmed", "cancelled"],
+    confirmed: ["ready", "cancelled"],
+    ready: ["delivered", "cancelled"],
+  },
 };
 
 export const canTransition = (from, to, fulfillment = "delivery") => NEXT[fulfillment]?.[from]?.includes(to) ?? false;

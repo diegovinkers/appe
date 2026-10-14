@@ -194,6 +194,25 @@ describe("contrato de las respuestas", () => {
     );
     check(await owner.post("/api/owner/uploads/signature").send({ kind: "product" }), "post", "/api/owner/uploads/signature");
 
+    // Salón: mesas y la cuenta de la mesa
+    const salonTable = check(await owner.post("/api/owner/tables").send({ name: "Janela" }), "post", "/api/owner/tables").body.table;
+    const spareTable = (await owner.post("/api/owner/tables").send({})).body.table;
+    check(await owner.put("/api/owner/tables/layout").send({ positions: [{ id: salonTable._id, x: 4, y: 2 }] }), "put", "/api/owner/tables/layout");
+    check(await owner.patch(`/api/owner/tables/${salonTable._id}`).send({ seats: 6 }), "patch", "/api/owner/tables/:id");
+    const tableOrder = check(
+      await owner.post(`/api/owner/tables/${salonTable._id}/orders`).send({ items: [{ productId: product._id, quantity: 1 }] }),
+      "post",
+      "/api/owner/tables/:id/orders"
+    ).body;
+    check(await owner.get("/api/owner/tables"), "get", "/api/owner/tables");
+    check(await owner.get(`/api/owner/tables/${salonTable._id}/tab`), "get", "/api/owner/tables/:id/tab");
+    check(await owner.post(`/api/owner/tabs/${tableOrder.tab._id}/bill`), "post", "/api/owner/tabs/:id/bill");
+    check(await owner.get(`/api/owner/tabs/${tableOrder.tab._id}/bill`), "get", "/api/owner/tabs/:id/bill");
+    check(await owner.post(`/api/owner/tabs/${tableOrder.tab._id}/move`).send({ tableId: spareTable._id }), "post", "/api/owner/tabs/:id/move");
+    await owner.patch(`/api/owner/orders/${tableOrder.order._id}/status`).send({ status: "ready" });
+    check(await owner.post(`/api/owner/tabs/${tableOrder.tab._id}/close`).send({ paymentMethod: "cash" }), "post", "/api/owner/tabs/:id/close");
+    check(await owner.delete(`/api/owner/tables/${salonTable._id}`), "delete", "/api/owner/tables/:id");
+
     // Cupones
     const createdCoupon = check(
       await owner.post("/api/owner/coupons").send({ code: "bemvindo", type: "percent", value: 10 }),

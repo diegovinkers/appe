@@ -39,14 +39,17 @@ export function priceOrder({
   serviceAt = now,
 }) {
   if (!manual) checkOpening(opening);
-  if (!store.fulfillment[input.fulfillment]) {
+  // En la mesa (solo desde el panel): sin envío ni mínimo, y la forma de pago se elige al cerrar la cuenta.
+  const atTable = input.fulfillment === "table";
+  if (atTable && !manual) throw badRequest("FULFILLMENT_NOT_AVAILABLE", "Pedidos na mesa são feitos pela equipe da loja");
+  if (!atTable && !store.fulfillment[input.fulfillment]) {
     const label = input.fulfillment === "delivery" ? "Entrega" : "Retirada";
     throw badRequest("FULFILLMENT_NOT_AVAILABLE", `${label} não disponível neste estabelecimento`);
   }
-  if (!store.paymentMethods.includes(input.paymentMethod)) {
+  if (!atTable && !store.paymentMethods.includes(input.paymentMethod)) {
     throw badRequest("PAYMENT_METHOD_NOT_AVAILABLE", "Forma de pagamento não aceita neste estabelecimento");
   }
-  if (!paymentMethodsFor(store, input.fulfillment).includes(input.paymentMethod)) {
+  if (!atTable && !paymentMethodsFor(store, input.fulfillment).includes(input.paymentMethod)) {
     const label = input.fulfillment === "delivery" ? "entrega" : "retirada";
     throw badRequest("PAYMENT_METHOD_NOT_AVAILABLE", `Essa forma de pagamento não é aceita na ${label}`);
   }

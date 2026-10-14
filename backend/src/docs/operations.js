@@ -7,6 +7,7 @@ import { subscriptionInput, subscriptionPaymentInput, subscriptionResponse, repo
 import { auditQuery, createCommerceSchema, resetPasswordSchema, updateCommerceSchema } from "../schemas/admin.schema.js";
 import { changePasswordSchema, loginSchema } from "../schemas/auth.schema.js";
 import { createMemberSchema, memberPasswordSchema, updateMemberSchema } from "../schemas/team.schema.js";
+import { closeTabSchema, createTableSchema, moveTabSchema, tableLayoutSchema, tableOrderSchema, updateTableSchema } from "../schemas/table.schema.js";
 import { idParams } from "../schemas/common.schema.js";
 import {
   availabilitySchema,
@@ -44,6 +45,11 @@ import { d360WebhookBody, d360WebhookParams, twilioWebhookBody, webhookBody, web
 import {
   auditEntry,
   availabilityResponse,
+  table,
+  tablesResponse,
+  tableTabResponse,
+  tableOrderResponse,
+  tab as tabResponse,
   teamMember,
   category,
   errorResponse,
@@ -155,6 +161,17 @@ export const operations = [
   { method: "get", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Un grupo de opciones", auth: "menu:read", params: idParams, responses: { 200: wrap("optionGroup", optionGroup) } },
   { method: "patch", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Editar grupo (options reemplaza la lista)", auth: "menu:write", params: idParams, body: updateOptionGroupSchema, responses: { 200: wrap("optionGroup", optionGroup) } },
   { method: "delete", path: "/api/owner/option-groups/:id", tag: "Panel: menú", summary: "Borrar grupo (lo saca de los productos)", auth: "menu:write", params: idParams, responses: { 204: NO_CONTENT } },
+  { method: "get", path: "/api/owner/tables", tag: "Panel: salón", summary: "Mesas del salón con su estado y la cuenta abierta", auth: "orders:read", responses: { 200: tablesResponse } },
+  { method: "post", path: "/api/owner/tables", tag: "Panel: salón", summary: "Crear una mesa (número y lugar automáticos si faltan)", auth: "tables:manage", body: createTableSchema, responses: { 201: z.strictObject({ table }) } },
+  { method: "put", path: "/api/owner/tables/layout", tag: "Panel: salón", summary: "Acomodar varias mesas en el plano", auth: "tables:manage", body: tableLayoutSchema, responses: { 200: z.strictObject({ tables: z.array(table) }) } },
+  { method: "patch", path: "/api/owner/tables/:id", tag: "Panel: salón", summary: "Cambiar número, nombre, lugares, lugar o activar/desactivar una mesa", auth: "tables:manage", params: idParams, body: updateTableSchema, responses: { 200: z.strictObject({ table }) } },
+  { method: "delete", path: "/api/owner/tables/:id", tag: "Panel: salón", summary: "Borrar una mesa sin cuenta abierta", auth: "tables:manage", params: idParams, responses: { 204: NO_CONTENT } },
+  { method: "get", path: "/api/owner/tables/:id/tab", tag: "Panel: salón", summary: "La cuenta abierta de la mesa y sus pedidos", auth: "orders:read", params: idParams, responses: { 200: tableTabResponse } },
+  { method: "post", path: "/api/owner/tables/:id/orders", tag: "Panel: salón", summary: "Pedido para la mesa (abre la cuenta si hace falta; 200 si es un reenvío)", auth: "orders:manual", params: idParams, body: tableOrderSchema, responses: { 201: tableOrderResponse, 200: tableOrderResponse } },
+  { method: "post", path: "/api/owner/tabs/:id/bill", tag: "Panel: salón", summary: "La mesa pidió la cuenta", auth: "orders:write", params: idParams, responses: { 200: z.strictObject({ tab: tabResponse }) } },
+  { method: "get", path: "/api/owner/tabs/:id/bill", tag: "Panel: salón", summary: "Precuenta para imprimir (HTML o texto, 58 u 80 mm)", auth: "orders:read", params: idParams, query: ticketQuery, responses: { 200: binary("text/html", "text/plain") } },
+  { method: "post", path: "/api/owner/tabs/:id/move", tag: "Panel: salón", summary: "Pasar la cuenta a otra mesa libre", auth: "orders:write", params: idParams, body: moveTabSchema, responses: { 200: z.strictObject({ tab: tabResponse }) } },
+  { method: "post", path: "/api/owner/tabs/:id/close", tag: "Panel: salón", summary: "Cerrar la cuenta cobrando (la forma de pago queda en cada pedido)", auth: "orders:write", params: idParams, body: closeTabSchema, responses: { 200: z.strictObject({ tab: tabResponse }) } },
   { method: "get", path: "/api/owner/team", tag: "Panel: local", summary: "Equipe: el dueño y los empleados del local", auth: "team:manage", responses: { 200: z.strictObject({ members: z.array(teamMember) }) } },
   { method: "post", path: "/api/owner/team", tag: "Panel: local", summary: "Dar de alta un empleado (409 si el e-mail ya existe)", auth: "team:manage", body: createMemberSchema, responses: { 201: z.strictObject({ member: teamMember }) } },
   { method: "patch", path: "/api/owner/team/:id", tag: "Panel: local", summary: "Cambiar el nombre de un empleado o desactivarlo", auth: "team:manage", params: idParams, body: updateMemberSchema, responses: { 200: z.strictObject({ member: teamMember }) } },

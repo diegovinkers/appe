@@ -58,6 +58,9 @@ const center = (text, width) => {
   return `${" ".repeat(Math.floor((width - clipped.length) / 2))}${clipped}`;
 };
 
+// "Mesa 5" o "Mesa 5 (Terraço)".
+export const tableLabel = (table) => `Mesa ${table?.number ?? "?"}${table?.name ? ` (${table.name})` : ""}`;
+
 export function buildTicket(order, store, { paperWidth = 80 } = {}) {
   const width = TICKET_COLUMNS[paperWidth];
   const rule = "-".repeat(width);
@@ -71,7 +74,9 @@ export function buildTicket(order, store, { paperWidth = 80 } = {}) {
 
   lines.push(...wrap(`Cliente: ${order.customer.name}`, width, "  "));
   if (order.customer.phone) lines.push(`Tel: ${order.customer.phone}`);
-  if (order.fulfillment === "delivery") {
+  if (order.fulfillment === "table") {
+    lines.push(`*** ${tableLabel(order.table).toUpperCase()} ***`);
+  } else if (order.fulfillment === "delivery") {
     const { street, number, neighborhood, reference } = order.address;
     lines.push(...wrap(`ENTREGA: ${street}, ${number} - ${neighborhood}`, width, "  "));
     if (reference) lines.push(...wrap(`Ref.: ${reference}`, width, "  "));
@@ -100,9 +105,33 @@ export function buildTicket(order, store, { paperWidth = 80 } = {}) {
   lines.push(...row("TOTAL", money(order.totalCents), width), rule);
 
   const change = order.paymentMethod === "cash" && order.changeForCents != null ? ` (troco p/ ${money(order.changeForCents)})` : "";
-  lines.push(...wrap(`Pagamento: ${PAYMENT_LABELS[order.paymentMethod]}${change}`, width, "  "));
+  const payment = order.paymentMethod ? PAYMENT_LABELS[order.paymentMethod] : "na conta da mesa";
+  lines.push(...wrap(`Pagamento: ${payment}${change}`, width, "  "));
   if (order.notes) lines.push(...wrap(`Obs.: ${order.notes}`, width, "  "));
   if (order.internalNotes) lines.push(...wrap(`Obs. internas: ${order.internalNotes}`, width, "  "));
+  return `${lines.join("\n")}\n`;
+}
+
+// Precuenta de una mesa: todos sus pedidos (sin los cancelados) y el total a cobrar.
+export function buildBill(tab, orders, store, { paperWidth = 80, now = new Date() } = {}) {
+  const width = TICKET_COLUMNS[paperWidth];
+  const rule = "-".repeat(width);
+  const lines = [center(store.name.toUpperCase(), width), center("CONTA", width), rule];
+  const table = orders[0]?.table ?? { number: tab.tableNumber };
+  lines.push(...row(tableLabel(table).toUpperCase(), dateTime(now), width), rule);
+  let total = 0;
+  for (const order of orders.filter((item) => item.status !== "cancelled")) {
+    lines.push(`Pedido #${order.number}`);
+    for (const item of order.items) {
+      lines.push(...row(`${item.quantity}x ${item.name}`, money(item.totalCents), width));
+      for (const option of item.options) lines.push(...wrap(`   ${option.quantity > 1 ? `${option.quantity}x ` : ""}${option.name}`, width, "     "));
+    }
+    if (order.discountCents > 0) lines.push(...row("Desconto", `-${money(order.discountCents)}`, width));
+    total += order.totalCents;
+  }
+  lines.push(rule, ...row("TOTAL", money(total), width), rule);
+  if (tab.paymentMethod) lines.push(`Pagamento: ${PAYMENT_LABELS[tab.paymentMethod]}`);
+  lines.push(center("Obrigado pela visita!", width));
   return `${lines.join("\n")}\n`;
 }
 

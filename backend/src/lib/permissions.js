@@ -15,6 +15,8 @@ export const ROLE_PERMISSIONS = {
     "coupons:manage",
     // Dar de alta, desactivar y cambiar la contraseña de los empleados.
     "team:manage",
+    // Crear, editar, acomodar y borrar las mesas del salón (abrir y cerrar cuentas es de todos).
+    "tables:manage",
   ],
   // Empleado del local: atiende pedidos (también los que llegan por teléfono o en el
   // mostrador), abre o pausa el local y marca agotados. No cambia precios, cupones,
