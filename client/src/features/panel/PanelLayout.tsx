@@ -167,8 +167,8 @@ export function PanelLayout() {
         <main className={workspace ? "flex h-[calc(100dvh-4rem)] min-w-0 flex-1 flex-col px-4 py-3" : "min-w-0 flex-1 px-4 pt-6 pb-24 sm:px-6 lg:px-10 lg:py-8"}>
           <div className={workspace ? "flex min-h-0 flex-1 flex-col" : "mx-auto max-w-5xl"}>
             {can(user.role, "orders:read") && <OrderAlerts />}
-            {/* En el espacio de trabajo, el panel de WhatsApp ya muestra las que esperan a una persona. */}
-            {can(user.role, "orders:read") && !workspace && <AssistantAlert />}
+            {/* En el espacio de trabajo (el panel de WhatsApp) y en Início ya se ven las que esperan a una persona. */}
+            {can(user.role, "orders:read") && !workspace && pathname !== "/painel/inicio" && <AssistantAlert />}
             <Outlet context={context} />
           </div>
         </main>

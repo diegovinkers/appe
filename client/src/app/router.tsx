@@ -14,6 +14,7 @@ import { NewOrderPage } from "../features/panel/pages/NewOrderPage";
 import { OptionGroupsPage } from "../features/panel/pages/OptionGroupsPage";
 import { OrdersPage } from "../features/panel/pages/OrdersPage";
 import { StorePage } from "../features/panel/pages/StorePage";
+import { HomePage } from "../features/panel/pages/HomePage";
 import { HoursPage } from "../features/panel/pages/HoursPage";
 import { DeliveryPage } from "../features/panel/pages/DeliveryPage";
 import { CouponsPage } from "../features/panel/pages/CouponsPage";
@@ -51,7 +52,9 @@ export const router = createBrowserRouter([
         path: "/painel",
         element: <PanelLayout />,
         children: [
-          { index: true, element: <Navigate to="pedidos" replace /> },
+          // Lo primero al entrar: el resumen del día.
+          { index: true, element: <Navigate to="inicio" replace /> },
+          { path: "inicio", element: guarded("orders:read", <HomePage />) },
           { path: "pedidos", element: guarded("orders:read", <OrdersPage />) },
           { path: "pedidos/novo", element: guarded("orders:manual", <NewOrderPage />) },
           { path: "assistente", element: guarded("orders:read", <AssistantPage />) },

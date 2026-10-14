@@ -18,18 +18,18 @@ const labels = (role: Parameters<typeof navFor>[0]) =>
 describe("menú por rol", () => {
   it("el dueño ve lo diario arriba y lo que se configura una vez en Configurações", () => {
     expect(labels("owner")).toEqual([
-      ["", ["Pedidos", "Disponibilidade", "Cardápio", "Assistente"]],
+      ["", ["Início", "Pedidos", "Disponibilidade", "Cardápio", "Assistente"]],
       ["Vendas", ["Relatórios", "Cupons", "Avaliações"]],
       ["", ["Configurações"]],
     ]);
     expect(menuTabsFor("owner").map((tab) => tab.label)).toEqual(["Produtos", "Categorias", "Adicionais", "Planilha"]);
     expect(settingsFor("owner").map((card) => card.label)).toEqual(["Loja", "Link e QR code", "Horários", "Entrega e retirada", "Pagamentos", "Salão", "Equipe", "Assinatura"]);
-    expect(bottomBarFor("owner").map((item) => item.label)).toEqual(["Pedidos", "Novo pedido", "Esgotados"]);
+    expect(bottomBarFor("owner").map((item) => item.label)).toEqual(["Início", "Pedidos", "Novo pedido", "Esgotados"]);
   });
 
   it("el empleado ve solo lo que necesita para atender", () => {
-    expect(labels("staff")).toEqual([["", ["Pedidos", "Disponibilidade", "Assistente"]]]);
-    expect(bottomBarFor("staff").map((item) => item.label)).toEqual(["Pedidos", "Novo pedido", "Esgotados"]);
+    expect(labels("staff")).toEqual([["", ["Início", "Pedidos", "Disponibilidade", "Assistente"]]]);
+    expect(bottomBarFor("staff").map((item) => item.label)).toEqual(["Início", "Pedidos", "Novo pedido", "Esgotados"]);
     expect(menuTabsFor("staff").map((tab) => tab.label)).toEqual(["Produtos", "Adicionais"]);
     expect(settingsFor("staff").map((card) => card.label)).toEqual(["Link e QR code"]);
   });

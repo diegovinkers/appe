@@ -8,6 +8,7 @@ import {
   Clock,
   CreditCard,
   FileSpreadsheet,
+  House,
   LayoutList,
   ListPlus,
   Menu,
@@ -39,6 +40,7 @@ type NavGroupDef = { label?: NavKey; items: NavItemDef[] };
 const NAV_GROUPS: NavGroupDef[] = [
   {
     items: [
+      { to: "/painel/inicio", label: "home", icon: House, permission: "orders:read" },
       { to: "/painel/pedidos", label: "orders", icon: ClipboardList, permission: "orders:read" },
       { to: "/painel/disponibilidade", label: "availability", icon: CircleSlash, permission: "menu:availability" },
       // Editar el cardápio es del dueño; el empleado agota en Disponibilidade.
@@ -82,6 +84,7 @@ const SETTINGS: (NavItemDef & { key: SettingsKey })[] = [
 
 // Barra de abajo en el celular: lo diario a un toque; "Mais" abre el menú completo.
 const BOTTOM_BAR: NavItemDef[] = [
+  { to: "/painel/inicio", label: "home", icon: House, permission: "orders:read" },
   { to: "/painel/pedidos", label: "orders", icon: ClipboardList, permission: "orders:read" },
   { to: "/painel/pedidos/novo", label: "newOrder", icon: CirclePlus, permission: "orders:manual" },
   { to: "/painel/disponibilidade", label: "soldOut", icon: CircleSlash, permission: "menu:availability" },
