@@ -229,26 +229,45 @@ export function useOrdersView() {
 }
 export type OrdersView = ReturnType<typeof useOrdersView>;
 
-export function DayPicker({ view }: { view: OrdersView }) {
+// `compact`: en la barra del panel, sin la palabra "Dia" a la vista; si se está mirando otro
+// día, se marca para que nadie lo confunda con hoy.
+export function DayPicker({ view, compact = false }: { view: OrdersView; compact?: boolean }) {
   const t = useT();
+  const otherDay = view.day !== view.today;
   return (
     <label className="flex items-center gap-2 text-sm font-bold">
-      {t.orders.day}
+      <span className={compact ? "sr-only" : ""}>{t.orders.day}</span>
       <input
         type="date"
         value={view.day}
         max={view.today}
+        title={compact ? t.orders.day : undefined}
         onChange={(event) => view.setParam("dia", event.target.value && event.target.value !== view.today ? event.target.value : null)}
-        className="h-11 rounded-lg border border-line bg-surface px-3 font-normal"
+        className={`rounded-lg border bg-surface px-3 ${compact ? "h-10 text-sm" : "h-11"} ${
+          compact && otherDay ? "border-warning font-bold text-warning ring-2 ring-warning/25" : "border-line font-normal"
+        }`}
       />
     </label>
   );
 }
 
-export function NewOrderButton() {
+// `compact`: un botón redondo con el color de la marca y solo el + (el nombre, al pasar el mouse).
+export function NewOrderButton({ compact = false }: { compact?: boolean }) {
   const t = useT();
   const { user } = usePanel();
   if (!can(user.role, "orders:manual")) return null;
+  if (compact) {
+    return (
+      <Link
+        to="/painel/pedidos/novo"
+        aria-label={t.nav.newOrder}
+        title={t.nav.newOrder}
+        className="grid size-11 shrink-0 place-items-center rounded-full bg-(--brand) text-(--on-brand) shadow-md ring-4 ring-(--brand)/20 transition-transform hover:scale-105 active:scale-95"
+      >
+        <Plus aria-hidden strokeWidth={2.75} className="size-6" />
+      </Link>
+    );
+  }
   return (
     <Link to="/painel/pedidos/novo" className={button.primary}>
       <Plus aria-hidden className="size-5" />

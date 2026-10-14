@@ -332,8 +332,6 @@ export const ptBR = {
     moveRow: (name: string) => `Mover o painel ${name}: arraste até os outros painéis ou use as setas ↑ ↓`,
     collapse: (name: string) => `Recolher ${name}`,
     expand: (name: string) => `Abrir ${name}`,
-    reset: "Restaurar disposição",
-    resetConfirm: "Voltar os painéis à disposição original?",
     search: "Buscar por nome, número ou telefone",
     noResults: "Nenhum pedido com essa busca.",
     assistantOn: "Assistente ligado",

@@ -1,9 +1,8 @@
-import { Armchair, ClipboardList, GripVertical, MessageCircle, PanelLeftClose, PanelTopClose, RotateCcw } from "lucide-react";
+import { Armchair, ClipboardList, GripVertical, MessageCircle, PanelLeftClose, PanelTopClose } from "lucide-react";
 import { Fragment, type DragEvent, type KeyboardEvent, type ReactNode, useState } from "react";
 import { Link } from "react-router";
 import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { can } from "../../../auth/permissions";
-import { button } from "../../../components/ui";
 import { useT } from "../../../i18n";
 import { formatDay } from "../../../lib/format";
 import { needsPerson, useAssistantSettings, useConversations } from "../assistant/assistant";
@@ -60,14 +59,6 @@ function readOrder(): ColumnId[] {
 }
 
 const readSalonAt = (): SalonAt => (storage.getItem(SALON_KEY) === "bottom" ? "bottom" : "top");
-
-function forgetLayouts() {
-  try {
-    for (const key of Object.keys(localStorage)) if (key.includes(LAYOUT_PREFIX) || key === ORDER_KEY || key === SALON_KEY) localStorage.removeItem(key);
-  } catch {
-    // Sin almacenamiento: no había nada guardado.
-  }
-}
 
 // Un panel: barra con el nombre (se arrastra para cambiarlo de lugar), recoger y su contenido.
 // `row`: una fila a todo el ancho (el salón): se mueve con ↑ ↓ y se recoge hacia arriba.
@@ -201,7 +192,6 @@ export function OrdersWorkspace() {
   const { params, setParam } = view;
   const [order, setOrder] = useState<ColumnId[]>(readOrder);
   const [salonAt, setSalonAt] = useState<SalonAt>(readSalonAt);
-  const [version, setVersion] = useState(0);
   // Tamaños y recogidos se guardan por panel (no dependen del orden): sobreviven a moverlos.
   const layout = useDefaultLayout({ id: `${LAYOUT_PREFIX}colunas`, storage });
   const rowsLayout = useDefaultLayout({ id: `${LAYOUT_PREFIX}filas`, storage });
@@ -251,13 +241,6 @@ export function OrdersWorkspace() {
     const target = order[index + step];
     if (target) swap(id, target);
   };
-  const reset = () => {
-    if (!window.confirm(t.workspace.resetConfirm)) return;
-    forgetLayouts();
-    setOrder(DEFAULT_ORDER);
-    setSalonAt("top");
-    setVersion((value) => value + 1);
-  };
 
   const assistantData = assistant.data?.assistant;
   const content: Record<PanelId, { badge?: number; extra?: ReactNode; body: ReactNode }> = {
@@ -288,6 +271,13 @@ export function OrdersWorkspace() {
     },
     orders: {
       badge: activeOrders,
+      // El día y "Novo pedido" viven en la barra del panel: la lista se queda con todo el alto.
+      extra: (
+        <span className="mr-1 flex items-center gap-2">
+          <DayPicker compact view={view} />
+          <NewOrderButton compact />
+        </span>
+      ),
       body: (
         <div className="p-3">
           <OrdersList view={view} selectedId={selectedOrder} onOpen={(id) => setParam("pedido", id)} />
@@ -302,7 +292,7 @@ export function OrdersWorkspace() {
 
   const columns = (
     <Group
-      key={`${order.join("-")}-${version}`}
+      key={order.join("-")}
       orientation="horizontal"
       defaultLayout={layout.defaultLayout}
       onLayoutChanged={layout.onLayoutChanged}
@@ -326,21 +316,12 @@ export function OrdersWorkspace() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="mr-auto text-2xl font-bold tracking-tight">
-          {view.day === view.today ? t.pages.orders.title : t.orders.titleForDay(formatDay(view.day))}
-        </h1>
-        <DayPicker view={view} />
-        <NewOrderButton />
-        <button type="button" onClick={reset} className={button.quiet} title={t.workspace.reset}>
-          <RotateCcw aria-hidden className="size-4" />
-          {t.workspace.reset}
-        </button>
-      </div>
+      {/* Sin barra de título: los paneles usan todo el alto. El título queda para el lector de pantalla. */}
+      <h1 className="sr-only">{view.day === view.today ? t.pages.orders.title : t.orders.titleForDay(formatDay(view.day))}</h1>
 
       {hasSalon ? (
         <Group
-          key={`filas-${salonAt}-${version}`}
+          key={`filas-${salonAt}`}
           orientation="vertical"
           defaultLayout={rowsLayout.defaultLayout}
           onLayoutChanged={rowsLayout.onLayoutChanged}

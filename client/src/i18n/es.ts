@@ -333,8 +333,6 @@ export const es: Dictionary = {
     moveRow: (name: string) => `Mover el panel ${name}: arrastralo hasta los otros paneles o usá las flechas ↑ ↓`,
     collapse: (name: string) => `Plegar ${name}`,
     expand: (name: string) => `Abrir ${name}`,
-    reset: "Restaurar disposición",
-    resetConfirm: "¿Volver los paneles a la disposición original?",
     search: "Buscar por nombre, número o teléfono",
     noResults: "No hay pedidos con esa búsqueda.",
     assistantOn: "Asistente activado",
