@@ -212,7 +212,8 @@ async function cotarPedido(args, { store, conversation, menu }) {
     versao: version,
     total: formatBRL(quote.totalCents),
     resumo: summary,
-    proximo_passo: "Mostre o resumo e pergunte se o cliente confirma. Só chame criar_pedido depois da resposta dele.",
+    proximo_passo:
+      "O sistema envia este resumo ao cliente e pergunta se confirma: não escreva outro resumo. Só chame criar_pedido depois da resposta dele.",
   };
 }
 
@@ -299,6 +300,7 @@ async function criarPedido(args, { store, conversation }) {
     total: formatBRL(order.totalCents),
     previsao: estimate?.min != null ? `${estimate.min}–${estimate.max} min` : null,
     acompanhamento: trackingUrl(order),
+    proximo_passo: "O sistema envia ao cliente o número, a previsão e o link de acompanhamento.",
   };
 }
 

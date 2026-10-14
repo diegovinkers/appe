@@ -114,10 +114,28 @@ describe("asistente: tomar un pedido", () => {
     expect(await Order.countDocuments({ commerce: commerce._id })).toBe(0);
   });
 
-  it("no crea un pedido con un resumen que el cliente no vio (escrito sin cotizar)", async () => {
+  it("el resumen oficial lo manda el sistema aunque la IA escriba otro", async () => {
     const { commerce, send } = await setup();
     fakeAi([use("cotar_pedido", pickupQuote), say("Anotado! Quer confirmar?")]);
     const first = await send({ text: "um x-burger ao ponto e uma coca, pix, retiro", realOrders: true });
+    const summary = first.body.messages[1].text;
+    expect(summary).toContain("1x X-Burger");
+    expect(summary).toContain(formatBRL(3100));
+    expect(summary).toContain("Confirma o pedido?");
+    expect(summary).not.toContain("Anotado");
+
+    fakeAi([use("criar_pedido", { versao: 1 }), say("Pedido criado!")]);
+    const second = await send({ conversationId: first.body.conversation._id, text: "sim", realOrders: true });
+    expect(second.body.messages[1].toolCalls[0].output.ok).toBe(true);
+    expect(await Order.countDocuments({ commerce: commerce._id })).toBe(1);
+  });
+
+  it("no crea un pedido si el total no le llegó al cliente", async () => {
+    const { commerce, send } = await setup();
+    fakeAi([use("cotar_pedido", pickupQuote), say("Confirma?")]);
+    const first = await send({ text: "um x-burger ao ponto e uma coca, pix, retiro", realOrders: true });
+    // Como si el resumen nunca se hubiera mostrado.
+    await ConversationMessage.updateOne({ _id: first.body.messages[1]._id }, { $set: { text: "Anotado! Quer confirmar?" } });
     fakeAi([use("criar_pedido", { versao: 1 }), say("Vou revisar o resumo.")]);
     const second = await send({ conversationId: first.body.conversation._id, text: "sim", realOrders: true });
     const create = second.body.messages[1].toolCalls[0];
@@ -186,6 +204,50 @@ describe("asistente: tomar un pedido", () => {
     const [known, unknown] = res.body.messages[1].toolCalls.map((call) => call.output);
     expect(known).toMatchObject({ ok: true, total: formatBRL(3800) });
     expect(unknown.erros[0]).toContain("Bairros atendidos: São Miguel");
+    // La última cotización falló: la explica la IA, no se manda el resumen anterior.
+    expect(res.body.messages[1].text).toBe("ok");
+  });
+
+  // Lo que pasó en producción: entrega con tarjeta, en español, y la IA escribió su propio
+  // resumen con el total en otro formato. El cliente confirmó y recibía "no puedo seguir".
+  it("entrega con tarjeta: el cliente confirma y recibe el número del pedido", async () => {
+    const { commerce, send } = await setup();
+    await Commerce.updateOne({ _id: commerce._id }, { $set: { paymentMethods: ["cash", "pix", "card"], deliveryFeeCents: 500 } });
+    const delivery = {
+      ...pickupQuote,
+      tipo: "entrega",
+      endereco: { rua: "Rivera", numero: "580", bairro: "Centro" },
+      pagamento: "cartao",
+      nome: "Federico",
+      idioma: "es",
+    };
+    fakeAi([use("cotar_pedido", delivery), say("Resumen:\n1 X-Burger\n1 Coca\nEnvío: $5\nTotal: $36\nPrevisión: 40-60 min\nPago: Tarjeta\n\n¿Confirmás?")]);
+    const first = await send({ text: "quiero un x-burger al punto y una coca, envío a Rivera #580, pago con tarjeta", locale: "es", realOrders: true });
+    const summary = first.body.messages[1].text;
+    expect(summary).toContain(formatBRL(3600));
+    expect(summary).toContain("Tarjeta");
+    expect(summary).toContain("¿Confirmás el pedido?");
+
+    fakeAi([use("criar_pedido", { versao: 1 }), say("¡Listo! Tu pedido #1 en Rivera #580 fue confirmado.")]);
+    const second = await send({ conversationId: first.body.conversation._id, text: "Confirmo", locale: "es", realOrders: true });
+    const order = await Order.findOne({ commerce: commerce._id }).lean();
+    expect(order).toMatchObject({ fulfillment: "delivery", paymentMethod: "card", totalCents: 3600 });
+    const text = second.body.messages[1].text;
+    expect(text).toContain(`¡Recibimos tu pedido *#${order.number}*!`);
+    expect(text).toContain(`/pedido/${order.trackingToken}`);
+    expect(text).not.toContain("no puedo seguir");
+    expect(second.body.conversation.status).toBe("bot");
+  });
+
+  it("si la IA falla después de crear el pedido, el cliente igual recibe la confirmación", async () => {
+    const { commerce, send } = await setup();
+    fakeAi([use("cotar_pedido", pickupQuote), say("Confirma?")]);
+    const first = await send({ text: "um x-burger ao ponto e uma coca, pix, retiro", realOrders: true });
+    fakeAi([use("criar_pedido", { versao: 1 }), new Error("API caída")]);
+    const second = await send({ conversationId: first.body.conversation._id, text: "sim", realOrders: true });
+    expect(await Order.countDocuments({ commerce: commerce._id })).toBe(1);
+    expect(second.body.messages[1].text).toContain("Recebemos seu pedido *#1*");
+    expect(second.body.conversation.status).toBe("bot");
   });
 });
 

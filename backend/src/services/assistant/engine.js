@@ -28,10 +28,20 @@ const TEXTS = {
     fallback: (url) =>
       `Desculpe, agora não consigo continuar por aqui. Você pode pedir pelo cardápio: ${url}\nOu aguarde: alguém da loja vai te responder.`,
     handoff: "Certo! Vou chamar alguém da loja para continuar o atendimento por aqui.",
+    confirmQuote: "Confirma o pedido? Responda *sim* para enviar ou me diga o que quer mudar.",
+    created: ({ numero, total, previsao, acompanhamento }) =>
+      [`✅ Recebemos seu pedido *#${numero}*! Total: ${total}.`, previsao && `Previsão: ${previsao}.`, acompanhamento && `Acompanhe aqui: ${acompanhamento}`]
+        .filter(Boolean)
+        .join("\n"),
   },
   es: {
     fallback: (url) => `Perdón, ahora no puedo seguir por acá. Podés pedir desde el menú: ${url}\nO esperá: alguien del local te va a responder.`,
     handoff: "¡Listo! Llamo a alguien del local para que siga atendiéndote por acá.",
+    confirmQuote: "¿Confirmás el pedido? Respondé *sí* para enviarlo o decime qué querés cambiar.",
+    created: ({ numero, total, previsao, acompanhamento }) =>
+      [`✅ ¡Recibimos tu pedido *#${numero}*! Total: ${total}.`, previsao && `Tiempo estimado: ${previsao}.`, acompanhamento && `Seguilo acá: ${acompanhamento}`]
+        .filter(Boolean)
+        .join("\n"),
   },
 };
 const textsFor = (locale) => TEXTS[locale] ?? TEXTS["pt-BR"];
@@ -137,6 +147,23 @@ async function inventsOrder(text, conversation, toolCalls) {
   return numbers.some((number) => !known.has(number));
 }
 
+// El último resultado bueno de una herramienta en esta respuesta.
+const lastOk = (toolCalls, name) => toolCalls.findLast((call) => call.name === name && call.output?.ok)?.output ?? null;
+
+// Lo que cierra un pedido lo escribe el sistema, no la IA: el resumen oficial de la cotización
+// (con el total que el cliente tiene que ver para poder confirmar) y la confirmación con el
+// número, la previsión y el link. Así un resumen reescrito por la IA no traba el pedido.
+function systemText(conversation, toolCalls) {
+  if (conversation.status !== "bot") return null;
+  const texts = textsFor(conversation.locale);
+  const created = lastOk(toolCalls, "criar_pedido");
+  if (created) return texts.created(created);
+  // Solo si la última cotización salió bien: si después probó otra que falló, explica la IA.
+  const quoted = toolCalls.findLast((call) => call.name === "cotar_pedido")?.output;
+  if (quoted?.ok && conversation.draft?.version === quoted.versao) return `${quoted.resumo}\n\n${texts.confirmQuote}`;
+  return null;
+}
+
 async function reply(conversationId) {
   const conversation = await Conversation.findById(conversationId);
   if (!conversation || conversation.status !== "bot") return [];
@@ -200,9 +227,14 @@ async function reply(conversationId) {
   } catch (error) {
     // Sin el contenido: puede traer datos del cliente.
     logger.warn({ err: { name: error.name, status: error.status }, conversation: String(conversation._id) }, "asistente: falló la IA");
+    // Si ya cotizó o creó el pedido, el cliente recibe eso igual: nunca "no puedo seguir" con un pedido hecho.
+    const fixed = systemText(conversation, toolCalls);
+    if (fixed) return [await saveReply(conversation, { text: fixed, model, usage, toolCalls })];
     return [await giveUp(conversation, store, "Falha ao falar com a IA", { model, usage, toolCalls })];
   }
 
+  const fixed = systemText(conversation, toolCalls);
+  if (fixed) return [await saveReply(conversation, { text: fixed, model, usage, toolCalls })];
   text ||= earlierText || (conversation.status === "human" ? textsFor(conversation.locale).handoff : "");
   if (!text) return [await giveUp(conversation, store, "O assistente não conseguiu responder", { model, usage, toolCalls })];
   if (await inventsOrder(text, conversation, toolCalls)) {
