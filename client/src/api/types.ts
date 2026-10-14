@@ -65,6 +65,9 @@ export type OwnerReviewsResponse = JsonResponse<"/api/owner/reviews", "get">;
 export type AvailabilityResponse = JsonResponse<"/api/owner/availability", "get">;
 export type TeamResponse = JsonResponse<"/api/owner/team", "get">;
 export type TeamMember = TeamResponse["members"][number];
+export type TablesResponse = JsonResponse<"/api/owner/tables", "get">;
+export type SalonTable = TablesResponse["tables"][number];
+export type TableTabResponse = JsonResponse<"/api/owner/tables/{id}/tab", "get">;
 export type OwnerReview = OwnerReviewsResponse["reviews"][number];
 export type CreateReviewResponse = JsonResponse<"/api/public/orders/{token}/review", "post", 201>;
 

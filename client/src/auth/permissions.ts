@@ -16,6 +16,7 @@ export const ROLE_PERMISSIONS = {
     "orders:manual",
     "coupons:manage",
     "team:manage",
+    "tables:manage",
   ],
   staff: ["store:read", "store:open", "menu:read", "menu:availability", "orders:read", "orders:write", "orders:manual"],
 } as const satisfies Record<Role, readonly string[]>;

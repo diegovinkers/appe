@@ -23,6 +23,7 @@ import { SettingsPage } from "../features/panel/pages/SettingsPage";
 import { PaymentsPage } from "../features/panel/pages/PaymentsPage";
 import { AvailabilityPage } from "../features/panel/pages/AvailabilityPage";
 import { TeamPage } from "../features/panel/pages/TeamPage";
+import { SalonPage } from "../features/panel/pages/SalonPage";
 import { MyAccountPage } from "../features/panel/pages/MyAccountPage";
 import { SubscriptionPage } from "../features/panel/pages/SubscriptionPage";
 import { MenuLayout } from "../features/panel/layouts/MenuLayout";
@@ -82,6 +83,7 @@ export const router = createBrowserRouter([
               { path: "entrega", element: guarded("store:write", <DeliveryPage />) },
               { path: "pagamentos", element: guarded("store:write", <PaymentsPage />) },
               { path: "equipe", element: guarded("team:manage", <TeamPage />) },
+              { path: "salao", element: guarded("tables:manage", <SalonPage />) },
               { path: "assinatura", element: guarded("store:write", <SubscriptionPage />) },
             ],
           },
