@@ -1,14 +1,39 @@
 import { type FormEvent, useState } from "react";
+import { Notice } from "../../components/Notice";
+import { PasswordInput } from "../../components/PasswordInput";
 import { Field, button, input } from "../../components/ui";
+import { supportContact } from "../../lib/support";
 import { errorText, useLanguage, useT } from "../../i18n";
 import { loadCustomer } from "../menu/customer";
 import { useLogin, useSignup } from "./account";
 
 const digits = (phone: string) => phone.replace(/\D/g, "").length;
 
+// Con el color del local cuando la página lo define (--brand); si no, el botón de siempre.
+const submitClass = (brand: boolean) =>
+  brand ? "inline-flex h-12 w-full items-center justify-center rounded-lg bg-(--brand) font-bold text-(--on-brand) hover:brightness-110 disabled:opacity-60" : `${button.primary} h-12 w-full`;
+
+// Por ahora la contraseña del cliente no se recupera sola (llega con Auth0): se explica y se
+// ofrece el contacto de soporte, si está configurado.
+function ForgotPassword() {
+  const t = useT();
+  const contact = supportContact();
+  return (
+    <details className="text-sm">
+      <summary className="inline-flex min-h-11 cursor-pointer items-center font-bold underline underline-offset-4">{t.account.forgot}</summary>
+      <p className="mt-1 text-ink-muted">{t.account.forgotText}</p>
+      {contact && (
+        <a href={contact} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-11 items-center font-bold underline underline-offset-4">
+          {t.account.support}
+        </a>
+      )}
+    </details>
+  );
+}
+
 // Crear la cuenta con lo mínimo: nombre y WhatsApp vienen de la última compra en este
 // aparato (se pueden corregir); solo falta la contraseña.
-export function SignupForm({ onDone, idPrefix = "cadastro" }: { onDone?: () => void; idPrefix?: string }) {
+export function SignupForm({ onDone, idPrefix = "cadastro", brand = false }: { onDone?: () => void; idPrefix?: string; brand?: boolean }) {
   const t = useT();
   const language = useLanguage();
   const signup = useSignup();
@@ -74,7 +99,7 @@ export function SignupForm({ onDone, idPrefix = "cadastro" }: { onDone?: () => v
               aria-invalid={!!errors.name}
             />
           </Field>
-          <Field id={`${idPrefix}-fone`} label={t.account.phone} error={errors.phone}>
+          <Field id={`${idPrefix}-fone`} label={t.account.phone} error={errors.phone} hint={t.account.phoneHint}>
             <input
               id={`${idPrefix}-fone`}
               type="tel"
@@ -90,9 +115,8 @@ export function SignupForm({ onDone, idPrefix = "cadastro" }: { onDone?: () => v
         </>
       )}
       <Field id={`${idPrefix}-senha`} label={t.account.password} error={errors.password} hint={t.account.passwordHint}>
-        <input
+        <PasswordInput
           id={`${idPrefix}-senha`}
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           autoComplete="new-password"
@@ -101,19 +125,15 @@ export function SignupForm({ onDone, idPrefix = "cadastro" }: { onDone?: () => v
           aria-invalid={!!errors.password}
         />
       </Field>
-      {signup.isError && (
-        <p role="alert" className="text-sm font-bold text-error">
-          {errorText(signup.error, t)}
-        </p>
-      )}
-      <button type="submit" disabled={signup.isPending} className={`${button.primary} h-12 w-full`}>
+      {signup.isError && <Notice tone="error">{errorText(signup.error, t)}</Notice>}
+      <button type="submit" disabled={signup.isPending} className={submitClass(brand)}>
         {signup.isPending ? t.account.submitting : t.account.signupSubmit}
       </button>
     </form>
   );
 }
 
-export function LoginForm({ onDone, idPrefix = "entrar" }: { onDone?: () => void; idPrefix?: string }) {
+export function LoginForm({ onDone, idPrefix = "entrar", brand = false }: { onDone?: () => void; idPrefix?: string; brand?: boolean }) {
   const t = useT();
   const login = useLogin();
   const [phone, setPhone] = useState(() => loadCustomer().phone);
@@ -127,7 +147,7 @@ export function LoginForm({ onDone, idPrefix = "entrar" }: { onDone?: () => void
 
   return (
     <form onSubmit={submit} className="space-y-3">
-      <Field id={`${idPrefix}-fone`} label={t.account.phone}>
+      <Field id={`${idPrefix}-fone`} label={t.account.phone} hint={t.account.phoneHint}>
         <input
           id={`${idPrefix}-fone`}
           type="tel"
@@ -141,9 +161,8 @@ export function LoginForm({ onDone, idPrefix = "entrar" }: { onDone?: () => void
         />
       </Field>
       <Field id={`${idPrefix}-senha`} label={t.account.password}>
-        <input
+        <PasswordInput
           id={`${idPrefix}-senha`}
-          type="password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -152,14 +171,11 @@ export function LoginForm({ onDone, idPrefix = "entrar" }: { onDone?: () => void
           className={input}
         />
       </Field>
-      {login.isError && (
-        <p role="alert" className="text-sm font-bold text-error">
-          {errorText(login.error, t)}
-        </p>
-      )}
-      <button type="submit" disabled={login.isPending} className={`${button.primary} h-12 w-full`}>
+      {login.isError && <Notice tone="error">{errorText(login.error, t)}</Notice>}
+      <button type="submit" disabled={login.isPending} className={submitClass(brand)}>
         {login.isPending ? t.account.submitting : t.account.loginSubmit}
       </button>
+      <ForgotPassword />
     </form>
   );
 }

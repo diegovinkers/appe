@@ -6,6 +6,8 @@ export const ptBR = {
   language: "Idioma",
   theme: { useLight: "Usar tema claro", useDark: "Usar tema escuro" },
   close: "Fechar",
+  showPassword: "Mostrar senha",
+  hidePassword: "Ocultar senha",
 
   login: {
     title: "Entrar no painel",
@@ -16,6 +18,12 @@ export const ptBR = {
     submitting: "Entrando…",
     aside: "Pedidos, cardápio e horários da sua loja, num lugar só.",
     expired: "Sua sessão terminou. Entre de novo para continuar de onde parou.",
+    backHome: "Voltar ao início",
+    customerHint: "Faz pedidos numa loja? Sua conta fica no cardápio da loja.",
+    customerLink: "Ir para minha conta",
+    forgot: "Esqueceu a senha?",
+    forgotText: "Peça ao dono da loja uma senha nova (Configurações → Equipe). Se você é o dono, fale com o suporte da plataforma.",
+    support: "Falar com o suporte",
   },
 
   nav: {
@@ -505,6 +513,14 @@ export const ptBR = {
     deleteConfirm: "Digite sua senha para confirmar",
     deleteSubmit: "Excluir para sempre",
     back: "Voltar",
+    backTo: (name: string) => `Voltar para ${name}`,
+    loginTitle: "Entre na sua conta",
+    signupTitle: "Crie sua conta",
+    loginText: "Seus dados e endereços já vêm preenchidos em cada pedido.",
+    phoneHint: "Com o código do país se não for do Brasil (ex.: +598 99 123 456).",
+    forgot: "Esqueceu a senha?",
+    forgotText: "Por enquanto a senha não pode ser recuperada por aqui. Você pode continuar pedindo sem conta.",
+    support: "Falar com o suporte",
   },
 
   // Reseñas: las deja el cliente después de recibir el pedido.

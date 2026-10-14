@@ -1,16 +1,19 @@
 import { ArrowLeft, LogOut, MapPin } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { type CSSProperties, type FormEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import type { CustomerAccount, CustomerOrder } from "../../api/types";
+import { api } from "../../api/client";
+import type { CustomerAccount, CustomerOrder, PublicStoreResponse } from "../../api/types";
 import { FullScreenMessage, Spinner } from "../../components/FullScreenMessage";
 import { LanguageSwitch } from "../../components/LanguageSwitch";
 import { StoreMark } from "../../components/StoreMark";
 import { Field, button, input } from "../../components/ui";
-import { type Dictionary, errorText, useT } from "../../i18n";
+import { type Dictionary, errorText, useLanguage, useT } from "../../i18n";
+import { readableTextOn } from "../../lib/color";
 import { formatDate, formatMoney, formatTime } from "../../lib/format";
 import { formatPhone } from "../../lib/phone";
 import { LoginForm, SignupForm } from "./AccountForms";
-import { addressLine, safeReturn, useCustomer, useCustomerOrders, useDeleteAccount, useLogout, useUpdateAccount } from "./account";
+import { addressLine, knownAccountOnDevice, safeReturn, useCustomer, useCustomerOrders, useDeleteAccount, useLogout, useUpdateAccount } from "./account";
 
 type Mode = "entrar" | "criar";
 
@@ -30,6 +33,9 @@ export function AccountPage() {
     else setCreated(wasSignup);
   };
 
+  // Si se vino desde el menú de un local (?volta=/fronteirico-burguer), la página lleva su marca.
+  const store = useStoreFrom(back);
+
   if (account.isPending) {
     return (
       <FullScreenMessage>
@@ -38,13 +44,27 @@ export function AccountPage() {
     );
   }
 
+  const brand = store
+    ? ({ "--brand": store.primaryColor, "--on-brand": readableTextOn(store.primaryColor) } as CSSProperties)
+    : undefined;
+  const initial: Mode = mode === "entrar" || (mode !== "criar" && knownAccountOnDevice()) ? "entrar" : "criar";
+
   return (
-    <div className="min-h-dvh bg-paper">
+    <div className="min-h-dvh bg-paper" style={brand}>
       <header className="border-b border-line bg-surface">
-        <div className="mx-auto flex h-15 max-w-xl items-center gap-2 px-4">
-          <Link to={back} className="-ml-2 inline-flex h-11 items-center gap-1.5 rounded-lg px-2 font-bold hover:bg-paper">
-            <ArrowLeft aria-hidden className="size-5" />
-            {t.account.back}
+        <div className="mx-auto flex min-h-16 max-w-xl items-center gap-2 px-4 py-2">
+          <Link to={back} className="-ml-2 inline-flex min-h-11 min-w-0 items-center gap-2 rounded-lg px-2 font-bold hover:bg-paper">
+            <ArrowLeft aria-hidden className="size-5 shrink-0" />
+            {store && <StoreMark store={store} size={32} />}
+            {store ? (
+              // En el celular no entra "Volver a …": la flecha y el logo ya lo dicen.
+              <span className="truncate" aria-label={t.account.backTo(store.name)}>
+                <span className="sm:hidden">{store.name}</span>
+                <span className="hidden sm:inline">{t.account.backTo(store.name)}</span>
+              </span>
+            ) : (
+              <span className="truncate">{t.account.back}</span>
+            )}
           </Link>
           <div className="flex-1" />
           <LanguageSwitch />
@@ -55,33 +75,62 @@ export function AccountPage() {
         {account.data ? (
           <SignedIn account={account.data} created={created} />
         ) : (
-          <SignedOut initial={mode === "entrar" ? "entrar" : "criar"} onDone={done} />
+          <SignedOut initial={initial} onDone={done} brand={!!store} />
         )}
       </main>
     </div>
   );
 }
 
-function SignedOut({ initial, onDone }: { initial: Mode; onDone: (wasSignup: boolean) => void }) {
+// El local del menú del que se vino: "/fronteirico-burguer" sí; "/", "/pedido/…" o "/conta" no.
+const PLATFORM_PATHS = new Set(["conta", "entrar", "painel", "pedido", "plataforma"]);
+function useStoreFrom(back: string) {
+  const slug = /^\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(back.split("?")[0])?.[1];
+  const lang = useLanguage() === "es" ? "es" : "pt";
+  const valid = Boolean(slug && !PLATFORM_PATHS.has(slug));
+  // La misma consulta que el menú: si se vino de ahí, ya está en caché.
+  const query = useQuery({
+    queryKey: ["public-store", slug, lang],
+    queryFn: () => api<PublicStoreResponse>(`/public/stores/${encodeURIComponent(slug!)}?lang=${lang}`),
+    enabled: valid,
+    retry: false,
+  });
+  return valid ? query.data?.store : undefined;
+}
+
+function SignedOut({ initial, onDone, brand }: { initial: Mode; onDone: (wasSignup: boolean) => void; brand: boolean }) {
   const t = useT();
   const [tab, setTab] = useState<Mode>(initial);
-  const tabClass = (active: boolean) =>
-    `h-11 flex-1 rounded-lg font-bold ${active ? "bg-surface text-ink shadow-sm ring-1 ring-line" : "text-ink-muted hover:text-ink"}`;
+  // La pestaña elegida se ve llena (con el color del local, si hay); la otra, solo texto.
+  const active = brand ? "bg-(--brand) text-(--on-brand)" : "bg-action text-white";
+  const tabClass = (on: boolean) => `h-11 flex-1 rounded-lg font-bold transition-colors ${on ? active : "text-ink-muted hover:text-ink"}`;
+  const tabs: [Mode, string][] = [
+    ["entrar", t.account.login],
+    ["criar", t.account.signup],
+  ];
 
   return (
-    <section className="rounded-2xl bg-surface p-4 ring-1 ring-line">
-      <h1 className="text-2xl font-bold tracking-tight">{t.account.title}</h1>
-      <p className="mt-1 text-ink-muted">{t.account.saveText}</p>
-      <div className="mt-4 flex gap-1 rounded-xl bg-paper p-1">
-        <button type="button" aria-pressed={tab === "criar"} onClick={() => setTab("criar")} className={tabClass(tab === "criar")}>
-          {t.account.signup}
-        </button>
-        <button type="button" aria-pressed={tab === "entrar"} onClick={() => setTab("entrar")} className={tabClass(tab === "entrar")}>
-          {t.account.login}
-        </button>
+    <section className="rounded-2xl bg-surface p-4 ring-1 ring-line sm:p-6">
+      <h1 className="text-2xl font-bold tracking-tight">{tab === "entrar" ? t.account.loginTitle : t.account.signupTitle}</h1>
+      <p className="mt-1 text-ink-muted">{tab === "entrar" ? t.account.loginText : t.account.saveText}</p>
+      <div role="tablist" aria-label={t.account.title} className="mt-5 flex gap-1 rounded-xl bg-paper p-1 ring-1 ring-inset ring-line">
+        {tabs.map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            role="tab"
+            id={`aba-${value}`}
+            aria-selected={tab === value}
+            aria-controls="aba-conteudo"
+            onClick={() => setTab(value)}
+            className={tabClass(tab === value)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
-      <div className="mt-4">
-        {tab === "criar" ? <SignupForm onDone={() => onDone(true)} /> : <LoginForm onDone={() => onDone(false)} />}
+      <div role="tabpanel" id="aba-conteudo" aria-labelledby={`aba-${tab}`} className="mt-5">
+        {tab === "criar" ? <SignupForm onDone={() => onDone(true)} brand={brand} /> : <LoginForm onDone={() => onDone(false)} brand={brand} />}
       </div>
     </section>
   );

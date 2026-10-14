@@ -27,6 +27,17 @@ const flag = {
   },
 };
 
+// Si en este aparato alguna vez se entró o se creó una cuenta (queda aunque se salga): así
+// "Conta" abre en "Entrar" y no en "Crear cuenta".
+const KNOWN = "conta.conhecida";
+export function knownAccountOnDevice() {
+  try {
+    return localStorage.getItem(KNOWN) === "1";
+  } catch {
+    return false;
+  }
+}
+
 // La sesión del cliente venció (cambió la contraseña en otro aparato, borró la cuenta): se cierra
 // acá también y la página muestra "Entrar" de nuevo.
 export function forgetCustomer(queryClient: QueryClient) {
@@ -98,6 +109,11 @@ function useStartSession<Body>(path: string) {
     mutationFn: (body) => api<CustomerSessionResponse>(path, { method: "POST", body: { ...body, orderTokens: deviceOrderTokens() } }),
     onSuccess: ({ customer }) => {
       flag.set(true);
+      try {
+        localStorage.setItem(KNOWN, "1");
+      } catch {
+        // Sin almacenamiento: la próxima vez abre en "Crear cuenta".
+      }
       queryClient.setQueryData(customerKey, customer);
       queryClient.invalidateQueries({ queryKey: ordersKey });
     },
