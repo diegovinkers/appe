@@ -4721,6 +4721,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/owner/option-groups/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Juntar grupos repetidos (los productos pasan al que queda)
+         * @description Con sesión y el permiso `menu:write`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        keepId: string;
+                        mergeIds: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            optionGroup: {
+                                _id: string;
+                                commerce: string;
+                                name: string;
+                                minSelect: number;
+                                maxSelect: number;
+                                /** @enum {string} */
+                                pricing: "sum" | "max" | "average";
+                                options: {
+                                    _id: string;
+                                    name: string;
+                                    priceCents: number;
+                                    maxQuantity: number;
+                                    available: boolean;
+                                    translations: {
+                                        es: {
+                                            name: string;
+                                        };
+                                    };
+                                }[];
+                                translations: {
+                                    es: {
+                                        name: string;
+                                    };
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            productsUpdated: number;
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/owner/option-groups/{id}": {
         parameters: {
             query?: never;

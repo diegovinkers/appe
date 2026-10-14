@@ -1,9 +1,11 @@
 import request from "supertest";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "../../src/app.js";
+import AuditLog from "../../src/models/auditLog.model.js";
 import Commerce from "../../src/models/commerce.model.js";
+import OptionGroup from "../../src/models/optionGroup.model.js";
 import Product from "../../src/models/product.model.js";
-import { containsKey, createCommerceWithOwner, createMenu, createSuperadmin, loginAs } from "../helpers.js";
+import { containsKey, createCommerceWithOwner, createMenu, createStaff, createSuperadmin, loginAs } from "../helpers.js";
 
 const app = createApp();
 
@@ -263,6 +265,55 @@ describe("/api/owner/option-groups", () => {
     expect((await owner.delete(`/api/owner/option-groups/${menuA.ponto._id}`)).status).toBe(204);
     const burger = await Product.findById(menuA.xBurger._id);
     expect(burger.optionGroups.map(String)).toEqual([String(menuA.adicionais._id)]);
+  });
+
+  describe("juntar grupos repetidos", () => {
+    // "Ponto da carne" cargado dos veces más: uno en el X-Salada y otro junto al original en el X-Burger.
+    let copyA, copyB;
+    beforeEach(async () => {
+      const options = [{ name: "Mal passado" }, { name: "Ao ponto" }];
+      copyA = await OptionGroup.create({ commerce: a.commerce._id, name: "Ponto da carne ", minSelect: 1, maxSelect: 1, options });
+      copyB = await OptionGroup.create({ commerce: a.commerce._id, name: "ponto da carne", minSelect: 1, maxSelect: 1, options });
+      await Product.updateOne({ _id: menuA.xSalada._id }, { optionGroups: [copyA._id] });
+      await Product.updateOne({ _id: menuA.xBurger._id }, { optionGroups: [copyB._id, menuA.adicionais._id, menuA.ponto._id] });
+    });
+
+    it("pasa los productos al grupo que queda, en el mismo lugar y sin repetir, y borra los otros", async () => {
+      const res = await owner.post("/api/owner/option-groups/merge").send({ keepId: String(menuA.ponto._id), mergeIds: [String(copyA._id), String(copyB._id)] });
+      expect(res.status).toBe(200);
+      expect(res.body.productsUpdated).toBe(2);
+      expect(res.body.optionGroup._id).toBe(String(menuA.ponto._id));
+      const salada = await Product.findById(menuA.xSalada._id);
+      expect(salada.optionGroups.map(String)).toEqual([String(menuA.ponto._id)]);
+      const burger = await Product.findById(menuA.xBurger._id);
+      expect(burger.optionGroups.map(String)).toEqual([String(menuA.ponto._id), String(menuA.adicionais._id)]);
+      expect(await OptionGroup.countDocuments({ _id: { $in: [copyA._id, copyB._id] } })).toBe(0);
+      const entry = await AuditLog.findOne({ action: "option_group.merged" }).lean();
+      expect(entry.changes.productsUpdated).toBe(2);
+    });
+
+    it("rechaza juntar un grupo consigo mismo o ids inválidos (400)", async () => {
+      const same = await owner.post("/api/owner/option-groups/merge").send({ keepId: String(copyA._id), mergeIds: [String(copyA._id)] });
+      expect(same.status).toBe(400);
+      expect((await owner.post("/api/owner/option-groups/merge").send({ keepId: "x", mergeIds: [] })).status).toBe(400);
+    });
+
+    it("aislamiento: con un grupo de otro local da 404 y no cambia nada", async () => {
+      const res = await owner.post("/api/owner/option-groups/merge").send({ keepId: String(menuA.ponto._id), mergeIds: [String(menuB.ponto._id)] });
+      expect(res.status).toBe(404);
+      expect(await OptionGroup.countDocuments({ _id: menuB.ponto._id })).toBe(1);
+      const other = await owner.post("/api/owner/option-groups/merge").send({ keepId: String(menuB.ponto._id), mergeIds: [String(copyA._id)] });
+      expect(other.status).toBe(404);
+      expect(await OptionGroup.countDocuments({ _id: copyA._id })).toBe(1);
+    });
+
+    it("el empleado no puede (403) y sin sesión da 401", async () => {
+      await createStaff(a.commerce);
+      const staff = await loginAs(app, `staff-${a.commerce.slug}@test.local`);
+      const body = { keepId: String(menuA.ponto._id), mergeIds: [String(copyA._id)] };
+      expect((await staff.post("/api/owner/option-groups/merge").send(body)).status).toBe(403);
+      expect((await request(app).post("/api/owner/option-groups/merge").send(body)).status).toBe(401);
+    });
   });
 
   it("aislamiento: 404 con los grupos y opciones de otro local", async () => {

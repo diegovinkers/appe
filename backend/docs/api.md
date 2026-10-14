@@ -347,6 +347,7 @@ Para atender: dueño y empleado (`menu:read` para ver, `menu:availability` para 
 - `POST /api/owner/availability/restore` → la misma vista. Vuelve a ofrecer todos los productos y opciones agotados a mano; el stock controlado no se toca.
 - Los productos se agotan uno por uno con `PATCH /api/owner/products/:id/availability`.
 - `DELETE /api/owner/option-groups/:id` → `204`. Lo saca de los productos que lo usaban.
+- `POST /api/owner/option-groups/merge` (`menu:write`) → `{ "optionGroup", "productsUpdated" }`. Body: `{ "keepId", "mergeIds": [...] }`. Junta grupos repetidos: los productos que usaban los de `mergeIds` pasan a usar `keepId` (en el mismo lugar de su lista y sin repetirlo) y los de `mergeIds` se borran, todo en una transacción. `400` si `keepId` está en `mergeIds` o hay ids repetidos; `404` si algún grupo no es del local (no cambia nada). Queda en la auditoría como `option_group.merged`.
 
 ### Planilla del menú (CSV)
 Para cargarle el menú rápido a un local: se exporta, se edita en Excel y se importa.

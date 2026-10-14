@@ -112,6 +112,11 @@ export const updateOptionGroupSchema = z
 
 export const optionParams = z.object({ id: objectId, optionId: objectId });
 
+// Juntar grupos repetidos: los productos de los de `mergeIds` pasan al de `keepId`.
+export const mergeOptionGroupsSchema = z
+  .object({ keepId: objectId, mergeIds: z.array(objectId).min(1).max(50) })
+  .refine(({ keepId, mergeIds }) => !mergeIds.includes(keepId) && new Set(mergeIds).size === mergeIds.length, "Grupo repetido");
+
 // Marcar disponible o agotado (producto u opción).
 export const availabilitySchema = z.object({ available: z.boolean() });
 

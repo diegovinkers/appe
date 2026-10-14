@@ -1,9 +1,10 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Combine, Plus, Trash2 } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import type { ApiError } from "../../../api/client";
 import type { OptionGroup, OptionGroupInput } from "../../../api/types";
 import { can } from "../../../auth/permissions";
 import { Spinner } from "../../../components/FullScreenMessage";
+import { Notice } from "../../../components/Notice";
 import { PageHeader } from "../../../components/PageHeader";
 import { Sheet } from "../../../components/Sheet";
 import { Field, Switch, button, input } from "../../../components/ui";
@@ -11,6 +12,7 @@ import { useParamSheet } from "../../../hooks/useParamSheet";
 import { errorText, useT } from "../../../i18n";
 import { formatMoney } from "../../../lib/format";
 import { centsToInput, parseMoney } from "../../../lib/money";
+import { duplicateSets } from "../menu/groupNames";
 import { useMenuChange, useOptionGroups, useProducts } from "../menu/useMenuAdmin";
 import { usePanel } from "../PanelLayout";
 
@@ -188,6 +190,53 @@ function GroupEditor({ group, usedIn, onClose }: { group: OptionGroup | null; us
   );
 }
 
+// Juntar grupos repetidos: se elige cuál queda (de entrada, el que está en más productos) y
+// los productos de los otros pasan a ese.
+function MergeSheet({ groups, usedIn, onClose, onMerged }: { groups: OptionGroup[]; usedIn: (id: string) => number; onClose: () => void; onMerged: (count: number) => void }) {
+  const t = useT();
+  const g = t.groups;
+  const merge = useMenuChange<{ productsUpdated: number }>();
+  const [keep, setKeep] = useState(() => [...groups].sort((a, b) => usedIn(b._id) - usedIn(a._id))[0]._id);
+  const confirm = () =>
+    merge.mutate(
+      { path: "/owner/option-groups/merge", method: "POST", body: { keepId: keep, mergeIds: groups.filter((group) => group._id !== keep).map((group) => group._id) } },
+      { onSuccess: ({ productsUpdated }) => onMerged(productsUpdated) }
+    );
+
+  return (
+    <Sheet
+      open
+      title={g.mergeTitle(groups[0].name.trim())}
+      onClose={onClose}
+      footer={
+        <div className="space-y-2">
+          {merge.isError && <Notice tone="error">{errorText(merge.error, t)}</Notice>}
+          <button type="button" disabled={merge.isPending} onClick={confirm} className={`${button.primary} w-full`}>
+            {g.mergeConfirm(groups.length)}
+          </button>
+        </div>
+      }
+    >
+      <fieldset className="space-y-2 p-4">
+        <legend className="font-bold">{g.keep}</legend>
+        <p className="text-sm text-ink-muted">{g.keepHint}</p>
+        {groups.map((group) => (
+          <label key={group._id} className={`flex cursor-pointer gap-3 rounded-xl border p-3 ${keep === group._id ? "border-ink bg-paper" : "border-line"}`}>
+            <input type="radio" name="fica" checked={keep === group._id} onChange={() => setKeep(group._id)} className="mt-1 size-5 shrink-0 accent-(--brand)" />
+            <span className="min-w-0">
+              <span className="block font-bold">{group.name}</span>
+              <span className="block text-sm text-ink-muted">
+                {t.menuAdmin.rule(group.minSelect, group.maxSelect)}, {t.menuAdmin.usedIn(usedIn(group._id)).toLowerCase()}
+              </span>
+              <span className="block text-sm">{group.options.map((option) => (option.priceCents > 0 ? `${option.name} +${formatMoney(option.priceCents)}` : option.name)).join(", ")}</span>
+            </span>
+          </label>
+        ))}
+      </fieldset>
+    </Sheet>
+  );
+}
+
 // Grupos de opciones (ponto da carne, adicionais, sabores…). El empleado solo marca agotadas.
 export function OptionGroupsPage() {
   const t = useT();
@@ -201,6 +250,10 @@ export function OptionGroupsPage() {
   const list = groups.data ?? [];
   const usedIn = (id: string) => (products.data ?? []).filter((product) => product.optionGroups.includes(id)).length;
   const editing = editor.value && editor.value !== "novo" ? list.find((group) => group._id === editor.value) : null;
+  // Los repetidos se avisan arriba, para juntarlos con un toque.
+  const duplicates = canWrite ? duplicateSets(list) : [];
+  const [merging, setMerging] = useState<OptionGroup[] | null>(null);
+  const [merged, setMerged] = useState<number | null>(null);
 
   return (
     <>
@@ -223,6 +276,27 @@ export function OptionGroupsPage() {
         <p role="alert" className="mb-3 font-bold text-error">
           {errorText(change.error, t)}
         </p>
+      )}
+      {merged != null && (
+        <div className="mb-4">
+          <Notice tone="success">{t.groups.merged(merged)}</Notice>
+        </div>
+      )}
+      {duplicates.length > 0 && (
+        <ul className="mb-4 space-y-2">
+          {duplicates.map((set) => (
+            <li key={set[0]._id} className="flex flex-wrap items-center gap-3 rounded-xl bg-[#fff4d6] p-4 text-[#7a4e00] ring-1 ring-inset ring-[#f0d48a]">
+              <Combine aria-hidden className="size-5 shrink-0" />
+              <p className="min-w-0 flex-1">
+                <strong className="block">{t.groups.duplicates(set[0].name.trim(), set.length)}</strong>
+                <span className="text-sm">{t.groups.duplicatesHint}</span>
+              </p>
+              <button type="button" onClick={() => setMerging(set)} className={button.secondary}>
+                {t.groups.merge}
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
       {groups.data && list.length === 0 && <p className="rounded-xl border border-dashed border-line bg-surface p-6 text-ink-muted">{t.menuAdmin.noGroups}</p>}
 
@@ -267,6 +341,17 @@ export function OptionGroupsPage() {
         ))}
       </div>
 
+      {merging && (
+        <MergeSheet
+          groups={merging}
+          usedIn={usedIn}
+          onClose={() => setMerging(null)}
+          onMerged={(count) => {
+            setMerging(null);
+            setMerged(count);
+          }}
+        />
+      )}
       {canWrite && editor.value && (editor.value === "novo" || editing) && (
         <GroupEditor key={editor.value} group={editing ?? null} usedIn={editing ? usedIn(editing._id) : 0} onClose={editor.close} />
       )}

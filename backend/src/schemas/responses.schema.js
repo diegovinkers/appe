@@ -305,6 +305,9 @@ export const tablesResponse = z.strictObject({
 export const tableTabResponse = z.strictObject({ table, tab: tab.nullable(), orders: z.array(order) });
 export const tableOrderResponse = z.strictObject({ order, tab });
 
+// Juntar grupos repetidos: el que queda y cuántos productos cambiaron.
+export const mergeOptionGroupsResponse = z.strictObject({ optionGroup, productsUpdated: z.number().int().nonnegative() });
+
 export const coupon = z.strictObject({
   _id: id,
   commerce: id,

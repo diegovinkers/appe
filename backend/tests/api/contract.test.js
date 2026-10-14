@@ -156,6 +156,8 @@ describe("contrato de las respuestas", () => {
       "patch",
       "/api/owner/option-groups/:id/options/:optionId"
     );
+    const twinGroup = (await owner.post("/api/owner/option-groups").send({ name: "Molhos", options: [{ name: "Barbecue" }] })).body.optionGroup;
+    check(await owner.post("/api/owner/option-groups/merge").send({ keepId: spareGroup._id, mergeIds: [twinGroup._id] }), "post", "/api/owner/option-groups/merge");
     check(await owner.delete(`/api/owner/option-groups/${spareGroup._id}`), "delete", "/api/owner/option-groups/:id");
     const member = check(
       await owner.post("/api/owner/team").send({ name: "Atendente", email: "atendente-contrato@test.local", password: "senha-forte-123" }),

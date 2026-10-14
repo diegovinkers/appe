@@ -9,6 +9,7 @@ import { fromBrazilInput, toBrazilInput } from "../../../lib/format";
 import { cloudinaryImage } from "../../../lib/images";
 import { centsToInput, parseMoney } from "../../../lib/money";
 import { uploadImage } from "../../../lib/upload";
+import { GroupPicker } from "./GroupPicker";
 import { useMenuChange } from "./useMenuAdmin";
 
 const TAGS: ProductTag[] = ["vegetarian", "vegan", "gluten_free", "spicy", "new"];
@@ -101,13 +102,6 @@ export function ProductEditor({ product, categories, groups, defaultCategory, on
     );
   };
 
-  const toggleGroup = (id: string) =>
-    set("optionGroups", form.optionGroups.includes(id) ? form.optionGroups.filter((g) => g !== id) : [...form.optionGroups, id]);
-  // Los elegidos primero (en su orden), después el resto.
-  const orderedGroups = [
-    ...form.optionGroups.map((id) => groups.find((g) => g._id === id)).filter((g): g is OptionGroup => !!g),
-    ...groups.filter((g) => !form.optionGroups.includes(g._id)),
-  ];
   const error = save.error ?? remove.error ?? duplicate.error;
   const busy = save.isPending || remove.isPending || duplicate.isPending || uploading;
 
@@ -231,20 +225,7 @@ export function ProductEditor({ product, categories, groups, defaultCategory, on
           </div>
         </fieldset>
 
-        {groups.length > 0 && (
-          <fieldset>
-            <legend className="font-bold">{f.optionGroups}</legend>
-            <p className="mb-1 text-sm text-ink-muted">{f.optionGroupsHint}</p>
-            {orderedGroups.map((group) => (
-              <label key={group._id} className="flex min-h-11 items-center gap-2">
-                <input type="checkbox" checked={form.optionGroups.includes(group._id)} onChange={() => toggleGroup(group._id)} className="size-5 accent-(--brand)" />
-                <span>
-                  {group.name} <span className="text-sm text-ink-muted">({t.menuAdmin.rule(group.minSelect, group.maxSelect)})</span>
-                </span>
-              </label>
-            ))}
-          </fieldset>
-        )}
+        <GroupPicker groups={groups} selected={form.optionGroups} onChange={(ids) => set("optionGroups", ids)} />
 
         <details className="rounded-lg border border-line p-3">
           <summary className="cursor-pointer font-bold">{f.spanish}</summary>

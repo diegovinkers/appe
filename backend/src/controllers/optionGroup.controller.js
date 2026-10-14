@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import OptionGroup from "../models/optionGroup.model.js";
 import Product from "../models/product.model.js";
 import { audit } from "../lib/audit.js";
@@ -89,6 +90,42 @@ export const deleteOptionGroup = async (req, res) => {
     changes: { name: group.name },
   });
   res.status(204).end();
+};
+
+// Juntar grupos repetidos ("Ponto da carne" cargado tres veces): los productos que usaban
+// los repetidos pasan a usar el que queda, en el mismo lugar de su lista, y los repetidos se
+// borran. Todo o nada: en una transacción.
+export const mergeOptionGroups = async (req, res) => {
+  const { keepId, mergeIds } = req.valid.body;
+  const groups = await OptionGroup.find({ commerce: req.commerce._id, _id: { $in: [keepId, ...mergeIds] } });
+  if (groups.length !== mergeIds.length + 1) throw groupNotFound();
+  const keep = groups.find((group) => String(group._id) === keepId);
+  const merged = new Set(mergeIds);
+  let productsUpdated = 0;
+
+  await mongoose.connection.transaction(async (session) => {
+    const products = await Product.find({ commerce: req.commerce._id, optionGroups: { $in: mergeIds } }).select("optionGroups").session(session).lean();
+    for (const product of products) {
+      const seen = new Set();
+      const next = [];
+      for (const id of product.optionGroups.map(String)) {
+        const target = merged.has(id) ? keepId : id;
+        if (!seen.has(target)) next.push(target);
+        seen.add(target);
+      }
+      // Solo la lista de grupos: el resto del producto no se toca ni se vuelve a validar.
+      await Product.updateOne({ _id: product._id, commerce: req.commerce._id }, { $set: { optionGroups: next } }, { session });
+    }
+    productsUpdated = products.length;
+    await OptionGroup.deleteMany({ commerce: req.commerce._id, _id: { $in: mergeIds } }, { session });
+  });
+
+  await audit(req, {
+    action: "option_group.merged",
+    entity: { type: "option_group", id: keep._id },
+    changes: { kept: keep.name, merged: groups.filter((group) => group !== keep).map((group) => group.name), productsUpdated },
+  });
+  res.json({ optionGroup: keep, productsUpdated });
 };
 
 // Marcar una opción agotada la apaga en todos los productos del local.

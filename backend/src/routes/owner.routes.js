@@ -29,6 +29,7 @@ import {
   deleteOptionGroup,
   getOptionGroup,
   listOptionGroups,
+  mergeOptionGroups,
   setOptionAvailability,
   updateOptionGroup,
 } from "../controllers/optionGroup.controller.js";
@@ -52,6 +53,7 @@ import {
   createCategorySchema,
   createOptionGroupSchema,
   createProductSchema,
+  mergeOptionGroupsSchema,
   importMenuSchema,
   optionAvailabilityByNameSchema,
   listProductsQuery,
@@ -139,6 +141,7 @@ router.delete("/products/:id", can("menu:write"), validate({ params: idParams })
 
 router.get("/option-groups", can("menu:read"), listOptionGroups);
 router.post("/option-groups", can("menu:write"), validate({ body: createOptionGroupSchema }), createOptionGroup);
+router.post("/option-groups/merge", can("menu:write"), validate({ body: mergeOptionGroupsSchema }), mergeOptionGroups);
 router.get("/option-groups/:id", can("menu:read"), validate({ params: idParams }), getOptionGroup);
 router.patch(
   "/option-groups/:id",
