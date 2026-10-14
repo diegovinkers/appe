@@ -295,6 +295,7 @@ export const es: Dictionary = {
     discardConfirm: "¿Descartar los cambios sin guardar?",
     unsaved: "Hay cambios sin guardar.",
     validFor: "Vale para",
+    accept: { cash: "Aceptar efectivo", pix: "Aceptar Pix", card: "Aceptar tarjeta" },
     fulfillments: { both: "Envío y retiro", delivery: "Solo envío", pickup: "Solo retiro" },
     note: "Nota para el cliente (opcional)",
     notePlaceholders: { cash: "Ej.: llevamos cambio hasta R$ 100", pix: "Ej.: mandá el comprobante por WhatsApp", card: "Ej.: crédito y débito" },
@@ -792,6 +793,7 @@ export const es: Dictionary = {
   errors: {
     generic: "No se pudo cargar. Intentá de nuevo.",
     retry: "Intentar de nuevo",
+    serverHint: "El servidor no respondió. Probá de nuevo en unos segundos.",
   },
   // El backend responde en portugués: acá van los códigos que el panel puede mostrar hoy.
   apiErrors: {

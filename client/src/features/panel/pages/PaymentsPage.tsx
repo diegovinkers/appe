@@ -94,8 +94,7 @@ export function PaymentsPage() {
             return (
               <SettingsSection key={method} title={c[method]}>
                 <Switch
-                  label={c[method]}
-                  showLabel={false}
+                  label={c.accept[method]}
                   checked={enabled}
                   onChange={(on) =>
                     change({ paymentMethods: on ? [...draft.paymentMethods, method] : draft.paymentMethods.filter((value) => value !== method) })

@@ -294,6 +294,7 @@ export const ptBR = {
     discardConfirm: "Descartar as alterações não salvas?",
     unsaved: "Há alterações não salvas.",
     validFor: "Vale para",
+    accept: { cash: "Aceitar dinheiro", pix: "Aceitar Pix", card: "Aceitar cartão" },
     fulfillments: { both: "Entrega e retirada", delivery: "Só entrega", pickup: "Só retirada" },
     note: "Observação para o cliente (opcional)",
     notePlaceholders: { cash: "Ex.: levamos troco até R$ 100", pix: "Ex.: mande o comprovante pelo WhatsApp", card: "Ex.: crédito e débito" },
@@ -792,6 +793,7 @@ export const ptBR = {
   errors: {
     generic: "Não foi possível carregar. Tente de novo.",
     retry: "Tentar de novo",
+    serverHint: "O servidor não respondeu. Tente de novo em alguns segundos.",
   },
   // Por código de error. Si un código no está, se muestra el mensaje del backend (que ya viene en portugués).
   apiErrors: {

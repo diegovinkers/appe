@@ -6,7 +6,7 @@ const pt = {
   timeHelp: "Um fechamento anterior à abertura termina no dia seguinte. Use 24:00 para fechar à meia-noite.",
   activeDay: "Atende neste dia", closed: "Fechado", open: "Abre às", close: "Fecha às", midnight: "Fechar à meia-noite (24:00)",
   overnight: "Termina no dia seguinte", addInterval: "Adicionar turno", removeInterval: "Remover turno", interval: "Turno",
-  copyFrom: "Copiar de outro dia", copyPlaceholder: "Escolher dia…", copy: "Copiar horários", copyConfirm: "Substituir os horários deste dia pelos horários do dia selecionado?",
+  copyFrom: "Copiar de outro dia", copyPlaceholder: "Escolher dia…", copy: "Copiar horários", copyAllFrom: "Usar os horários de", copyAll: "em todos os dias", copyAllConfirm: "Substituir os horários de todos os dias pelos do dia escolhido?", openOn: (day: string) => `Atende ${day}`, removeIntervalOf: (day: string, n: number) => `Remover turno ${n} de ${day}`, copyConfirm: "Substituir os horários deste dia pelos horários do dia selecionado?",
   exceptions: "Feriados e datas especiais", exceptionsHelp: "Estas datas substituem o horário semanal. Os turnos iniciados no dia anterior continuam até o fechamento informado. Datas passadas são removidas ao salvar.",
   noExceptions: "Nenhuma data especial. A loja seguirá o horário semanal.", addException: "Adicionar data", removeException: "Remover data", removeExceptionConfirm: "Remover esta data especial? O horário semanal voltará a valer nessa data.",
   date: "Data", note: "Observação (opcional)", notePlaceholder: "Ex.: feriado municipal", specialHours: "Atende nesta data", closedDate: "Fechado nesta data",
@@ -22,14 +22,14 @@ const pt = {
   days: { mon: "Segunda-feira", tue: "Terça-feira", wed: "Quarta-feira", thu: "Quinta-feira", fri: "Sexta-feira", sat: "Sábado", sun: "Domingo" },
 };
 
-type Copy = { [K in keyof typeof pt]: K extends "days" ? Record<keyof typeof pt.days, string> : string };
+type Copy = { [K in keyof typeof pt]: K extends "days" ? Record<keyof typeof pt.days, string> : (typeof pt)[K] extends string ? string : (typeof pt)[K] };
 const es: Copy = {
   title: "Horarios", description: "Definí cuándo recibe pedidos tu local y ajustá feriados o fechas especiales.",
   weekly: "Horario semanal", weeklyHelp: "Hasta 4 turnos por día, en el horario de Brasilia (America/Sao_Paulo).",
   timeHelp: "Un cierre anterior a la apertura termina al día siguiente. Usá 24:00 para cerrar a medianoche.",
   activeDay: "Atiende este día", closed: "Cerrado", open: "Abre a las", close: "Cierra a las", midnight: "Cerrar a medianoche (24:00)",
   overnight: "Termina al día siguiente", addInterval: "Agregar turno", removeInterval: "Quitar turno", interval: "Turno",
-  copyFrom: "Copiar de otro día", copyPlaceholder: "Elegir día…", copy: "Copiar horarios", copyConfirm: "¿Reemplazar los horarios de este día por los del día seleccionado?",
+  copyFrom: "Copiar de otro día", copyPlaceholder: "Elegir día…", copy: "Copiar horarios", copyAllFrom: "Usar los horarios del", copyAll: "en todos los días", copyAllConfirm: "¿Reemplazar los horarios de todos los días por los del día elegido?", openOn: (day: string) => `Atiende el ${day}`, removeIntervalOf: (day: string, n: number) => `Quitar el turno ${n} del ${day}`, copyConfirm: "¿Reemplazar los horarios de este día por los del día seleccionado?",
   exceptions: "Feriados y fechas especiales", exceptionsHelp: "Estas fechas reemplazan el horario semanal. Los turnos iniciados el día anterior continúan hasta su hora de cierre. Las fechas pasadas se eliminan al guardar.",
   noExceptions: "No hay fechas especiales. El local seguirá el horario semanal.", addException: "Agregar fecha", removeException: "Quitar fecha", removeExceptionConfirm: "¿Quitar esta fecha especial? El horario semanal volverá a aplicarse en esa fecha.",
   date: "Fecha", note: "Observación (opcional)", notePlaceholder: "Ej.: feriado local", specialHours: "Atiende esta fecha", closedDate: "Cerrado en esta fecha",

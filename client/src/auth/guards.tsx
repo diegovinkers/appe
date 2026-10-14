@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router";
 import type { Role } from "../api/types";
 import { FullScreenMessage, Spinner } from "../components/FullScreenMessage";
+import { LoadError } from "../components/LoadError";
 import { useT } from "../i18n";
 import { can, type Permission } from "./permissions";
 import { panelSessionExpired } from "./expiry";
@@ -9,8 +10,7 @@ import { homeFor, useSession } from "./session";
 
 // Deja pasar solo a usuarios con sesión y con uno de estos roles.
 export function RequireSession({ roles }: { roles: Role[] }) {
-  const t = useT();
-  const { data: user, isPending, isError, refetch } = useSession();
+  const { data: user, isPending, isError, error, refetch } = useSession();
   const location = useLocation();
 
   if (isPending) {
@@ -20,18 +20,7 @@ export function RequireSession({ roles }: { roles: Role[] }) {
       </FullScreenMessage>
     );
   }
-  if (isError) {
-    return (
-      <FullScreenMessage
-        title={t.errors.generic}
-        action={
-          <button type="button" onClick={() => refetch()} className="h-11 rounded-lg bg-action px-4 font-bold text-white">
-            {t.errors.retry}
-          </button>
-        }
-      />
-    );
-  }
+  if (isError) return <LoadError error={error} onRetry={() => void refetch()} />;
   if (!user) return <Navigate to="/entrar" replace state={{ from: location.pathname + location.search, expired: panelSessionExpired() }} />;
   if (!roles.includes(user.role)) return <Navigate to={homeFor(user)} replace />;
   return <Outlet />;

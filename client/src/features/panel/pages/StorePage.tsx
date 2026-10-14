@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ImagePlus } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { api, type ApiError } from "../../../api/client";
 import type { OwnerStore, OwnerStoreResponse } from "../../../api/types";
@@ -94,7 +95,11 @@ export function StorePage() {
               return <div key={kind} className="space-y-2">
                 <label htmlFor={`store-${kind}`} className="block font-bold">{c[kind]}</label>
                 {draft[key] && <img src={draft[key]} alt={c[kind]} className="h-28 max-w-full rounded-lg border border-line object-contain" />}
-                <input id={`store-${kind}`} type="file" accept="image/jpeg,image/png,image/webp" aria-describedby={`store-${kind}-hint`} className="block w-full text-sm file:mr-2 file:min-h-11 file:rounded-lg file:border file:border-line file:px-3" onChange={(event) => { void upload(event.target.files?.[0], kind); event.target.value = ""; }} />
+                <label className={`${button.secondary} cursor-pointer focus-within:outline-3 focus-within:outline-[#2f7de1]`}>
+                  <ImagePlus aria-hidden className="size-5" />
+                  {c.upload}
+                  <input id={`store-${kind}`} type="file" accept="image/jpeg,image/png,image/webp" aria-describedby={`store-${kind}-hint`} className="sr-only" onChange={(event) => { void upload(event.target.files?.[0], kind); event.target.value = ""; }} />
+                </label>
                 <p id={`store-${kind}-hint`} className="text-sm text-ink-muted">{c.imageHint}</p>
                 {draft[key] && <button type="button" className={button.danger} onClick={() => change(key, "")}>{c.remove}</button>}
               </div>;

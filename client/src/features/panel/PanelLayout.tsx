@@ -1,4 +1,5 @@
 import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
+import { LoadError } from "../../components/LoadError";
 import { type CSSProperties, useEffect, useState } from "react";
 import { Outlet, useLocation, useOutletContext } from "react-router";
 import { ApiError } from "../../api/client";
@@ -76,16 +77,7 @@ export function PanelLayout() {
     if (storeQuery.error instanceof ApiError && storeQuery.error.code === "COMMERCE_SUSPENDED") {
       return <FullScreenMessage title={t.suspended.title}>{t.suspended.text}</FullScreenMessage>;
     }
-    return (
-      <FullScreenMessage
-        title={t.errors.generic}
-        action={
-          <button type="button" onClick={() => storeQuery.refetch()} className="h-11 rounded-lg bg-action px-4 font-bold text-white">
-            {t.errors.retry}
-          </button>
-        }
-      />
-    );
+    return <LoadError error={storeQuery.error} onRetry={() => void storeQuery.refetch()} />;
   }
 
   const { store, opening, storeUrl } = storeQuery.data;

@@ -1,4 +1,5 @@
 import { type CSSProperties, useMemo, useState } from "react";
+import { LoadError } from "../../components/LoadError";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { ApiError } from "../../api/client";
@@ -41,16 +42,7 @@ export function MenuPage() {
     if (query.error instanceof ApiError && query.error.status === 404) {
       return <FullScreenMessage title={t.menu.notFound.title}>{t.menu.notFound.text}</FullScreenMessage>;
     }
-    return (
-      <FullScreenMessage
-        title={t.errors.generic}
-        action={
-          <button type="button" onClick={() => query.refetch()} className="h-11 rounded-lg bg-action px-4 font-bold text-white">
-            {t.errors.retry}
-          </button>
-        }
-      />
-    );
+    return <LoadError error={query.error} onRetry={() => void query.refetch()} />;
   }
   return <StoreMenu key={slug} slug={slug} data={query.data} />;
 }
