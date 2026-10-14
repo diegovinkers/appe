@@ -376,6 +376,30 @@ export interface paths {
                             cancelled: number;
                             salesCents: number;
                             averageCents: number;
+                            subtotalCents: number;
+                            deliveryFeeCents: number;
+                            discountCents: number;
+                            open: {
+                                count: number;
+                                salesCents: number;
+                            };
+                            payments: {
+                                /** @enum {string} */
+                                method: "cash" | "pix" | "card";
+                                count: number;
+                                salesCents: number;
+                            }[];
+                            fulfillment: {
+                                /** @enum {string} */
+                                type: "delivery" | "pickup";
+                                count: number;
+                                salesCents: number;
+                            }[];
+                            days: {
+                                day: string;
+                                count: number;
+                                salesCents: number;
+                            }[];
                             products: {
                                 productId: string;
                                 name: string;

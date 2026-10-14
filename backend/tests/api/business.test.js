@@ -46,3 +46,43 @@ describe("suscripciones y reportes", () => {
     expect((await agent.get("/api/owner/reports?from=2026-02-30&to=2026-03-01")).status).toBe(400);
   });
 });
+
+describe("cierre de caja", () => {
+  it("separa por forma de pago, entrega o retiro y día de operación, y avisa lo que sigue abierto", async () => {
+    const { commerce, owner } = await createCommerceWithOwner({ slug: "caixa" });
+    const agent = await loginAs(app, owner.email);
+    const order = (number, fields) => ({
+      commerce: commerce._id, clientOrderId: randomUUID(), number, status: "delivered", items: [],
+      subtotalCents: 0, deliveryFeeCents: 0, discountCents: 0, totalCents: 0, ...fields,
+    });
+    await Order.collection.insertMany([
+      // Viernes 2026-01-02 a la noche (y la 01:00 del sábado cuenta en el viernes).
+      order(1, { paymentMethod: "cash", fulfillment: "delivery", subtotalCents: 3000, deliveryFeeCents: 500, totalCents: 3500, createdAt: new Date("2026-01-02T23:00:00Z") }),
+      order(2, { paymentMethod: "pix", fulfillment: "pickup", subtotalCents: 2000, discountCents: 200, totalCents: 1800, createdAt: new Date("2026-01-03T04:00:00Z") }),
+      // Sábado.
+      order(3, { paymentMethod: "card", fulfillment: "delivery", subtotalCents: 4000, deliveryFeeCents: 500, totalCents: 4500, createdAt: new Date("2026-01-03T22:00:00Z") }),
+      order(4, { paymentMethod: "cash", fulfillment: "pickup", subtotalCents: 1000, totalCents: 1000, createdAt: new Date("2026-01-03T22:30:00Z") }),
+      // Abierto y cancelado: no son ventas.
+      order(5, { status: "confirmed", paymentMethod: "cash", fulfillment: "pickup", totalCents: 2500, createdAt: new Date("2026-01-03T23:00:00Z") }),
+      order(6, { status: "cancelled", paymentMethod: "pix", fulfillment: "pickup", totalCents: 9999, createdAt: new Date("2026-01-03T23:10:00Z") }),
+    ]);
+    const { body } = await agent.get("/api/owner/reports?from=2026-01-02&to=2026-01-03");
+    expect(body).toMatchObject({
+      completed: 4, cancelled: 1, salesCents: 10800, subtotalCents: 10000, deliveryFeeCents: 1000, discountCents: 200,
+      open: { count: 1, salesCents: 2500 },
+    });
+    expect(body.payments).toEqual([
+      { method: "card", count: 1, salesCents: 4500 },
+      { method: "cash", count: 2, salesCents: 4500 },
+      { method: "pix", count: 1, salesCents: 1800 },
+    ]);
+    expect(body.fulfillment).toEqual([
+      { type: "delivery", count: 2, salesCents: 8000 },
+      { type: "pickup", count: 2, salesCents: 2800 },
+    ]);
+    expect(body.days).toEqual([
+      { day: "2026-01-02", count: 2, salesCents: 5300 },
+      { day: "2026-01-03", count: 2, salesCents: 5500 },
+    ]);
+  });
+});

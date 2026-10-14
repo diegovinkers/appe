@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { cents, dateTime, optionalText, requiredText } from "./common.schema.js";
 import { isValidDay } from "../lib/dates.js";
+import { PAYMENT_METHODS } from "../models/commerce.model.js";
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(isValidDay, "Data inválida");
 export const subscriptionInput = z.object({
@@ -20,6 +21,12 @@ export const subscriptionResponse = z.strictObject({ subscription: z.strictObjec
 export const reportResponse = z.strictObject({
   from: day, to: day, timeZone: z.string(), completed: z.number().int().nonnegative(), cancelled: z.number().int().nonnegative(),
   salesCents: z.number().int().nonnegative(), averageCents: z.number().int().nonnegative(),
+  // Cierre de caja: lo vendido separado en productos, envíos y descuentos, y lo que sigue abierto.
+  subtotalCents: z.number().int().nonnegative(), deliveryFeeCents: z.number().int().nonnegative(), discountCents: z.number().int().nonnegative(),
+  open: z.strictObject({ count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() }),
+  payments: z.array(z.strictObject({ method: z.enum(PAYMENT_METHODS), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
+  fulfillment: z.array(z.strictObject({ type: z.enum(["delivery", "pickup"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
+  days: z.array(z.strictObject({ day, count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
   products: z.array(z.strictObject({ productId: z.string(), name: z.string(), quantity: z.number().int().nonnegative(), totalCents: z.number().int().nonnegative() })),
   sources: z.array(z.strictObject({ source: z.enum(["direct", "directory", "unknown"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
 });

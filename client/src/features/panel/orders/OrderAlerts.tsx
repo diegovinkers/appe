@@ -98,7 +98,7 @@ export function OrderAlerts() {
   if (!pending && !offline && !full) return null;
 
   return (
-    <div aria-label={t.alerts.label} className="sticky top-18 z-20 mb-5 space-y-2">
+    <div aria-label={t.alerts.label} className="sticky top-18 z-20 mb-5 space-y-2 print:hidden">
       {pending > 0 && (
         <div role="status" className="flex min-h-12 items-center gap-3 rounded-xl bg-[#fff4d6] px-4 py-1.5 text-[#7a4e00] shadow-sm ring-1 ring-[#f0d48a]">
           <BellRing aria-hidden className="size-5 shrink-0" />

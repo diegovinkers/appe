@@ -102,7 +102,7 @@ export function PanelLayout() {
 
   return (
     <div className="min-h-dvh" style={{ "--brand": store.primaryColor, "--on-brand": readableTextOn(store.primaryColor) } as CSSProperties}>
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-1.5 border-b border-line bg-surface px-2 sm:gap-3 sm:px-4">
+      <header className="sticky top-0 z-30 flex h-16 print:hidden items-center gap-1.5 border-b border-line bg-surface px-2 sm:gap-3 sm:px-4">
         <button
           type="button"
           onClick={toggleMenu}
@@ -132,7 +132,7 @@ export function PanelLayout() {
         {isDesktop ? (
           <aside
             id="menu-do-painel"
-            className={`sticky top-16 h-[calc(100dvh-4rem)] shrink-0 transition-[width] duration-200 ${collapsed ? "w-18" : "w-64"}`}
+            className={`sticky top-16 h-[calc(100dvh-4rem)] shrink-0 print:hidden transition-[width] duration-200 ${collapsed ? "w-18" : "w-64"}`}
           >
             <Sidebar groups={groups} collapsed={collapsed} storeUrl={storeUrl} />
           </aside>

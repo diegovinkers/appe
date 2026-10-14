@@ -405,6 +405,13 @@ Para cargarle el menú rápido a un local: se exporta, se edita en Excel y se im
   - `text`: texto plano de 48 columnas (80 mm) o 32 (58 mm).
   - Trae todo lo que necesitan la cocina y el repartidor: cliente y teléfono, dirección completa, ítems con sus opciones, totales, pago con troco, observaciones y notas internas.
 
+### Relatórios y cierre de caja (`store:write`)
+- `GET /api/owner/reports?from=YYYY-MM-DD&to=YYYY-MM-DD` (hasta 367 días) → por día de operación (de 05:00 a 05:00, hora de Brasil). Las ventas son los pedidos `delivered`:
+  - `completed`, `cancelled`, `salesCents`, `averageCents`; `subtotalCents`, `deliveryFeeCents` y `discountCents` (lo vendido separado).
+  - `open: { count, salesCents }`: los que siguen sin cerrar (`new`, `confirmed`, `ready`, `out_for_delivery`), para revisar antes de cerrar la caja.
+  - `payments: [{ method, count, salesCents }]` (`cash`, `pix`, `card`), `fulfillment: [{ type, count, salesCents }]` y `days: [{ day, count, salesCents }]`.
+  - `products` (los 20 más vendidos, valor antes de cupones) y `sources` (de dónde vino el pedido).
+
 ### Equipe (`team:manage`, solo el dueño)
 Cada miembro: `{ _id, name, email, role: "owner" | "staff", active, createdAt }`. Al dueño no se lo modifica desde acá; para un empleado de otro local o el dueño, `404`. Todo queda en la auditoría (`team.member_created`, `team.member_updated`, `team.password_reset`).
 - `GET /api/owner/team` → `{ "members": [...] }`: el dueño y los empleados del local.
