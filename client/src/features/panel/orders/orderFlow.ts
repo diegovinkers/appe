@@ -80,7 +80,8 @@ export function orderTiming(order: TimedOrder, now = Date.now()): OrderTiming {
     return { kind: "ready", minutes: minutesBetween(readyAt, now), late: false, dueAt: null };
   }
   const due = dueAt(order);
-  if (due != null && now > due) return { kind: "late", minutes: minutesBetween(due, now), late: true, dueAt: due };
+  // Atrasado desde el primer minuto entero: "Atrasado 0 min" no le dice nada a nadie.
+  if (due != null && now - due >= 60_000) return { kind: "late", minutes: minutesBetween(due, now), late: true, dueAt: due };
   return { kind: "onTime", minutes: minutesBetween(createdAt, now), late: false, dueAt: due };
 }
 

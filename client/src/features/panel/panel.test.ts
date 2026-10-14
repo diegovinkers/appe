@@ -126,6 +126,8 @@ describe("tiempos de la lista de pedidos", () => {
     const confirmed = { ...base, status: "confirmed" as const, statusHistory: [{ status: "confirmed" as const, at: "2026-09-25T22:10:00.000Z" }] };
     expect(orderTiming(confirmed, at("2026-09-25T23:05:00Z"))).toMatchObject({ kind: "onTime", minutes: 65, late: false });
     expect(orderTiming(confirmed, at("2026-09-25T23:17:00Z"))).toMatchObject({ kind: "late", minutes: 7, late: true });
+    // Recién pasada la hora (30 s) todavía no es "Atrasado 0 min".
+    expect(orderTiming(confirmed, at("2026-09-25T23:10:30Z")).late).toBe(false);
   });
 
   it("un programado vence a su hora y un listo para retirar no es atraso", () => {

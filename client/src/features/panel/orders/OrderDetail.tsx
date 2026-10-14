@@ -1,4 +1,4 @@
-import { MessageCircle, Phone, Printer, Star } from "lucide-react";
+import { MessageCircle, Phone, Printer, Star, X } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Link } from "react-router";
 import type { Order } from "../../../api/types";
@@ -78,7 +78,35 @@ function CancelForm({ onConfirm, onKeep, pending }: { onConfirm: (reason: string
   );
 }
 
-export function OrderDetail({ order, onClose }: { order: Order; onClose: () => void }) {
+// El detalle dentro de un panel del espacio de trabajo: título, contenido con scroll y botones abajo.
+function PanelFrame({ title, onClose, footer, children }: { title: string; onClose: () => void; footer?: ReactNode; children: ReactNode }) {
+  const t = useT();
+  return (
+    <section aria-label={title} className="flex h-full min-h-0 flex-col">
+      <header className="flex shrink-0 items-center gap-2 border-b border-line py-1 pr-1 pl-4">
+        <h2 className="min-w-0 flex-1 truncate font-bold">{title}</h2>
+        <button type="button" onClick={onClose} aria-label={t.close} className="grid size-11 shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-paper hover:text-ink">
+          <X aria-hidden className="size-5" />
+        </button>
+      </header>
+      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+      {footer && <div className="shrink-0 border-t border-line bg-surface p-3">{footer}</div>}
+    </section>
+  );
+}
+
+// `inline`: dentro de un panel en vez de la hoja. `conversationHref`: a dónde lleva "Ver la conversación".
+export function OrderDetail({
+  order,
+  onClose,
+  inline = false,
+  conversationHref = (id) => `/painel/assistente?conversa=${id}`,
+}: {
+  order: Order;
+  onClose: () => void;
+  inline?: boolean;
+  conversationHref?: (conversationId: string) => string;
+}) {
   const t = useT();
   const { user, store, storeUrl } = usePanel();
   const askReview = reviewRequestLink(order, store.name, storeUrl);
@@ -92,6 +120,7 @@ export function OrderDetail({ order, onClose }: { order: Order; onClose: () => v
   const label = nextLabel(order, t);
   const cancelEntry = order.statusHistory.find((entry) => entry.status === "cancelled");
 
+  const Frame = inline ? PanelFrame : Sheet;
   const footer = canWrite && (
     <div className="space-y-2">
       {change.isError && (
@@ -141,14 +170,14 @@ export function OrderDetail({ order, onClose }: { order: Order; onClose: () => v
   );
 
   return (
-    <Sheet open title={t.orders.detail.title(order.number, order.customer.name)} onClose={onClose} footer={footer}>
+    <Frame open title={t.orders.detail.title(order.number, order.customer.name)} onClose={onClose} footer={footer}>
       <div className="flex flex-wrap items-center gap-2 px-4 pt-4">
         <StatusChip order={order} />
         <span className="text-sm text-ink-muted">
           {formatTime(order.createdAt)} · {t.orders.detail.arrivedBy(order.conversation ? t.orders.byAssistant : t.orders.channels[order.channel])}
         </span>
         {order.conversation && (
-          <Link to={`/painel/assistente?conversa=${order.conversation}`} className="text-sm font-bold underline underline-offset-4">
+          <Link to={conversationHref(order.conversation)} className="text-sm font-bold underline underline-offset-4">
             {t.orders.detail.viewConversation}
           </Link>
         )}
@@ -292,6 +321,6 @@ export function OrderDetail({ order, onClose }: { order: Order; onClose: () => v
           </button>
         </div>
       )}
-    </Sheet>
+    </Frame>
   );
 }

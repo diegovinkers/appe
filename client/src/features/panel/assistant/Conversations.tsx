@@ -34,7 +34,7 @@ function StatusLabel({ conversation }: { conversation: Conversation }) {
 
 const who = (conversation: Conversation) => conversation.customer.name || formatPhone(conversation.customer.phone);
 
-function Detail({ id, onBack, canListen }: { id: string; onBack: () => void; canListen: boolean }) {
+function Detail({ id, onBack, canListen, compact, orderHref }: { id: string; onBack: () => void; canListen: boolean; compact: boolean; orderHref: (orderId: string) => string }) {
   const t = useT();
   const c = t.assistant.conversations;
   const { user } = usePanel();
@@ -58,10 +58,11 @@ function Detail({ id, onBack, canListen }: { id: string; onBack: () => void; can
   return (
     <section aria-label={who(conversation)} className="flex min-h-[28rem] flex-col overflow-hidden rounded-xl border border-line bg-paper">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface px-3 py-2">
-        <button type="button" onClick={onBack} className={`${button.quiet} lg:hidden`} aria-label={c.back}>
+        <button type="button" onClick={onBack} className={`${button.quiet} ${compact ? "" : "lg:hidden"}`} aria-label={c.back}>
           <ArrowLeft aria-hidden className="size-5" />
         </button>
-        <div className="min-w-0 flex-1">
+        {/* En una columna angosta, los botones bajan a su propia línea y el nombre queda entero. */}
+        <div className="min-w-48 flex-1">
           <p className="truncate font-bold">{who(conversation)}</p>
           <p className="text-sm text-ink-muted">
             {c.channels[conversation.channel]}
@@ -110,7 +111,7 @@ function Detail({ id, onBack, canListen }: { id: string; onBack: () => void; can
       {conversation.orders.length > 0 && (
         <p className="flex flex-wrap gap-3 border-b border-line bg-surface px-4 py-2 text-sm">
           {conversation.orders.map((orderId, index) => (
-            <Link key={orderId} to={`/painel/pedidos?pedido=${orderId}`} className="font-bold underline underline-offset-4">
+            <Link key={orderId} to={orderHref(orderId)} className="font-bold underline underline-offset-4">
               {c.order(index + 1)}
             </Link>
           ))}
@@ -153,14 +154,19 @@ function Detail({ id, onBack, canListen }: { id: string; onBack: () => void; can
 }
 
 // Lista de conversaciones y, al elegir una, sus mensajes. En el celular, una cosa a la vez.
+// `compact`: en una columna angosta (el espacio de trabajo de Pedidos), la lista o la conversación.
 export function Conversations({
   selected,
   onSelect,
   canListen = false,
+  compact = false,
+  orderHref = (orderId) => `/painel/pedidos?pedido=${orderId}`,
 }: {
   selected: string | null;
   onSelect: (id: string | null) => void;
   canListen?: boolean;
+  compact?: boolean;
+  orderHref?: (orderId: string) => string;
 }) {
   const t = useT();
   const c = t.assistant.conversations;
@@ -170,8 +176,8 @@ export function Conversations({
   const conversations = [...(query.data?.conversations ?? [])].sort((a, b) => Number(needsPerson(b)) - Number(needsPerson(a)));
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[20rem_1fr]">
-      <div className={selected ? "hidden lg:block" : ""}>
+    <div className={compact ? "" : "grid gap-5 lg:grid-cols-[20rem_1fr]"}>
+      <div className={selected ? (compact ? "hidden" : "hidden lg:block") : ""}>
         <div role="group" aria-label={c.label} className="mb-3 flex flex-wrap gap-2">
           {FILTERS.map((option) => (
             <button
@@ -217,9 +223,9 @@ export function Conversations({
         )}
       </div>
 
-      <div className={selected ? "" : "hidden lg:block"}>
+      <div className={selected ? "" : compact ? "hidden" : "hidden lg:block"}>
         {selected ? (
-          <Detail key={selected} id={selected} onBack={() => onSelect(null)} canListen={canListen} />
+          <Detail key={selected} id={selected} onBack={() => onSelect(null)} canListen={canListen} compact={compact} orderHref={orderHref} />
         ) : (
           <p className="rounded-xl border border-dashed border-line bg-surface p-6 text-ink-muted">{c.pick}</p>
         )}

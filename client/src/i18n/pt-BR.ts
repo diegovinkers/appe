@@ -303,6 +303,23 @@ export const ptBR = {
     noneFor: (mode: "delivery" | "pickup") => `Deixe pelo menos uma forma de pagamento para ${mode === "delivery" ? "a entrega" : "a retirada"}.`,
   },
 
+  // Espaço de trabalho de Pedidos na PC: painéis que se movem, se redimensionam e se recolhem.
+  workspace: {
+    panels: { orders: "Pedidos", whatsapp: "WhatsApp", detail: "Detalhe" },
+    move: (name: string) => `Mover o painel ${name}: arraste até outro painel ou use as setas ← →`,
+    collapse: (name: string) => `Recolher ${name}`,
+    expand: (name: string) => `Abrir ${name}`,
+    reset: "Restaurar disposição",
+    resetConfirm: "Voltar os painéis à disposição original?",
+    pickOrder: "Escolha um pedido para ver os detalhes aqui.",
+    search: "Buscar por nome, número ou telefone",
+    noResults: "Nenhum pedido com essa busca.",
+    assistantOn: "Assistente ligado",
+    assistantOff: "Assistente desligado",
+    configure: "Configurar",
+    views: "Ver",
+  },
+
   manualOrder: {
     channel: "Como chegou o pedido?",
     products: "Produtos",
