@@ -9,8 +9,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { Field, Switch, button, input } from "../../../components/ui";
 import { errorText, useT } from "../../../i18n";
 import { FloorPlan } from "../salon/FloorPlan";
-
-export const tablesKey = ["tables"];
+import { tablesKey } from "../salon/useSalon";
 
 // Configurações → Salão: las mesas en su lugar. Se agregan con un toque (quedan ordenadas solas)
 // y después se arrastran a donde están de verdad.

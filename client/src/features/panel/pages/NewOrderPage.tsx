@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { type ApiError, api } from "../../../api/client";
 import type {
   ManualOrderInput,
@@ -10,6 +10,7 @@ import type {
   PaymentMethod,
   PublicProduct,
   PublicStoreResponse,
+  TableTabResponse,
 } from "../../../api/types";
 import { Spinner } from "../../../components/FullScreenMessage";
 import { PageHeader } from "../../../components/PageHeader";
@@ -28,6 +29,7 @@ import { ProductSheet, Stepper } from "../../menu/ProductSheet";
 import { orderTotals } from "../../menu/pricing";
 import { usePublicStore } from "../../menu/usePublicStore";
 import { ordersKey, printIfConfirmed } from "../orders/useOrders";
+import { tableTabKey, tablesKey } from "../salon/useSalon";
 import { usePanel } from "../PanelLayout";
 
 type Channel = Exclude<OrderChannel, "online">;
@@ -38,29 +40,43 @@ const chip = (active: boolean) =>
 
 // Pedido que llegó por teléfono, WhatsApp o en el mostrador. Los productos se eligen con
 // la misma ficha que el menú público (opciones y precios iguales).
+// Con ?mesa=<id>, el pedido es para una mesa: solo productos y observaciones; entra en su cuenta.
 export function NewOrderPage() {
   const t = useT();
   const { store } = usePanel();
   const menu = usePublicStore(store.slug);
+  const tableId = useSearchParams()[0].get("mesa");
+  const tab = useQuery({
+    queryKey: tableTabKey(tableId ?? ""),
+    queryFn: () => api<TableTabResponse>(`/owner/tables/${tableId}/tab`),
+    enabled: Boolean(tableId),
+  });
+  const table = tableId ? tab.data?.table : undefined;
+  const loading = menu.isPending || (tableId != null && tab.isPending);
+  const failed = menu.isError || (tableId != null && tab.isError);
 
   return (
     <>
-      <PageHeader title={t.pages.newOrder.title} description={t.pages.newOrder.description} />
-      {menu.isPending && <Spinner />}
-      {menu.isError && <p className="text-error">{t.errors.generic}</p>}
-      {menu.data && <NewOrderForm data={menu.data} />}
+      <PageHeader
+        title={table ? t.tables.newOrderTitle(table.number) : t.pages.newOrder.title}
+        description={table ? t.tables.newOrderDescription : t.pages.newOrder.description}
+      />
+      {loading && <Spinner />}
+      {failed && <p className="text-error">{t.errors.generic}</p>}
+      {menu.data && !loading && !failed && <NewOrderForm data={menu.data} table={table} />}
     </>
   );
 }
 
-function NewOrderForm({ data }: { data: PublicStoreResponse }) {
+function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: TableTabResponse["table"] }) {
   const t = useT();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { store, categories, optionGroups } = data;
   const groups = useMemo(() => new Map(optionGroups.map((group) => [group._id, group])), [optionGroups]);
   const index = useMemo(() => indexMenu(categories), [categories]);
-  const cart = useCart(`painel.${store.slug}`);
+  // Cada mesa tiene su propio borrador: no se mezcla con el pedido del mostrador.
+  const cart = useCart(table ? `painel.${store.slug}.mesa.${table._id}` : `painel.${store.slug}`);
   const lines = resolveLines(cart.lines, index, groups);
 
   const [search, setSearch] = useState("");
@@ -86,6 +102,17 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
   const methods = paymentMethodsFor(store, fulfillment);
   const payment = methods.includes(chosenPayment) ? chosenPayment : (methods[0] ?? chosenPayment);
 
+  const forTable = useMutation<ManualOrderResponse, ApiError, object>({
+    mutationFn: (body) => api<ManualOrderResponse>(`/owner/tables/${table?._id}/orders`, { method: "POST", body }),
+    onSuccess: ({ order }) => {
+      cart.clear();
+      setClientOrderId(newId());
+      queryClient.invalidateQueries({ queryKey: ordersKey(operatingDayISO()) });
+      queryClient.invalidateQueries({ queryKey: tablesKey });
+      printIfConfirmed(order);
+      navigate(`/painel/pedidos?ver=salao&mesa=${table?._id}`);
+    },
+  });
   const create = useMutation<ManualOrderResponse, ApiError, ManualOrderInput>({
     mutationFn: (body) => api<ManualOrderResponse>("/owner/orders", { method: "POST", body }),
     onSuccess: ({ order }) => {
@@ -98,14 +125,31 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
     },
   });
 
+  const sending = table ? forTable : create;
+  // En la mesa no hay envío: el total es lo que suman los productos.
+  const shownTotal = table ? totals.subtotalCents : totals.totalCents;
+
   const visibleCategories = categories
     .map((category) => ({ category, products: category.products.filter((p) => matchesSearch(`${p.name} ${p.description}`, search)) }))
     .filter((entry) => entry.products.length > 0);
+
+  const items = () =>
+    available.map(({ line }) => ({
+      productId: line.productId,
+      quantity: line.quantity,
+      options: line.options,
+      ...(line.notes && { notes: line.notes }),
+    }));
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const found: Record<string, string> = {};
     if (!available.length) found.items = t.manualOrder.noItems;
+    if (table) {
+      setErrors(found);
+      if (!Object.keys(found).length) forTable.mutate({ clientOrderId, items: items(), ...(notes.trim() && { notes: notes.trim() }) });
+      return;
+    }
     if (!name.trim()) found.name = t.checkout.required;
     if (channel !== "counter" && !phone.trim()) found.phone = t.checkout.required;
     if (fulfillment === "delivery") {
@@ -136,12 +180,7 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
       ...(notes.trim() && { notes: notes.trim() }),
       // Hora de Brasil (UTC-3, sin horario de verano).
       ...(scheduledFor && { scheduledFor: `${scheduledFor}:00-03:00` }),
-      items: available.map(({ line }) => ({
-        productId: line.productId,
-        quantity: line.quantity,
-        options: line.options,
-        ...(line.notes && { notes: line.notes }),
-      })),
+      items: items(),
       locale: "pt-BR",
     });
   };
@@ -182,16 +221,18 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
       </section>
 
       <form onSubmit={submit} noValidate className="space-y-5 rounded-xl border border-line bg-surface p-4 lg:sticky lg:top-20">
-        <fieldset>
-          <legend className="mb-2 font-bold">{t.manualOrder.channel}</legend>
-          <div className="flex flex-wrap gap-2">
-            {CHANNELS.map((value) => (
-              <button key={value} type="button" aria-pressed={channel === value} onClick={() => setChannel(value)} className={chip(channel === value)}>
-                {t.orders.channels[value]}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        {!table && (
+          <fieldset>
+            <legend className="mb-2 font-bold">{t.manualOrder.channel}</legend>
+            <div className="flex flex-wrap gap-2">
+              {CHANNELS.map((value) => (
+                <button key={value} type="button" aria-pressed={channel === value} onClick={() => setChannel(value)} className={chip(channel === value)}>
+                  {t.orders.channels[value]}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
 
         <section aria-labelledby="itens">
           <div className="mb-2 flex items-center justify-between gap-2">
@@ -231,123 +272,132 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
           )}
         </section>
 
-        <Field id="cliente-nome" label={t.checkout.name} error={errors.name}>
-          <input id="cliente-nome" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} className={input} {...invalid("name")} />
-        </Field>
-        <Field id="cliente-fone" label={channel === "counter" ? t.manualOrder.phoneOptional : t.checkout.phone} error={errors.phone}>
-          <input
-            id="cliente-fone"
-            type="tel"
-            inputMode="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            maxLength={30}
-            className={input}
-            {...invalid("phone")}
-          />
-        </Field>
-
-        <fieldset>
-          <legend className="mb-2 font-bold">{t.checkout.howToReceive}</legend>
-          <div className="flex flex-wrap gap-2">
-            {(["delivery", "pickup"] as const)
-              .filter((option) => store.fulfillment[option])
-              .map((option) => (
-                <button key={option} type="button" aria-pressed={fulfillment === option} onClick={() => setFulfillment(option)} className={chip(fulfillment === option)}>
-                  {option === "delivery" ? t.checkout.delivery : t.checkout.pickup}
-                </button>
-              ))}
-          </div>
-        </fieldset>
-
-        {fulfillment === "delivery" && (
-          <div className="space-y-3">
-            {zones ? (
-              <Field id="pedido-bairro" label={t.checkout.zone} error={errors.zone}>
-                <select id="pedido-bairro" value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={input} {...invalid("zone")}>
-                  <option value="">{t.checkout.chooseZone}</option>
-                  {store.deliveryZones.map((zone) => (
-                    <option key={zone._id} value={zone._id}>
-                      {t.checkout.zoneFee(zone.name, zone.feeCents > 0 ? formatMoney(zone.feeCents) : t.checkout.free)}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            ) : (
-              <Field id="pedido-bairro" label={t.checkout.neighborhood} error={errors.zone}>
-                <input
-                  id="pedido-bairro"
-                  value={address.neighborhood}
-                  onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })}
-                  maxLength={80}
-                  className={input}
-                  {...invalid("zone")}
-                />
-              </Field>
-            )}
-            <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-3">
-              <Field id="pedido-rua" label={t.checkout.street} error={errors.street}>
-                <input
-                  id="pedido-rua"
-                  value={address.street}
-                  onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                  maxLength={120}
-                  className={input}
-                  {...invalid("street")}
-                />
-              </Field>
-              <Field id="pedido-numero" label={t.checkout.number} error={errors.number}>
-                <input
-                  id="pedido-numero"
-                  value={address.number}
-                  onChange={(e) => setAddress({ ...address, number: e.target.value })}
-                  maxLength={20}
-                  className={input}
-                  {...invalid("number")}
-                />
-              </Field>
-            </div>
-            <Field id="pedido-referencia" label={t.checkout.reference}>
+        {/* En la mesa no hay cliente, entrega ni pago: se cobra al cerrar la cuenta. */}
+        {!table && (
+          <>
+            <Field id="cliente-nome" label={t.checkout.name} error={errors.name}>
+              <input id="cliente-nome" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} className={input} {...invalid("name")} />
+            </Field>
+            <Field id="cliente-fone" label={channel === "counter" ? t.manualOrder.phoneOptional : t.checkout.phone} error={errors.phone}>
               <input
-                id="pedido-referencia"
-                value={address.reference}
-                onChange={(e) => setAddress({ ...address, reference: e.target.value })}
-                maxLength={120}
+                id="cliente-fone"
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                maxLength={30}
                 className={input}
+                {...invalid("phone")}
               />
             </Field>
-          </div>
-        )}
 
-        <fieldset>
-          <legend className="mb-2 font-bold">{t.checkout.payment}</legend>
-          <div className="flex flex-wrap gap-2">
-            {methods.map((method) => (
-              <button key={method} type="button" aria-pressed={payment === method} onClick={() => setPayment(method)} className={chip(payment === method)}>
-                {t.checkout.methods[method]}
-              </button>
-            ))}
-          </div>
-        </fieldset>
-        {payment === "cash" && (
-          <Field id="pedido-troco" label={t.checkout.changeFor} error={errors.changeFor} hint={t.checkout.changeHint}>
-            <input id="pedido-troco" inputMode="decimal" value={changeFor} onChange={(e) => setChangeFor(e.target.value)} className={input} {...invalid("changeFor")} />
-          </Field>
+            <fieldset>
+              <legend className="mb-2 font-bold">{t.checkout.howToReceive}</legend>
+              <div className="flex flex-wrap gap-2">
+                {(["delivery", "pickup"] as const)
+                  .filter((option) => store.fulfillment[option])
+                  .map((option) => (
+                    <button key={option} type="button" aria-pressed={fulfillment === option} onClick={() => setFulfillment(option)} className={chip(fulfillment === option)}>
+                      {option === "delivery" ? t.checkout.delivery : t.checkout.pickup}
+                    </button>
+                  ))}
+              </div>
+            </fieldset>
+
+            {fulfillment === "delivery" && (
+              <div className="space-y-3">
+                {zones ? (
+                  <Field id="pedido-bairro" label={t.checkout.zone} error={errors.zone}>
+                    <select id="pedido-bairro" value={zoneId} onChange={(e) => setZoneId(e.target.value)} className={input} {...invalid("zone")}>
+                      <option value="">{t.checkout.chooseZone}</option>
+                      {store.deliveryZones.map((zone) => (
+                        <option key={zone._id} value={zone._id}>
+                          {t.checkout.zoneFee(zone.name, zone.feeCents > 0 ? formatMoney(zone.feeCents) : t.checkout.free)}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                ) : (
+                  <Field id="pedido-bairro" label={t.checkout.neighborhood} error={errors.zone}>
+                    <input
+                      id="pedido-bairro"
+                      value={address.neighborhood}
+                      onChange={(e) => setAddress({ ...address, neighborhood: e.target.value })}
+                      maxLength={80}
+                      className={input}
+                      {...invalid("zone")}
+                    />
+                  </Field>
+                )}
+                <div className="grid grid-cols-[minmax(0,1fr)_6rem] gap-3">
+                  <Field id="pedido-rua" label={t.checkout.street} error={errors.street}>
+                    <input
+                      id="pedido-rua"
+                      value={address.street}
+                      onChange={(e) => setAddress({ ...address, street: e.target.value })}
+                      maxLength={120}
+                      className={input}
+                      {...invalid("street")}
+                    />
+                  </Field>
+                  <Field id="pedido-numero" label={t.checkout.number} error={errors.number}>
+                    <input
+                      id="pedido-numero"
+                      value={address.number}
+                      onChange={(e) => setAddress({ ...address, number: e.target.value })}
+                      maxLength={20}
+                      className={input}
+                      {...invalid("number")}
+                    />
+                  </Field>
+                </div>
+                <Field id="pedido-referencia" label={t.checkout.reference}>
+                  <input
+                    id="pedido-referencia"
+                    value={address.reference}
+                    onChange={(e) => setAddress({ ...address, reference: e.target.value })}
+                    maxLength={120}
+                    className={input}
+                  />
+                </Field>
+              </div>
+            )}
+
+            <fieldset>
+              <legend className="mb-2 font-bold">{t.checkout.payment}</legend>
+              <div className="flex flex-wrap gap-2">
+                {methods.map((method) => (
+                  <button key={method} type="button" aria-pressed={payment === method} onClick={() => setPayment(method)} className={chip(payment === method)}>
+                    {t.checkout.methods[method]}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            {payment === "cash" && (
+              <Field id="pedido-troco" label={t.checkout.changeFor} error={errors.changeFor} hint={t.checkout.changeHint}>
+                <input id="pedido-troco" inputMode="decimal" value={changeFor} onChange={(e) => setChangeFor(e.target.value)} className={input} {...invalid("changeFor")} />
+              </Field>
+            )}
+          </>
         )}
 
         <Field id="pedido-obs" label={t.checkout.notes}>
           <textarea id="pedido-obs" rows={2} maxLength={280} value={notes} onChange={(e) => setNotes(e.target.value)} className={textarea} />
         </Field>
-        <Field id="pedido-agendar" label={t.manualOrder.schedule} hint={t.manualOrder.scheduleHint}>
-          <input id="pedido-agendar" type="datetime-local" value={scheduledFor} onChange={(e) => setScheduledFor(e.target.value)} className={input} />
-        </Field>
+        {!table && (
+          <Field id="pedido-agendar" label={t.manualOrder.schedule} hint={t.manualOrder.scheduleHint}>
+            <input id="pedido-agendar" type="datetime-local" value={scheduledFor} onChange={(e) => setScheduledFor(e.target.value)} className={input} />
+          </Field>
+        )}
 
         <dl className="space-y-1 border-t border-line pt-3">
-          <div className="flex justify-between">
-            <dt>{t.checkout.subtotal}</dt>
-            <dd className="tabular-nums">{formatMoney(totals.subtotalCents)}</dd>
-          </div>
-          {fulfillment === "delivery" && (
+          {!table && (
+            <div className="flex justify-between">
+              <dt>{t.checkout.subtotal}</dt>
+              <dd className="tabular-nums">{formatMoney(totals.subtotalCents)}</dd>
+            </div>
+          )}
+          {!table && fulfillment === "delivery" && (
             <div className="flex justify-between">
               <dt>{t.checkout.deliveryFee}</dt>
               <dd className="tabular-nums">
@@ -357,17 +407,17 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
           )}
           <div className="flex justify-between text-lg font-bold">
             <dt>{t.checkout.total}</dt>
-            <dd className="tabular-nums">{formatMoney(totals.totalCents)}</dd>
+            <dd className="tabular-nums">{formatMoney(shownTotal)}</dd>
           </div>
         </dl>
 
-        {create.isError && (
+        {sending.isError && (
           <p role="alert" className="text-sm font-bold text-error">
-            {errorText(create.error, t)}
+            {errorText(sending.error, t)}
           </p>
         )}
-        <button type="submit" disabled={create.isPending} className={`${button.primary} h-12 w-full`}>
-          {create.isPending ? t.manualOrder.submitting : t.manualOrder.submit(formatMoney(totals.totalCents))}
+        <button type="submit" disabled={sending.isPending} className={`${button.primary} h-12 w-full`}>
+          {sending.isPending ? t.manualOrder.submitting : table ? t.tables.submit(formatMoney(shownTotal)) : t.manualOrder.submit(formatMoney(shownTotal))}
         </button>
       </form>
 

@@ -45,6 +45,8 @@ export function useChangeStatus() {
     onSuccess: ({ order }) => {
       replaceOrder(queryClient, order);
       printIfConfirmed(order);
+      // Un pedido de mesa cambia el estado de la mesa (en la cocina, listo para servir…).
+      if (order.fulfillment === "table") void queryClient.invalidateQueries({ queryKey: ["tables"] });
     },
     // Otro aparato ya lo cambió: se trae la lista de nuevo.
     onError: (error) => {

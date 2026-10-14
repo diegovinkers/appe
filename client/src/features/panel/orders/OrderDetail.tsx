@@ -79,7 +79,7 @@ function CancelForm({ onConfirm, onKeep, pending }: { onConfirm: (reason: string
 }
 
 // El detalle dentro de un panel del espacio de trabajo: título, contenido con scroll y botones abajo.
-function PanelFrame({ title, onClose, footer, children }: { title: string; onClose: () => void; footer?: ReactNode; children: ReactNode }) {
+export function PanelFrame({ title, onClose, footer, children }: { title: string; onClose: () => void; footer?: ReactNode; children: ReactNode }) {
   const t = useT();
   return (
     <section aria-label={title} className="flex h-full min-h-0 flex-col">

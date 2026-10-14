@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 const TONES = {
   error: "bg-error-soft text-error ring-error/30",
   warning: "bg-[#fff4d6] text-[#7a4e00] ring-[#f0d48a]",
+  success: "bg-[#e3f4ea] text-[#16603b] ring-[#b4dcc4]",
 };
 
 export function Notice({ tone, children }: { tone: keyof typeof TONES; children: ReactNode }) {

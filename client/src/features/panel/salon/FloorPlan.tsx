@@ -14,11 +14,14 @@ type Props<T extends PlanTable> = {
   onSelect?: (table: T) => void;
   // Solo al armar el salón: se arrastran y se mueven con flechas.
   onMove?: (table: T, x: number, y: number) => void;
-  // Lo de adentro de cada mesa (número, estado, total…) y su color.
-  content: (table: T) => ReactNode;
+  // Lo de adentro de cada mesa (número, estado, total…) y su color. `size`: el lado de la mesa en px.
+  content: (table: T, size: number) => ReactNode;
   tone?: (table: T) => string;
   describe: (table: T) => string;
   cell?: number;
+  // Para atender (panel Salão): el plano entra entero en el lugar que hay (ancho y alto),
+  // las mesas son más grandes y sin sillas.
+  fill?: boolean;
 };
 
 // Las sillas alrededor de la mesa, al centro de cada lado: se ve cuántos lugares tiene sin leer.
@@ -50,27 +53,39 @@ function Chairs({ seats, size }: { seats: number; size: number }) {
   );
 }
 
-export function FloorPlan<T extends PlanTable>({ tables, label, selectedId, onSelect, onMove, content, tone, describe, cell: fixedCell }: Props<T>) {
-  // Lo justo para las mesas que hay, con una celda de aire (y un mínimo para que el plano se lea).
-  const columns = Math.min(GRID_COLUMNS, Math.max(10, ...tables.map((table) => table.x + 2)));
+export function FloorPlan<T extends PlanTable>({ tables, label, selectedId, onSelect, onMove, content, tone, describe, cell: fixedCell, fill = false }: Props<T>) {
+  // Para atender, las filas y columnas sin mesas se juntan: cada mesa sigue al lado de las
+  // mismas mesas, pero más grande (el salón entra en un tercio de la pantalla).
+  const xs = fill ? [...new Set(tables.map((table) => table.x))].sort((a, b) => a - b) : [];
+  const ys = fill ? [...new Set(tables.map((table) => table.y))].sort((a, b) => a - b) : [];
+  const column = (table: T) => (fill ? xs.indexOf(table.x) : table.x);
+  const row = (table: T) => (fill ? ys.indexOf(table.y) : table.y);
+  // Para armarlo: lo justo para las mesas que hay, con una celda de aire (y un mínimo para que el plano se lea).
+  const columns = fill ? Math.max(1, xs.length) : Math.min(GRID_COLUMNS, Math.max(10, ...tables.map((table) => table.x + 2)));
+  const rows = fill ? Math.max(1, ys.length) : Math.min(GRID_ROWS, Math.max(5, ...tables.map((table) => table.y + 2)));
   // El plano entra en el ancho que haya; en pantallas chicas, con un mínimo y desplazamiento de costado.
-  const [width, setWidth] = useState(0);
+  const [box, setBox] = useState({ width: 0, height: 0 });
   const frame = useRef<ResizeObserver | null>(null);
   const measure = useCallback((element: HTMLDivElement | null) => {
     frame.current?.disconnect();
     if (!element) return;
-    frame.current = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    frame.current = new ResizeObserver(([entry]) => setBox({ width: entry.contentRect.width, height: entry.contentRect.height }));
     frame.current.observe(element);
   }, []);
+  // Aire alrededor del plano: las sillas de las mesas del borde no quedan cortadas.
+  const pad = fill ? 8 : 14;
   // Mínimo 62 px: la mesa (72% de la celda) queda en 44 px, cómoda para el dedo.
-  const cell = fixedCell ?? Math.max(62, Math.min(92, Math.floor(width / columns) || 76));
-  const rows = Math.min(GRID_ROWS, Math.max(5, ...tables.map((table) => table.y + 2)));
+  const cell = fixedCell ?? Math.max(62, Math.min(92, Math.floor(box.width / columns) || 76));
+  // Para atender, las celdas se estiran a lo ancho y a lo alto que haya (no son cuadradas) y
+  // la mesa es el cuadrado que entra en la celda (como mínimo 44 px, cómoda para el dedo).
+  const fit = (space: number, count: number, max: number) => Math.max(52, Math.min(max, Math.floor((space - pad * 2) / count) || 80));
+  const cellX = fill ? fit(box.width, columns, 240) : cell;
+  const cellY = fill ? fit(box.height, rows, 128) : cell;
+  const size = fill ? Math.round(Math.min(cellX, cellY, 112) * 0.86) : Math.round(cell * 0.72);
+  const marginX = Math.round((cellX - size) / 2);
+  const marginY = Math.round((cellY - size) / 2);
   const drag = useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null);
   const [offset, setOffset] = useState<{ id: string; dx: number; dy: number } | null>(null);
-  const size = Math.round(cell * 0.72);
-  const margin = Math.round((cell - size) / 2);
-  // Aire alrededor del plano: las sillas de las mesas del borde no quedan cortadas.
-  const pad = 14;
   const taken = (x: number, y: number, except: string) => tables.some((table) => table._id !== except && table.x === x && table.y === y);
 
   const down = (event: PointerEvent<HTMLButtonElement>, table: T) => {
@@ -115,18 +130,20 @@ export function FloorPlan<T extends PlanTable>({ tables, label, selectedId, onSe
   };
 
   return (
-    <div ref={measure} className="overflow-auto rounded-xl border border-line bg-paper">
+    <div ref={measure} className={fill ? "h-full min-h-0 overflow-auto" : "overflow-auto rounded-xl border border-line bg-paper"}>
       <div
         role="group"
         aria-label={label}
-        className="relative"
+        className={fill ? "relative mx-auto" : "relative"}
         style={{
-          width: columns * cell + pad * 2,
-          height: rows * cell + pad * 2,
-          // Puntos en las esquinas de cada celda: la planta del local.
-          backgroundImage: "radial-gradient(var(--color-line) 1.5px, transparent 1.5px)",
-          backgroundSize: `${cell}px ${cell}px`,
-          backgroundPosition: `${pad + cell / 2}px ${pad + cell / 2}px`,
+          width: columns * cellX + pad * 2,
+          height: rows * cellY + pad * 2,
+          // Puntos en las esquinas de cada celda: la planta del local (solo para armarlo).
+          ...(!fill && {
+            backgroundImage: "radial-gradient(var(--color-line) 1.5px, transparent 1.5px)",
+            backgroundSize: `${cell}px ${cell}px`,
+            backgroundPosition: `${pad + cell / 2}px ${pad + cell / 2}px`,
+          }),
         }}
       >
         {tables.map((table) => {
@@ -147,8 +164,8 @@ export function FloorPlan<T extends PlanTable>({ tables, label, selectedId, onSe
               }}
               onKeyDown={(event) => keys(event, table)}
               onClick={(event) => {
-                // Con teclado (Enter/espacio) no hay puntero: se elige acá.
-                if (event.detail === 0) onSelect?.(table);
+                // Con teclado (Enter/espacio) no hay puntero: se elige acá. Si no se arrastra, siempre acá.
+                if (event.detail === 0 || !onMove) onSelect?.(table);
               }}
               className={`absolute flex flex-col items-center justify-center rounded-xl border-2 text-center leading-tight shadow-sm transition-[box-shadow] ${
                 onMove ? "cursor-grab touch-none active:cursor-grabbing" : ""
@@ -156,13 +173,13 @@ export function FloorPlan<T extends PlanTable>({ tables, label, selectedId, onSe
               style={{
                 width: size,
                 height: size,
-                left: pad + table.x * cell + margin,
-                top: pad + table.y * cell + margin,
+                left: pad + column(table) * cellX + marginX,
+                top: pad + row(table) * cellY + marginY,
                 transform: dragging ? `translate(${offset.dx}px, ${offset.dy}px)` : undefined,
               }}
             >
-              <Chairs seats={table.seats} size={size} />
-              {content(table)}
+              {!fill && <Chairs seats={table.seats} size={size} />}
+              {content(table, size)}
             </button>
           );
         })}

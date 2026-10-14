@@ -20,6 +20,9 @@ import { OrdersWorkspace } from "../orders/OrdersWorkspace";
 import { printTicket } from "../orders/printTicket";
 import { useChangeStatus, useOrder, useOrders } from "../orders/useOrders";
 import { usePanel } from "../PanelLayout";
+import { SalonBoard } from "../salon/SalonBoard";
+import { TableTab } from "../salon/TableTab";
+import { useSalonTables } from "../salon/useSalon";
 
 // Cuándo entró y cuánto lleva: "18:42 · há 12 min"; si es de otro día, "sex 23:50".
 function TimeInfo({ order, now, today }: { order: Order; now: number; today: string }) {
@@ -128,12 +131,16 @@ export function useOrdersView() {
   const [search, setSearch] = useState("");
   const orders = useOrders(day, day === today);
 
-  const setParam = (name: string, value: string | null) => {
+  // Varios a la vez: elegir una mesa abre su cuenta y cierra el pedido que estaba abierto.
+  const update = (changes: Record<string, string | null>) => {
     const next = new URLSearchParams(params);
-    if (value) next.set(name, value);
-    else next.delete(name);
+    for (const [name, value] of Object.entries(changes)) {
+      if (value) next.set(name, value);
+      else next.delete(name);
+    }
     setParams(next, { replace: true });
   };
+  const setParam = (name: string, value: string | null) => update({ [name]: value });
 
   const list = orders.data?.orders ?? [];
   const found = search.trim()
@@ -143,7 +150,7 @@ export function useOrdersView() {
   if (filter === "active" || filter === "new") visible.sort(byUrgency(now));
   const count = (value: OrderFilter) => found.filter((order) => matchesFilter(order.status, value)).length;
 
-  return { params, setParam, now, today, day, filter, search, setSearch, orders, list, visible, count };
+  return { params, setParam, update, now, today, day, filter, search, setSearch, orders, list, visible, count };
 }
 export type OrdersView = ReturnType<typeof useOrdersView>;
 
@@ -235,11 +242,19 @@ function OrdersNarrow() {
   const t = useT();
   const view = useOrdersView();
   const detail = useParamSheet("pedido");
-  const showing = view.params.get("ver") === "whatsapp" ? "whatsapp" : "orders";
+  const tableSheet = useParamSheet("mesa");
+  const salon = useSalonTables();
+  const salonTables = salon.data?.tables ?? [];
+  // El salón solo aparece si el local tiene mesas.
+  const hasSalon = salonTables.some((table) => table.active);
+  const wanted = view.params.get("ver");
+  const showing = wanted === "whatsapp" ? "whatsapp" : wanted === "salao" && hasSalon ? "salon" : "orders";
   const tabs = [
     ["orders", t.workspace.panels.orders],
+    ...(hasSalon ? ([["salon", t.workspace.panels.salon]] as const) : []),
     ["whatsapp", t.workspace.panels.whatsapp],
   ] as const;
+  const param = { orders: null, salon: "salao", whatsapp: "whatsapp" } as const;
 
   return (
     <>
@@ -260,7 +275,7 @@ function OrdersNarrow() {
             type="button"
             role="tab"
             aria-selected={showing === value}
-            onClick={() => view.setParam("ver", value === "orders" ? null : value)}
+            onClick={() => view.setParam("ver", param[value])}
             className={`h-11 flex-1 rounded-lg px-5 font-bold sm:flex-none ${showing === value ? "bg-action text-white" : "text-ink-muted hover:text-ink"}`}
           >
             {label}
@@ -270,10 +285,26 @@ function OrdersNarrow() {
 
       {showing === "orders" ? (
         <OrdersList view={view} selectedId={detail.value} onOpen={(id) => detail.open(id)} />
+      ) : showing === "salon" ? (
+        <div className="rounded-xl border border-line bg-surface">
+          <SalonBoard tables={salonTables} now={view.now} selectedId={tableSheet.value} onSelect={(id) => tableSheet.open(id)} />
+        </div>
       ) : (
         <Conversations selected={view.params.get("conversa")} onSelect={(id) => view.setParam("conversa", id)} compact />
       )}
 
+      {/* Un pedido abierto desde la cuenta queda en lugar de la hoja de la mesa; al cerrarlo, vuelve. */}
+      {tableSheet.value && hasSalon && !detail.value && (
+        <TableTab
+          key={tableSheet.value}
+          tableId={tableSheet.value}
+          now={view.now}
+          onClose={tableSheet.close}
+          onOpenOrder={(id) => detail.open(id)}
+          onMoved={(id) => view.setParam("mesa", id)}
+          newOrderHref={`/painel/pedidos/novo?mesa=${tableSheet.value}`}
+        />
+      )}
       {detail.value && <OpenOrder id={detail.value} fromList={view.list.find((order) => order._id === detail.value)} onClose={detail.close} />}
     </>
   );
