@@ -327,15 +327,13 @@ export const ptBR = {
 
   // Espaço de trabalho de Pedidos na PC: painéis que se movem, se redimensionam e se recolhem.
   workspace: {
-    panels: { orders: "Pedidos", whatsapp: "WhatsApp", detail: "Detalhe", salon: "Salão" },
+    panels: { orders: "Pedidos", whatsapp: "WhatsApp", salon: "Salão" },
     move: (name: string) => `Mover o painel ${name}: arraste até outro painel ou use as setas ← →`,
     moveRow: (name: string) => `Mover o painel ${name}: arraste até os outros painéis ou use as setas ↑ ↓`,
     collapse: (name: string) => `Recolher ${name}`,
     expand: (name: string) => `Abrir ${name}`,
     reset: "Restaurar disposição",
     resetConfirm: "Voltar os painéis à disposição original?",
-    pickOrder: "Escolha um pedido para ver os detalhes aqui.",
-    pickOrderOrTable: "Escolha um pedido ou uma mesa para ver os detalhes aqui.",
     search: "Buscar por nome, número ou telefone",
     noResults: "Nenhum pedido com essa busca.",
     assistantOn: "Assistente ligado",

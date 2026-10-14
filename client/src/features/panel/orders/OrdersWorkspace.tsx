@@ -1,4 +1,4 @@
-import { Armchair, ClipboardList, GripVertical, MessageCircle, PanelLeftClose, PanelTopClose, ReceiptText, RotateCcw } from "lucide-react";
+import { Armchair, ClipboardList, GripVertical, MessageCircle, PanelLeftClose, PanelTopClose, RotateCcw } from "lucide-react";
 import { Fragment, type DragEvent, type KeyboardEvent, type ReactNode, useState } from "react";
 import { Link } from "react-router";
 import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
@@ -15,13 +15,14 @@ import { TableTab } from "../salon/TableTab";
 import { useSalonTables } from "../salon/useSalon";
 import { isActive } from "./orderFlow";
 
-type ColumnId = "whatsapp" | "orders" | "detail";
+// El detalle no es un panel: se abre al tocar un pedido o una mesa, en una hoja al costado.
+type ColumnId = "whatsapp" | "orders";
 // El salón es una fila a todo el ancho, arriba o abajo de las columnas.
 type PanelId = ColumnId | "salon";
 type SalonAt = "top" | "bottom";
-const DEFAULT_ORDER: ColumnId[] = ["whatsapp", "orders", "detail"];
-const DEFAULT_SIZE: Record<PanelId, string> = { whatsapp: "27%", orders: "41%", detail: "32%", salon: "33%" };
-const ICONS = { whatsapp: MessageCircle, orders: ClipboardList, detail: ReceiptText, salon: Armchair };
+const DEFAULT_ORDER: ColumnId[] = ["whatsapp", "orders"];
+const DEFAULT_SIZE: Record<PanelId, string> = { whatsapp: "34%", orders: "66%", salon: "33%" };
+const ICONS = { whatsapp: MessageCircle, orders: ClipboardList, salon: Armchair };
 const ORDER_KEY = "painel.pedidos.paineis";
 const SALON_KEY = "painel.pedidos.salao";
 const LAYOUT_PREFIX = "painel-pedidos-";
@@ -190,9 +191,9 @@ function Edge({ row = false }: { row?: boolean }) {
   );
 }
 
-// Pedidos en la PC: WhatsApp, la lista y el detalle lado a lado, como paneles que el equipo
-// acomoda a su gusto (tamaño, lugar y recogidos). Si el local tiene mesas, el salón es una
-// fila a todo el ancho arriba (o abajo) de las columnas.
+// Pedidos en la PC: WhatsApp y la lista lado a lado, como paneles que el equipo acomoda a su
+// gusto (tamaño, lugar y recogidos). Si el local tiene mesas, el salón es una fila a todo el
+// ancho arriba (o abajo) de las columnas. Un pedido o una mesa se abren al tocarlos.
 export function OrdersWorkspace() {
   const t = useT();
   const { user } = usePanel();
@@ -202,7 +203,7 @@ export function OrdersWorkspace() {
   const [salonAt, setSalonAt] = useState<SalonAt>(readSalonAt);
   const [version, setVersion] = useState(0);
   // Tamaños y recogidos se guardan por panel (no dependen del orden): sobreviven a moverlos.
-  const layout = useDefaultLayout({ id: `${LAYOUT_PREFIX}tamanhos`, storage });
+  const layout = useDefaultLayout({ id: `${LAYOUT_PREFIX}colunas`, storage });
   const rowsLayout = useDefaultLayout({ id: `${LAYOUT_PREFIX}filas`, storage });
 
   const isOwner = can(user.role, "store:write");
@@ -297,31 +298,6 @@ export function OrdersWorkspace() {
       badge: salonAttention,
       body: <SalonBoard fill tables={salonTables} now={view.now} selectedId={selectedTable} onSelect={(id) => view.update({ mesa: id, pedido: null })} />,
     },
-    detail: {
-      // Un pedido abierto desde la cuenta de una mesa: al cerrarlo se vuelve a la cuenta.
-      body: selectedOrder ? (
-        <OpenOrder
-          inline
-          id={selectedOrder}
-          fromList={view.list.find((item) => item._id === selectedOrder)}
-          onClose={() => setParam("pedido", null)}
-          conversationHref={(conversationId) => hrefWith("conversa", conversationId)}
-        />
-      ) : selectedTable ? (
-        <TableTab
-          key={selectedTable}
-          inline
-          tableId={selectedTable}
-          now={view.now}
-          onClose={() => setParam("mesa", null)}
-          onOpenOrder={(id) => setParam("pedido", id)}
-          onMoved={(id) => setParam("mesa", id)}
-          newOrderHref={`/painel/pedidos/novo?mesa=${selectedTable}`}
-        />
-      ) : (
-        <p className="m-3 rounded-xl border border-dashed border-line p-6 text-ink-muted">{hasSalon ? t.workspace.pickOrderOrTable : t.workspace.pickOrder}</p>
-      ),
-    },
   };
 
   const columns = (
@@ -380,6 +356,36 @@ export function OrdersWorkspace() {
         </Group>
       ) : (
         columns
+      )}
+
+      {/* Abierto desde la cuenta de una mesa, el pedido queda en su lugar; al cerrarlo, vuelve la mesa. */}
+      {selectedOrder ? (
+        <OpenOrder
+          side
+          id={selectedOrder}
+          fromList={view.list.find((item) => item._id === selectedOrder)}
+          onClose={() => setParam("pedido", null)}
+          // "Ver a conversa" cierra la hoja y la abre en el panel de WhatsApp.
+          conversationHref={(conversationId) => {
+            const next = new URLSearchParams(params);
+            next.set("conversa", conversationId);
+            next.delete("pedido");
+            return `/painel/pedidos?${next}`;
+          }}
+        />
+      ) : (
+        selectedTable && (
+          <TableTab
+            key={selectedTable}
+            side
+            tableId={selectedTable}
+            now={view.now}
+            onClose={() => setParam("mesa", null)}
+            onOpenOrder={(id) => setParam("pedido", id)}
+            onMoved={(id) => setParam("mesa", id)}
+            newOrderHref={`/painel/pedidos/novo?mesa=${selectedTable}`}
+          />
+        )
       )}
     </div>
   );

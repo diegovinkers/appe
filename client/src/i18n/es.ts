@@ -328,15 +328,13 @@ export const es: Dictionary = {
 
   // Espacio de trabajo de Pedidos en la PC: paneles que se mueven, cambian de tamaño y se pliegan.
   workspace: {
-    panels: { orders: "Pedidos", whatsapp: "WhatsApp", detail: "Detalle", salon: "Salón" },
+    panels: { orders: "Pedidos", whatsapp: "WhatsApp", salon: "Salón" },
     move: (name: string) => `Mover el panel ${name}: arrastralo hasta otro panel o usá las flechas ← →`,
     moveRow: (name: string) => `Mover el panel ${name}: arrastralo hasta los otros paneles o usá las flechas ↑ ↓`,
     collapse: (name: string) => `Plegar ${name}`,
     expand: (name: string) => `Abrir ${name}`,
     reset: "Restaurar disposición",
     resetConfirm: "¿Volver los paneles a la disposición original?",
-    pickOrder: "Elegí un pedido para ver el detalle acá.",
-    pickOrderOrTable: "Elegí un pedido o una mesa para ver el detalle acá.",
     search: "Buscar por nombre, número o teléfono",
     noResults: "No hay pedidos con esa búsqueda.",
     assistantOn: "Asistente activado",

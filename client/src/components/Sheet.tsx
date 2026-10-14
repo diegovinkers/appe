@@ -2,11 +2,12 @@ import { X } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
 import { useT } from "../i18n";
 
-type Props = { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode };
+type Props = { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; side?: boolean };
 
 // Hoja que sube desde abajo en el celular y se centra en la PC. Es un <dialog> modal:
 // el navegador se encarga del foco, de Esc y de tapar lo de atrás.
-export function Sheet({ open, onClose, title, children, footer }: Props) {
+// `side`: en la PC se abre al costado derecho, a todo el alto (el detalle de un pedido).
+export function Sheet({ open, onClose, title, children, footer, side = false }: Props) {
   const t = useT();
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -38,9 +39,13 @@ export function Sheet({ open, onClose, title, children, footer }: Props) {
       onClose={() => open && onClose()}
       // Tocar fuera de la hoja la cierra.
       onClick={(event) => event.target === event.currentTarget && onClose()}
-      className="mx-0 mt-auto mb-0 max-h-[92dvh] w-full max-w-none rounded-t-2xl bg-surface p-0 text-ink shadow-xl backdrop:bg-black/50 sm:m-auto sm:max-w-lg sm:rounded-2xl"
+      className={`mx-0 mt-auto mb-0 max-h-[92dvh] w-full max-w-none rounded-t-2xl bg-surface p-0 text-ink shadow-xl ${
+        side
+          ? "backdrop:bg-black/30 sm:my-0 sm:mr-0 sm:ml-auto sm:h-dvh sm:max-h-dvh sm:max-w-md sm:rounded-none sm:rounded-l-2xl"
+          : "backdrop:bg-black/50 sm:m-auto sm:max-w-lg sm:rounded-2xl"
+      }`}
     >
-      <div className="flex max-h-[92dvh] flex-col">
+      <div className={`flex max-h-[92dvh] flex-col ${side ? "sm:h-full sm:max-h-dvh" : ""}`}>
         <header className="flex shrink-0 items-center gap-2 border-b border-line py-2 pr-2 pl-4">
           <h2 id={titleId} className="min-w-0 flex-1 text-lg leading-tight font-bold">
             {title}

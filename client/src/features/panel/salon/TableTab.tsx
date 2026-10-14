@@ -10,7 +10,7 @@ import { Field, button, input } from "../../../components/ui";
 import { errorText, useT } from "../../../i18n";
 import { formatMinutes, formatMoney, formatTime } from "../../../lib/format";
 import { parseMoney } from "../../../lib/money";
-import { PanelFrame, StatusChip } from "../orders/OrderDetail";
+import { StatusChip } from "../orders/OrderDetail";
 import { useDeviceSettings } from "../orders/deviceSettings";
 import { printBill } from "../orders/printTicket";
 import { useChangeStatus } from "../orders/useOrders";
@@ -121,11 +121,11 @@ function CloseForm({ tab, onBack, onClosed }: { tab: Tab; onBack: () => void; on
   );
 }
 
-// La cuenta de una mesa: dentro del panel Detalhe (`inline`) o como hoja en el celular.
+// La cuenta de una mesa, en una hoja (al costado en el espacio de trabajo: `side`).
 export function TableTab({
   tableId,
   now,
-  inline = false,
+  side = false,
   onClose,
   onOpenOrder,
   onMoved,
@@ -133,7 +133,7 @@ export function TableTab({
 }: {
   tableId: string;
   now: number;
-  inline?: boolean;
+  side?: boolean;
   onClose: () => void;
   onOpenOrder: (orderId: string) => void;
   onMoved: (tableId: string) => void;
@@ -152,12 +152,11 @@ export function TableTab({
   const canWrite = can(user.role, "orders:write");
   const canOrder = can(user.role, "orders:manual");
 
-  const Frame = inline ? PanelFrame : Sheet;
   const data = query.data;
   const title = data ? c.title(data.table.number, data.table.name) : t.workspace.panels.salon;
   if (!data) {
     return (
-      <Frame open title={title} onClose={onClose}>
+      <Sheet open side={side} title={title} onClose={onClose}>
         {query.isError ? (
           <div className="p-4">
             <Notice tone="error">{errorText(query.error, t)}</Notice>
@@ -165,7 +164,7 @@ export function TableTab({
         ) : (
           <Spinner />
         )}
-      </Frame>
+      </Sheet>
     );
   }
 
@@ -216,7 +215,7 @@ export function TableTab({
   }
 
   return (
-    <Frame open title={title} onClose={onClose} footer={footer}>
+    <Sheet open side={side} title={title} onClose={onClose} footer={footer}>
       <div className="space-y-4 p-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className={`inline-flex items-center rounded-full border-2 px-2.5 py-0.5 text-sm font-bold ${STATE_TONE[state]}`}>{c.states[state]}</span>
@@ -295,6 +294,6 @@ export function TableTab({
           !closed && <p className="rounded-xl border border-dashed border-line p-4 text-ink-muted">{c.free}</p>
         )}
       </div>
-    </Frame>
+    </Sheet>
   );
 }

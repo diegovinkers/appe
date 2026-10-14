@@ -181,19 +181,19 @@ export function OpenOrder({
   id,
   fromList,
   onClose,
-  inline = false,
+  side = false,
   conversationHref,
 }: {
   id: string;
   fromList: Order | undefined;
   onClose: () => void;
-  inline?: boolean;
+  side?: boolean;
   conversationHref?: (conversationId: string) => string;
 }) {
   const single = useOrder(id, !fromList);
   const order = fromList ?? single.data;
-  if (!order) return inline ? <Spinner /> : null;
-  return <OrderDetail key={order._id} order={order} onClose={onClose} inline={inline} conversationHref={conversationHref} />;
+  if (!order) return null;
+  return <OrderDetail key={order._id} order={order} onClose={onClose} side={side} conversationHref={conversationHref} />;
 }
 
 // Lo que comparten la página y el espacio de trabajo: el día, el filtro, la búsqueda y la lista.

@@ -1,4 +1,4 @@
-import { MessageCircle, Phone, Printer, Star, X } from "lucide-react";
+import { MessageCircle, Phone, Printer, Star } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { Link } from "react-router";
 import type { Order } from "../../../api/types";
@@ -78,33 +78,16 @@ function CancelForm({ onConfirm, onKeep, pending }: { onConfirm: (reason: string
   );
 }
 
-// El detalle dentro de un panel del espacio de trabajo: título, contenido con scroll y botones abajo.
-export function PanelFrame({ title, onClose, footer, children }: { title: string; onClose: () => void; footer?: ReactNode; children: ReactNode }) {
-  const t = useT();
-  return (
-    <section aria-label={title} className="flex h-full min-h-0 flex-col">
-      <header className="flex shrink-0 items-center gap-2 border-b border-line py-1 pr-1 pl-4">
-        <h2 className="min-w-0 flex-1 truncate font-bold">{title}</h2>
-        <button type="button" onClick={onClose} aria-label={t.close} className="grid size-11 shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-paper hover:text-ink">
-          <X aria-hidden className="size-5" />
-        </button>
-      </header>
-      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
-      {footer && <div className="shrink-0 border-t border-line bg-surface p-3">{footer}</div>}
-    </section>
-  );
-}
-
-// `inline`: dentro de un panel en vez de la hoja. `conversationHref`: a dónde lleva "Ver la conversación".
+// `side`: la hoja se abre al costado (en el espacio de trabajo). `conversationHref`: a dónde lleva "Ver la conversación".
 export function OrderDetail({
   order,
   onClose,
-  inline = false,
+  side = false,
   conversationHref = (id) => `/painel/assistente?conversa=${id}`,
 }: {
   order: Order;
   onClose: () => void;
-  inline?: boolean;
+  side?: boolean;
   conversationHref?: (conversationId: string) => string;
 }) {
   const t = useT();
@@ -120,7 +103,6 @@ export function OrderDetail({
   const label = nextLabel(order, t);
   const cancelEntry = order.statusHistory.find((entry) => entry.status === "cancelled");
 
-  const Frame = inline ? PanelFrame : Sheet;
   const footer = canWrite && (
     <div className="space-y-2">
       {change.isError && (
@@ -170,7 +152,7 @@ export function OrderDetail({
   );
 
   return (
-    <Frame open title={t.orders.detail.title(order.number, order.customer.name)} onClose={onClose} footer={footer}>
+    <Sheet open side={side} title={t.orders.detail.title(order.number, order.customer.name)} onClose={onClose} footer={footer}>
       <div className="flex flex-wrap items-center gap-2 px-4 pt-4">
         <StatusChip order={order} />
         <span className="text-sm text-ink-muted">
@@ -324,6 +306,6 @@ export function OrderDetail({
           </button>
         </div>
       )}
-    </Frame>
+    </Sheet>
   );
 }
