@@ -75,7 +75,18 @@ export function ReportsPage() {
   const [range, setRange] = useState<Range>(() => presetRange("today", today));
   const [form, setForm] = useState<Range>(range);
   const query = useQuery({ queryKey: ["reports", range], queryFn: () => api<ReportResponse>(`/owner/reports?${new URLSearchParams(range)}`) });
-  const data = query.data;
+  // Con el backend anterior (unos minutos durante un despliegue) faltan los campos del cierre.
+  const raw = query.data;
+  const data = raw && {
+    ...raw,
+    open: raw.open ?? { count: 0, salesCents: 0 },
+    payments: raw.payments ?? [],
+    fulfillment: raw.fulfillment ?? [],
+    days: raw.days ?? [],
+    subtotalCents: raw.subtotalCents ?? 0,
+    deliveryFeeCents: raw.deliveryFeeCents ?? 0,
+    discountCents: raw.discountCents ?? 0,
+  };
 
   const choose = (value: Preset) => {
     const next = presetRange(value, today);

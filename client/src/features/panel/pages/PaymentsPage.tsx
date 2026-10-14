@@ -19,9 +19,14 @@ const fields = (store: OwnerStore) => ({
   paymentMethods: [...store.paymentMethods],
   pixKey: store.pixKey,
   paymentOptions: {
-    cash: { ...store.paymentOptions.cash },
-    pix: { ...store.paymentOptions.pix },
-    card: { ...store.paymentOptions.card },
+    // Pueden faltar unos minutos mientras se despliega el backend.
+    cash: {
+      fulfillment: store.paymentOptions?.cash?.fulfillment ?? "both",
+      note: store.paymentOptions?.cash?.note ?? "",
+      askChange: store.paymentOptions?.cash?.askChange ?? true,
+    },
+    pix: { fulfillment: store.paymentOptions?.pix?.fulfillment ?? "both", note: store.paymentOptions?.pix?.note ?? "" },
+    card: { fulfillment: store.paymentOptions?.card?.fulfillment ?? "both", note: store.paymentOptions?.card?.note ?? "" },
   },
 });
 type Draft = ReturnType<typeof fields>;

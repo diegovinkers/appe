@@ -139,7 +139,8 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
   // Las formas de pago de este modo (entrega o retiro). Si la elegida no vale para el modo, no cuenta.
   const methods = form.fulfillment ? paymentMethodsFor(store, form.fulfillment) : store.paymentMethods;
   const payment = form.paymentMethod && methods.includes(form.paymentMethod) ? form.paymentMethod : undefined;
-  const askChange = payment === "cash" && store.paymentOptions.cash.askChange;
+  // Las opciones de pago pueden faltar unos minutos mientras se despliega el backend.
+  const askChange = payment === "cash" && store.paymentOptions?.cash?.askChange !== false;
   const [notes, setNotes] = useState("");
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<Coupon | null>(null);
@@ -464,7 +465,7 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
                 checked={payment === method}
                 onChange={() => update("paymentMethod", method)}
                 title={t.checkout.methods[method]}
-                detail={store.paymentOptions[method].note || undefined}
+                detail={store.paymentOptions?.[method]?.note || undefined}
               />
             ))}
           </div>
