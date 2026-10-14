@@ -175,6 +175,53 @@ describe("pedidos programados", () => {
   });
 });
 
+describe("lista del panel por día de operación", () => {
+  // Pedido directo en la base, con la hora que haga falta.
+  const insert = (number, createdAt, status = "new", extra = {}) =>
+    Order.collection.insertOne({
+      commerce: commerce._id, clientOrderId: randomUUID(), number, status, createdAt: new Date(createdAt), updatedAt: new Date(createdAt),
+      scheduledFor: null, customer: { name: "Ana", phone: "" }, fulfillment: "pickup", paymentMethod: "cash", items: [],
+      subtotalCents: 0, deliveryFeeCents: 0, totalCents: 0, statusHistory: [], ...extra,
+    });
+  const numbers = (res) => res.body.orders.map((order) => order.number).sort((a, b) => a - b);
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-26T04:30:00Z")); // sábado 01:30 en Brasil
+  });
+
+  it("después de medianoche sigue mostrando la noche anterior", async () => {
+    await insert(1, "2026-09-26T02:50:00Z", "delivered"); // viernes 23:50
+    await insert(2, "2026-09-26T04:10:00Z"); // sábado 01:10
+    await insert(3, "2026-09-25T07:00:00Z", "delivered"); // viernes 04:00: es del jueves
+    const res = await owner.get("/api/owner/orders");
+    expect(res.status).toBe(200);
+    expect(res.body.day).toBe("2026-09-25");
+    expect(numbers(res)).toEqual([1, 2]);
+  });
+
+  it("los pedidos que quedaron abiertos de días anteriores no desaparecen", async () => {
+    await insert(1, "2026-09-24T23:00:00Z", "confirmed"); // jueves, sin cerrar
+    await insert(2, "2026-09-24T23:10:00Z", "delivered"); // jueves, cerrado
+    await insert(3, "2026-09-25T22:00:00Z", "new"); // hoy
+    expect(numbers(await owner.get("/api/owner/orders"))).toEqual([1, 3]);
+    // En otro día se ve solo lo de ese día.
+    expect(numbers(await owner.get("/api/owner/orders?date=2026-09-24"))).toEqual([1, 2]);
+  });
+
+  it("un programado para mañana no se trae como abierto", async () => {
+    await insert(1, "2026-09-25T22:00:00Z", "confirmed", { scheduledFor: new Date("2026-09-27T21:00:00Z") });
+    expect(numbers(await owner.get("/api/owner/orders"))).toEqual([]);
+    expect(numbers(await owner.get("/api/owner/orders?date=2026-09-27"))).toEqual([1]);
+  });
+
+  it("no trae pedidos abiertos de otro local", async () => {
+    const { commerce: other } = await createCommerceWithOwner({ slug: "loja-b" });
+    await Order.collection.insertOne({ commerce: other._id, clientOrderId: randomUUID(), number: 9, status: "new", createdAt: new Date("2026-09-20T22:00:00Z"), scheduledFor: null, items: [] });
+    expect(numbers(await owner.get("/api/owner/orders"))).toEqual([]);
+  });
+});
+
 describe("estados, motivo y tiempo estimado", () => {
   it("al confirmar se ajusta el tiempo y el seguimiento lo muestra", async () => {
     const created = await postOrder(orderBody());

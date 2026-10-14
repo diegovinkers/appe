@@ -237,10 +237,11 @@ describe("panel del dueño: /api/owner/orders", () => {
   it("filtra por fecha (hora de Brasil) y por estado", async () => {
     const old = await postOrder(orderBody());
     await postOrder(orderBody());
-    // 2026-01-10 a las 23:30 en Brasil (02:30 UTC del día siguiente).
+    // 2026-01-10 a las 23:30 en Brasil (02:30 UTC del día siguiente), ya entregado: los abiertos
+    // de días anteriores siguen en la lista de hoy (lista del panel por día de operación).
     await Order.collection.updateOne(
       { _id: new Order.base.Types.ObjectId(old.body.order._id) },
-      { $set: { createdAt: new Date("2026-01-11T02:30:00Z") } }
+      { $set: { createdAt: new Date("2026-01-11T02:30:00Z"), status: "delivered" } }
     );
 
     expect((await owner.get("/api/owner/orders")).body.orders).toHaveLength(1);

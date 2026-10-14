@@ -29,15 +29,17 @@ describe("suscripciones y reportes", () => {
     expect((await employee.get("/api/owner/subscription")).status).toBe(403);
     expect((await employee.get("/api/owner/reports?from=2026-01-01&to=2026-01-31")).status).toBe(403);
   });
-  it("agrega más de 500 pedidos, respeta la fecha de Brasil y excluye otros locales y cancelados", async () => {
+  it("agrega más de 500 pedidos, corta el día a las 05:00 de Brasil y excluye otros locales y cancelados", async () => {
     const { commerce, owner } = await createCommerceWithOwner(); const { commerce: other } = await createCommerceWithOwner({ slug: "otra" });
     const agent = await loginAs(app, owner.email);
     // Direct fixture insertion deliberately avoids 502 unrelated order-placement transactions.
-    await Order.collection.insertMany(Array.from({ length: 502 }, (_, i) => ({ commerce: commerce._id, clientOrderId: randomUUID(), number: i + 1, status: "delivered", totalCents: 1000, items: [], createdAt: new Date("2026-01-02T02:59:00Z") })));
+    await Order.collection.insertMany(Array.from({ length: 502 }, (_, i) => ({ commerce: commerce._id, clientOrderId: randomUUID(), number: i + 1, status: "delivered", totalCents: 1000, items: [], createdAt: new Date("2026-01-02T07:59:00Z") })));
     await Order.collection.insertMany([
       { commerce: commerce._id, clientOrderId: randomUUID(), number: 503, status: "cancelled", totalCents: 9999, items: [], createdAt: new Date("2026-01-01T12:00:00Z") },
       { commerce: other._id, clientOrderId: randomUUID(), number: 1, status: "delivered", totalCents: 9999, items: [], createdAt: new Date("2026-01-01T12:00:00Z") },
-      { commerce: commerce._id, clientOrderId: randomUUID(), number: 504, status: "delivered", totalCents: 9999, items: [], createdAt: new Date("2026-01-02T03:00:00Z") },
+      // 05:00 del 2 en Brasil: ya es el día siguiente; 04:59 del 1, el anterior.
+      { commerce: commerce._id, clientOrderId: randomUUID(), number: 504, status: "delivered", totalCents: 9999, items: [], createdAt: new Date("2026-01-02T08:00:00Z") },
+      { commerce: commerce._id, clientOrderId: randomUUID(), number: 505, status: "delivered", totalCents: 9999, items: [], createdAt: new Date("2026-01-01T07:59:00Z") },
     ]);
     const result = await agent.get("/api/owner/reports?from=2026-01-01&to=2026-01-01");
     expect(result.status).toBe(200); expect(result.body).toMatchObject({ completed: 502, salesCents: 502000, averageCents: 1000, cancelled: 1 });

@@ -3,6 +3,8 @@
 //   retiro:   new → confirmed → ready → delivered
 // y cancelled desde cualquier estado que no sea final (con motivo).
 export const ORDER_STATUSES = ["new", "confirmed", "ready", "out_for_delivery", "delivered", "cancelled"];
+// Los que el local todavía tiene que mover.
+export const ACTIVE_STATUSES = ["new", "confirmed", "ready", "out_for_delivery"];
 
 export const STATUS_LABELS = {
   new: "novo",

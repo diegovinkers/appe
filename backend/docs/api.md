@@ -366,8 +366,8 @@ Para cargarle el menú rápido a un local: se exporta, se edita en Excel y se im
 - Errores: `INVALID_LIMITS` (400) si `minSelect > maxSelect` o `maxSelect` supera la cantidad de opciones; `INVALID_OPTION` (400) si se manda un `_id` de opción que no es del grupo.
 
 ### Pedidos
-- `GET /api/owner/orders?date=YYYY-MM-DD&status=new&updatedSince=<ISO>` → `{ "orders": [...], "serverTime": "<ISO>" }`.
-  - `date`: día en hora de Brasil; por defecto, hoy. Un pedido programado aparece el día para el que está programado. Más nuevos primero; hasta 500.
+- `GET /api/owner/orders?date=YYYY-MM-DD&status=new&updatedSince=<ISO>` → `{ "orders": [...], "day": "YYYY-MM-DD", "serverTime": "<ISO>" }`.
+  - `date`: día de operación en hora de Brasil, de 05:00 a 05:00 (un pedido de la 01:00 del sábado es del viernes); por defecto, el día en curso, que vuelve en `day`. Un pedido programado aparece el día para el que está programado. En el día en curso también vienen los pedidos que quedaron abiertos (`new`, `confirmed`, `ready`, `out_for_delivery`) de días anteriores. Más nuevos primero; hasta 500.
   - `status`: `new`, `confirmed`, `ready`, `out_for_delivery`, `delivered` o `cancelled`.
   - `updatedSince`: solo los que cambiaron desde ese momento. **Polling del panel:** la primera vez pedí la lista sin `updatedSince`; después, cada ~10 s, pedí con `updatedSince=<serverTime de la respuesta anterior>` y mezclá por `_id`. Usá siempre el `serverTime` de la API, no el reloj de la PC.
   - **Qué trae cada pedido:**

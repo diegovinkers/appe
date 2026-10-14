@@ -15,7 +15,7 @@ import { Spinner } from "../../../components/FullScreenMessage";
 import { PageHeader } from "../../../components/PageHeader";
 import { Field, button, input, textarea } from "../../../components/ui";
 import { errorText, useT } from "../../../i18n";
-import { formatMoney, todayISO } from "../../../lib/format";
+import { formatMoney, operatingDayISO } from "../../../lib/format";
 import { newId } from "../../../lib/id";
 import { parseMoney } from "../../../lib/money";
 import { matchesSearch } from "../../../lib/text";
@@ -87,7 +87,7 @@ function NewOrderForm({ data }: { data: PublicStoreResponse }) {
     onSuccess: ({ order }) => {
       cart.clear();
       setClientOrderId(newId());
-      queryClient.invalidateQueries({ queryKey: ordersKey(todayISO()) });
+      queryClient.invalidateQueries({ queryKey: ordersKey(operatingDayISO()) });
       navigate(`/painel/pedidos?pedido=${order._id}`);
     },
   });

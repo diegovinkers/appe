@@ -6,11 +6,11 @@ import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 import { audit } from "../lib/audit.js";
 import { AppError, conflict, notFound } from "../lib/errors.js";
-import { dayRange, todayIn } from "../lib/dates.js";
+import { operatingDayIn, operatingDayRange } from "../lib/dates.js";
 import { trackingUrl as trackingUrlOf } from "../lib/links.js";
 import { placeOrder } from "../services/orderPlacement.service.js";
 import { notifyOrderStatus } from "../services/assistant/whatsapp.js";
-import { STATUS_LABELS, canTransition } from "../services/orderStatus.js";
+import { ACTIVE_STATUSES, STATUS_LABELS, canTransition } from "../services/orderStatus.js";
 import { publicReview, reviewWindow } from "../services/review.service.js";
 import { rememberOrder } from "../services/customer.service.js";
 import Review from "../models/review.model.js";
@@ -93,23 +93,30 @@ export const createManualOrder = async (req, res) => {
   }
 };
 
-// GET /api/owner/orders — por defecto, los de hoy (hora de Brasil), más nuevos primero.
-// Un pedido programado aparece el día para el que está programado.
+// GET /api/owner/orders — por defecto, los del día de operación en curso (hora de Brasil, de
+// 05:00 a 05:00), más nuevos primero. Un pedido programado aparece el día para el que está
+// programado. En el día en curso también vienen los que quedaron abiertos de días anteriores:
+// un pedido sin cerrar nunca desaparece de la lista.
 export const listOrders = async (req, res) => {
-  const { date = todayIn(), status, updatedSince } = req.valid.query;
-  const { start, end } = dayRange(date);
+  const today = operatingDayIn();
+  const { date = today, status, updatedSince } = req.valid.query;
+  const { start, end } = operatingDayRange(date);
   const range = { $gte: start, $lt: end };
-  const filter = {
-    commerce: req.commerce._id,
-    $or: [{ scheduledFor: null, createdAt: range }, { scheduledFor: range }],
-  };
+  const ofDay = [{ scheduledFor: null, createdAt: range }, { scheduledFor: range }];
+  if (date === today) {
+    ofDay.push({
+      status: { $in: ACTIVE_STATUSES },
+      $or: [{ scheduledFor: null, createdAt: { $lt: start } }, { scheduledFor: { $lt: start } }],
+    });
+  }
+  const filter = { commerce: req.commerce._id, $or: ofDay };
   if (status) filter.status = status;
   if (updatedSince) filter.updatedAt = { $gte: new Date(updatedSince) };
 
   // Se toma antes de consultar: el próximo polling con updatedSince=serverTime no pierde nada.
   const serverTime = new Date();
   const orders = await Order.find(filter).sort({ createdAt: -1 }).limit(500);
-  res.json({ orders, serverTime: serverTime.toISOString() });
+  res.json({ orders, day: date, serverTime: serverTime.toISOString() });
 };
 
 export const getOrder = async (req, res) => {

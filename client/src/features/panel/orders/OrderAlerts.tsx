@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { button } from "../../../components/ui";
 import { useLanguage } from "../../../i18n";
-import { todayISO } from "../../../lib/format";
+import { operatingDayISO } from "../../../lib/format";
 import { useOrders } from "./useOrders";
 
 const copy = {
@@ -12,7 +12,7 @@ const copy = {
 
 export function OrderAlerts() {
   const c = copy[useLanguage()];
-  const day = todayISO(); const query = useOrders(day, true);
+  const day = operatingDayISO(); const query = useOrders(day, true);
   const [sound, setSound] = useState(false); const [failed, setFailed] = useState(false); const [fresh, setFresh] = useState(false);
   const audio = useRef<AudioContext | null>(null);
   const seen = useRef<{ day: string; ids: Set<string> } | null>(null);

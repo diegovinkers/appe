@@ -5133,7 +5133,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Pedidos del día (o cambios desde updatedSince)
+         * Pedidos del día de operación, con los que quedaron abiertos (o cambios desde updatedSince)
          * @description Con sesión y el permiso `orders:read`.
          */
         get: {
@@ -5239,6 +5239,8 @@ export interface paths {
                                 /** Format: date-time */
                                 updatedAt: string;
                             }[];
+                            /** Format: date */
+                            day: string;
                             /** Format: date-time */
                             serverTime: string;
                         };

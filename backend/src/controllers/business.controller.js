@@ -3,7 +3,7 @@ import Subscription from "../models/subscription.model.js";
 import Order from "../models/order.model.js";
 import { notFound, badRequest } from "../lib/errors.js";
 import { audit } from "../lib/audit.js";
-import { dayRange, todayIn, TIME_ZONE } from "../lib/dates.js";
+import { operatingDayRange, todayIn, TIME_ZONE } from "../lib/dates.js";
 
 function view(subscription) {
   return { subscription: {
@@ -36,9 +36,10 @@ export const recordSubscriptionPayment = async (req, res) => {
   if (result.modifiedCount) await audit(req, { action: "subscription.payment_recorded", commerce, entity: { type: "commerce", id: commerce }, changes: { amountCents: payment.amountCents, period: payment.period } });
   res.status(result.modifiedCount ? 201 : 200).json(view(await Subscription.findOne({ commerce })));
 };
+// Por día de operación (de 05:00 a 05:00): la venta de la madrugada cuenta en la noche anterior.
 export const getReports = async (req, res) => {
   const { from, to } = req.valid.query;
-  const filter = { commerce: req.commerce._id, createdAt: { $gte: dayRange(from).start, $lt: dayRange(to).end } };
+  const filter = { commerce: req.commerce._id, createdAt: { $gte: operatingDayRange(from).start, $lt: operatingDayRange(to).end } };
   const [totals] = await Order.aggregate([
     { $match: filter },
     { $facet: {

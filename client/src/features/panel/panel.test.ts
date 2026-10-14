@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { Opening, OwnerStore } from "../../api/types";
+import type { Opening, Order, OwnerStore } from "../../api/types";
 import { initials, readableTextOn } from "../../lib/color";
 import { setLanguage } from "../../i18n";
-import { formatWhen } from "../../lib/format";
+import { formatMinutes, formatWhen, operatingDayISO } from "../../lib/format";
+import { byUrgency, orderTiming } from "./orders/orderFlow";
 import { navFor } from "./nav";
 import { statusActions, statusView } from "./storeStatus";
 
@@ -101,5 +102,55 @@ describe("utilidades", () => {
     expect(formatWhen("2026-09-26T02:30:00Z", now)).toBe("hoje 23:30");
     expect(formatWhen("2026-09-26T21:00:00Z", now)).toBe("amanhã 18:00");
     expect(formatWhen("2026-09-27T21:00:00Z", now)).toBe("dom 18:00");
+  });
+});
+
+describe("tiempos de la lista de pedidos", () => {
+  const at = (iso: string) => Date.parse(iso);
+  const base = {
+    fulfillment: "delivery" as const,
+    createdAt: "2026-09-25T22:00:00.000Z",
+    scheduledFor: null,
+    estimatedMinutes: { min: 40, max: 60 },
+    statusHistory: [] as Order["statusHistory"],
+  };
+
+  it("un nuevo sin aceptar se marca a los 5 minutos", () => {
+    expect(orderTiming({ ...base, status: "new" }, at("2026-09-25T22:04:00Z"))).toMatchObject({ kind: "waiting", minutes: 4, late: false });
+    expect(orderTiming({ ...base, status: "new" }, at("2026-09-25T22:07:00Z"))).toMatchObject({ kind: "waiting", minutes: 7, late: true });
+  });
+
+  it("el atraso se cuenta desde la confirmación más el tiempo máximo", () => {
+    const confirmed = { ...base, status: "confirmed" as const, statusHistory: [{ status: "confirmed" as const, at: "2026-09-25T22:10:00.000Z" }] };
+    expect(orderTiming(confirmed, at("2026-09-25T23:05:00Z"))).toMatchObject({ kind: "onTime", minutes: 65, late: false });
+    expect(orderTiming(confirmed, at("2026-09-25T23:17:00Z"))).toMatchObject({ kind: "late", minutes: 7, late: true });
+  });
+
+  it("un programado vence a su hora y un listo para retirar no es atraso", () => {
+    const scheduled = { ...base, status: "confirmed" as const, scheduledFor: "2026-09-26T00:00:00.000Z" };
+    expect(orderTiming(scheduled, at("2026-09-25T23:30:00Z")).late).toBe(false);
+    expect(orderTiming(scheduled, at("2026-09-26T00:20:00Z"))).toMatchObject({ kind: "late", minutes: 20 });
+    const ready = { ...base, fulfillment: "pickup" as const, status: "ready" as const, statusHistory: [{ status: "ready" as const, at: "2026-09-25T22:30:00.000Z" }] };
+    expect(orderTiming(ready, at("2026-09-26T01:00:00Z"))).toMatchObject({ kind: "ready", minutes: 150, late: false });
+  });
+
+  it("ordena: nuevos (el más viejo arriba) y después por la hora en que tienen que salir", () => {
+    const now = at("2026-09-25T23:30:00Z");
+    const orders = [
+      { ...base, _id: "a", status: "confirmed" as const, createdAt: "2026-09-25T23:00:00.000Z" }, // sale 00:00
+      { ...base, _id: "b", status: "new" as const, createdAt: "2026-09-25T23:20:00.000Z" },
+      { ...base, _id: "c", status: "confirmed" as const, createdAt: "2026-09-25T22:00:00.000Z" }, // atrasado
+      { ...base, _id: "d", status: "new" as const, createdAt: "2026-09-25T23:10:00.000Z" },
+    ];
+    expect([...orders].sort(byUrgency(now)).map((order) => order._id)).toEqual(["d", "b", "c", "a"]);
+  });
+
+  it("el día de operación termina a las 5 de la mañana", () => {
+    expect(operatingDayISO(new Date("2026-09-26T04:30:00Z"))).toBe("2026-09-25"); // sábado 01:30
+    expect(operatingDayISO(new Date("2026-09-26T08:00:00Z"))).toBe("2026-09-26"); // sábado 05:00
+  });
+
+  it("muestra los minutos en horas cuando pasan de 60", () => {
+    expect([formatMinutes(7), formatMinutes(60), formatMinutes(95)]).toEqual(["7 min", "1 h", "1 h 35 min"]);
   });
 });

@@ -92,6 +92,11 @@ export const es: Dictionary = {
     titleForDay: (day: string) => `Pedidos del ${day}`,
     emptyFilter: "No hay pedidos acá.",
     scheduled: (when: string) => `Programado ${when}`,
+    // Tiempo de cada pedido en la lista ("hace 12 min", "Atrasado 7 min").
+    ago: (time: string) => `hace ${time}`,
+    waiting: (time: string) => `Esperando hace ${time}`,
+    late: (time: string) => `Atrasado ${time}`,
+    readySince: (time: string) => `Listo hace ${time}`,
     next: {
       new: "Confirmar",
       confirmed: "Marcar listo",
@@ -260,7 +265,7 @@ export const es: Dictionary = {
   },
 
   pages: {
-    orders: { title: "Pedidos de hoy", description: "Los pedidos del día, del más nuevo al más viejo." },
+    orders: { title: "Pedidos de hoy", description: "Primero los más urgentes. El día termina a las 5 de la mañana." },
     newOrder: {
       title: "Nuevo pedido",
       description: "Para los pedidos que llegan por teléfono, WhatsApp o en el mostrador.",

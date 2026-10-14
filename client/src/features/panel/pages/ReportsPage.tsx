@@ -5,14 +5,14 @@ import { PageHeader } from "../../../components/PageHeader";
 import { Spinner } from "../../../components/FullScreenMessage";
 import { button, Field, input } from "../../../components/ui";
 import { errorText, useLanguage, useT } from "../../../i18n";
-import { todayISO, formatMoney } from "../../../lib/format";
+import { operatingDayISO, formatMoney } from "../../../lib/format";
 import type { ReportResponse } from "../../platform/businessTypes";
 
 export function ReportsPage() {
-  const es = useLanguage() === "es"; const t = useT(); const today = todayISO();
+  const es = useLanguage() === "es"; const t = useT(); const today = operatingDayISO();
   const [range, setRange] = useState({ from: `${today.slice(0, 7)}-01`, to: today }); const [form, setForm] = useState(range);
   const query = useQuery({ queryKey: ["reports", range], queryFn: () => api<ReportResponse>(`/owner/reports?${new URLSearchParams(range)}`) });
-  return <><PageHeader title={es ? "Reportes" : "Relatórios"} description={es ? "Pedidos completados, agrupados por la fecha de creación en el horario de Brasilia." : "Pedidos concluídos, agrupados pela data de criação no horário de Brasília."} />
+  return <><PageHeader title={es ? "Reportes" : "Relatórios"} description={es ? "Pedidos completados, por día de trabajo (de 5:00 a 5:00, hora de Brasilia)." : "Pedidos concluídos, por dia de trabalho (das 5h às 5h, horário de Brasília)."} />
     <form className="mb-5 flex flex-wrap items-end gap-3" onSubmit={(event) => { event.preventDefault(); setRange(form); }}>
       <Field id="report-from" label={es ? "Desde" : "De"}><input id="report-from" type="date" className={input} required value={form.from} max={form.to} onChange={(e) => setForm({ ...form, from: e.target.value })} /></Field><Field id="report-to" label={es ? "Hasta" : "Até"}><input id="report-to" type="date" className={input} required value={form.to} min={form.from} max={today} onChange={(e) => setForm({ ...form, to: e.target.value })} /></Field><button className={button.primary}>{es ? "Consultar" : "Consultar"}</button>
     </form>

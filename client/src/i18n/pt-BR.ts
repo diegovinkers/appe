@@ -90,6 +90,11 @@ export const ptBR = {
     titleForDay: (day: string) => `Pedidos de ${day}`,
     emptyFilter: "Nenhum pedido aqui.",
     scheduled: (when: string) => `Agendado ${when}`,
+    // Tiempo de cada pedido en la lista ("há 12 min", "Atrasado 7 min").
+    ago: (time: string) => `há ${time}`,
+    waiting: (time: string) => `Aguardando há ${time}`,
+    late: (time: string) => `Atrasado ${time}`,
+    readySince: (time: string) => `Pronto há ${time}`,
     // El botón para pasar al estado siguiente.
     next: {
       new: "Confirmar",
@@ -259,7 +264,7 @@ export const ptBR = {
   },
 
   pages: {
-    orders: { title: "Pedidos de hoje", description: "Os pedidos do dia, do mais novo ao mais antigo." },
+    orders: { title: "Pedidos de hoje", description: "Os mais urgentes primeiro. O dia vai até as 5h da manhã." },
     newOrder: {
       title: "Novo pedido",
       description: "Para pedidos que chegam por telefone, WhatsApp ou no balcão.",

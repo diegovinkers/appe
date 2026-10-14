@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayRange, isValidDay, todayIn } from "../../src/lib/dates.js";
+import { dayRange, isValidDay, operatingDayIn, operatingDayRange, todayIn } from "../../src/lib/dates.js";
 import { formatBRL } from "../../src/lib/money.js";
 import { canTransition } from "../../src/services/orderStatus.js";
 import { buildOrderMessage, buildWhatsappUrl } from "../../src/services/whatsapp.service.js";
@@ -27,6 +27,16 @@ describe("dates", () => {
     const { start, end } = dayRange("2026-03-08", "America/New_York");
     expect(start.toISOString()).toBe("2026-03-08T05:00:00.000Z");
     expect(end.toISOString()).toBe("2026-03-09T04:00:00.000Z");
+  });
+
+  it("el día de operación va de 05:00 a 05:00 en Brasil", () => {
+    const { start, end } = operatingDayRange("2026-09-26");
+    expect(start.toISOString()).toBe("2026-09-26T08:00:00.000Z");
+    expect(end.toISOString()).toBe("2026-09-27T08:00:00.000Z");
+    // Sábado 01:30 y 04:59 en Brasil: sigue la noche del viernes. A las 05:00 empieza el sábado.
+    expect(operatingDayIn(undefined, new Date("2026-09-26T04:30:00Z"))).toBe("2026-09-25");
+    expect(operatingDayIn(undefined, new Date("2026-09-26T07:59:00Z"))).toBe("2026-09-25");
+    expect(operatingDayIn(undefined, new Date("2026-09-26T08:00:00Z"))).toBe("2026-09-26");
   });
 
   it("valida fechas reales", () => {

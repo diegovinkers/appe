@@ -4,35 +4,59 @@ import { can } from "../../../auth/permissions";
 import { Spinner } from "../../../components/FullScreenMessage";
 import { PageHeader } from "../../../components/PageHeader";
 import { errorText, useT } from "../../../i18n";
-import { formatDay, formatMoney, formatTime, formatWhen, todayISO } from "../../../lib/format";
+import { formatDay, formatMinutes, formatMoney, formatTime, formatWhen, operatingDayISO } from "../../../lib/format";
+import { useNow } from "../../../hooks/useNow";
 import { useParamSheet } from "../../../hooks/useParamSheet";
 import { OrderDetail, StatusChip } from "../orders/OrderDetail";
-import { ORDER_FILTERS, type OrderFilter, matchesFilter, nextLabel, nextStatus } from "../orders/orderFlow";
+import { ORDER_FILTERS, type OrderFilter, byUrgency, matchesFilter, nextLabel, nextStatus, orderTiming } from "../orders/orderFlow";
 import { useChangeStatus, useOrder, useOrders } from "../orders/useOrders";
 import { usePanel } from "../PanelLayout";
 
-function OrderRow({ order, onOpen }: { order: Order; onOpen: () => void }) {
+// Cuándo entró y cuánto lleva: "18:42 · há 12 min"; si es de otro día, "sex 23:50".
+function TimeInfo({ order, now, today }: { order: Order; now: number; today: string }) {
+  const t = useT();
+  const timing = orderTiming(order, now);
+  const when = operatingDayISO(new Date(order.createdAt)) === today ? formatTime(order.createdAt) : formatWhen(order.createdAt, new Date(now));
+  if (timing.kind === "done") return <>{when}</>;
+  const elapsed = formatMinutes(timing.minutes);
+  if (timing.kind === "ready") return <>{when} · {t.orders.readySince(elapsed)}</>;
+  if (timing.kind === "late") return <>{when}</>;
+  return <>{when} · {t.orders.ago(elapsed)}</>;
+}
+
+// Aviso al lado del estado: el pedido nuevo que nadie acepta o el que pasó la hora prometida.
+function LateChip({ order, now }: { order: Order; now: number }) {
+  const t = useT();
+  const timing = orderTiming(order, now);
+  if (!timing.late) return null;
+  const text = timing.kind === "waiting" ? t.orders.waiting(formatMinutes(timing.minutes)) : t.orders.late(formatMinutes(timing.minutes));
+  return <span className="inline-flex shrink-0 rounded-full bg-error-soft px-2.5 py-0.5 text-sm font-bold text-error ring-1 ring-inset ring-error/30">{text}</span>;
+}
+
+function OrderRow({ order, onOpen, now, today }: { order: Order; onOpen: () => void; now: number; today: string }) {
   const t = useT();
   const { user } = usePanel();
   const change = useChangeStatus();
   const next = nextStatus(order);
   const label = nextLabel(order, t);
+  const late = orderTiming(order, now).late;
 
   return (
-    <li className="px-4 py-3 sm:flex sm:items-center sm:gap-4">
+    <li className={`px-4 py-3 sm:flex sm:items-center sm:gap-4 ${late ? "border-l-4 border-l-error pl-3" : ""}`}>
       <button type="button" onClick={onOpen} className="flex w-full min-w-0 flex-1 items-center gap-3 text-left">
         <span className="w-12 shrink-0 text-lg font-bold tabular-nums">#{order.number}</span>
         <span className="min-w-0 flex-1">
           <span className="block truncate font-bold">{order.customer.name}</span>
           <span className="block text-sm text-ink-muted">
-            {formatTime(order.createdAt)} · {order.fulfillment === "delivery" ? t.orders.delivery : t.orders.pickup} ·{" "}
+            <TimeInfo order={order} now={now} today={today} /> · {order.fulfillment === "delivery" ? t.orders.delivery : t.orders.pickup} ·{" "}
             {order.conversation ? t.orders.byAssistant : t.orders.channels[order.channel]}
             {order.scheduledFor && <strong className="text-warning"> · {t.orders.scheduled(formatWhen(order.scheduledFor))}</strong>}
           </span>
         </span>
         <span className="shrink-0 font-bold tabular-nums">{formatMoney(order.totalCents)}</span>
       </button>
-      <div className="mt-2 flex items-center justify-end gap-2 sm:mt-0">
+      <div className="mt-2 flex flex-wrap items-center justify-end gap-2 sm:mt-0">
+        <LateChip order={order} now={now} />
         <StatusChip order={order} />
         {next && label && can(user.role, "orders:write") && (
           <button
@@ -58,11 +82,13 @@ function OpenOrder({ id, fromList, onClose }: { id: string; fromList: Order | un
   return <OrderDetail key={order._id} order={order} onClose={onClose} />;
 }
 
-// Los pedidos del día: filtros, el botón para avanzar cada uno y el detalle.
+// Los pedidos del día de operación: filtros, el botón para avanzar cada uno y el detalle.
+// En curso y nuevos, los más urgentes arriba; en los demás filtros, los más nuevos arriba.
 export function OrdersPage() {
   const t = useT();
   const [params, setParams] = useSearchParams();
-  const today = todayISO();
+  const now = useNow();
+  const today = operatingDayISO(new Date(now));
   const day = params.get("dia") ?? today;
   const filter = (ORDER_FILTERS as string[]).includes(params.get("filtro") ?? "") ? (params.get("filtro") as OrderFilter) : "active";
   const detail = useParamSheet("pedido");
@@ -77,6 +103,7 @@ export function OrdersPage() {
 
   const list = orders.data?.orders ?? [];
   const visible = list.filter((order) => matchesFilter(order.status, filter));
+  if (filter === "active" || filter === "new") visible.sort(byUrgency(now));
   const count = (value: OrderFilter) => list.filter((order) => matchesFilter(order.status, value)).length;
 
   return (
@@ -122,7 +149,7 @@ export function OrdersPage() {
         ) : (
           <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
             {visible.map((order) => (
-              <OrderRow key={order._id} order={order} onOpen={() => detail.open(order._id)} />
+              <OrderRow key={order._id} order={order} now={now} today={today} onOpen={() => detail.open(order._id)} />
             ))}
           </ul>
         ))}

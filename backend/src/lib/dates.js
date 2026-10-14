@@ -58,3 +58,21 @@ export function isValidDay(day) {
   const parsed = new Date(Date.UTC(year, month - 1, date));
   return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === date;
 }
+
+// El día de operación de un local termina a las 05:00: un pedido de la 01:00 del sábado
+// es de la noche del viernes (lista de pedidos del panel y cierre de caja).
+export const OPERATING_DAY_START = "05:00";
+
+// Inicio (incluido) y fin (excluido) del día de operación "YYYY-MM-DD", como instantes UTC.
+export function operatingDayRange(day, timeZone = TIME_ZONE) {
+  return {
+    start: localToUtc(day, OPERATING_DAY_START, timeZone),
+    end: localToUtc(addDays(day, 1), OPERATING_DAY_START, timeZone),
+  };
+}
+
+// Día de operación en curso: antes de las 05:00 sigue siendo el de ayer.
+export function operatingDayIn(timeZone = TIME_ZONE, now = new Date()) {
+  const today = todayIn(timeZone, now);
+  return now < operatingDayRange(today, timeZone).start ? addDays(today, -1) : today;
+}

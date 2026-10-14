@@ -158,7 +158,7 @@ export const operations = [
   { method: "post", path: "/api/owner/uploads/signature", tag: "Panel: menú", summary: "Firma para subir una imagen a Cloudinary", auth: "menu:write", body: uploadSignatureSchema, responses: { 200: uploadSignatureResponse } },
 
   // Panel: pedidos
-  { method: "get", path: "/api/owner/orders", tag: "Panel: pedidos", summary: "Pedidos del día (o cambios desde updatedSince)", auth: "orders:read", query: listOrdersQuery, responses: { 200: z.strictObject({ orders: z.array(order), serverTime: z.iso.datetime() }) } },
+  { method: "get", path: "/api/owner/orders", tag: "Panel: pedidos", summary: "Pedidos del día de operación, con los que quedaron abiertos (o cambios desde updatedSince)", auth: "orders:read", query: listOrdersQuery, responses: { 200: z.strictObject({ orders: z.array(order), day: z.iso.date(), serverTime: z.iso.datetime() }) } },
   { method: "post", path: "/api/owner/orders", tag: "Panel: pedidos", summary: "Cargar un pedido que llegó por teléfono, WhatsApp o en el mostrador", auth: "orders:manual", body: manualOrderSchema, responses: { 201: manualOrderResponse, 200: manualOrderResponse } },
   { method: "get", path: "/api/owner/orders/:id/ticket", tag: "Panel: pedidos", summary: "Comanda para imprimir (HTML o texto, 58 u 80 mm)", auth: "orders:read", params: idParams, query: ticketQuery, responses: { 200: binary("text/html", "text/plain") } },
   { method: "patch", path: "/api/owner/orders/:id/notes", tag: "Panel: pedidos", summary: "Notas internas del pedido", auth: "orders:write", params: idParams, body: orderNotesSchema, responses: { 200: wrap("order", order) } },
