@@ -178,19 +178,22 @@ export function Conversations({
   return (
     <div className={compact ? "" : "grid gap-5 lg:grid-cols-[20rem_1fr]"}>
       <div className={selected ? (compact ? "hidden" : "hidden lg:block") : ""}>
-        <div role="group" aria-label={c.label} className="mb-3 flex flex-wrap gap-2">
-          {FILTERS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              aria-pressed={filter === option}
-              onClick={() => setFilter(option)}
-              className="h-10 rounded-full border border-line px-4 text-sm font-bold aria-pressed:border-action aria-pressed:bg-action aria-pressed:text-white"
-            >
-              {c.filters[option]}
-            </button>
-          ))}
-        </div>
+        {/* En Pedidos (compact) van todas las conversaciones juntas, sin filtros. */}
+        {!compact && (
+          <div role="group" aria-label={c.label} className="mb-3 flex flex-wrap gap-2">
+            {FILTERS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={filter === option}
+                onClick={() => setFilter(option)}
+                className="h-10 rounded-full border border-line px-4 text-sm font-bold aria-pressed:border-action aria-pressed:bg-action aria-pressed:text-white"
+              >
+                {c.filters[option]}
+              </button>
+            ))}
+          </div>
+        )}
         {query.isPending && <Spinner />}
         {query.isError && <p className="text-error">{errorText(query.error, t)}</p>}
         {query.data && conversations.length === 0 && (
