@@ -608,7 +608,7 @@ export const es: Dictionary = {
       enabled: "Atender por WhatsApp",
       enabledHint: "Encendido, el asistente responde los mensajes que llegan al número conectado.",
       noWhatsapp: "WhatsApp todavía no está conectado en este servidor. El paso a paso está en backend/docs/whatsapp-bot.md.",
-      plusRequired: "Para atender clientes por WhatsApp, el comercio necesita Member Plus activa.",
+      plusRequired: "Para atender clientes por WhatsApp, el comercio necesita el plan Plus activo.",
       phoneNumberId: "ID del número en Meta",
       phoneNumberIdHint: "Aparece en el panel de Meta, en WhatsApp → Configuración de la API. Solo números.",
       budget: "Límite de gasto por mes (US$)",

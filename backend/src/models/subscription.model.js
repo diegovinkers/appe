@@ -1,5 +1,11 @@
 import mongoose from "mongoose";
 
+// Planes de la plataforma: Plus suma el asistente de WhatsApp. Antes Plus se llamaba
+// "Member Plus": lo que quedó guardado así cuenta (y se muestra) como Plus.
+export const SUBSCRIPTION_PLANS = ["Essencial", "Plus"];
+const normalized = (value) => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase();
+export const planName = (value) => (["plus", "member plus"].includes(normalized(value)) ? "Plus" : (value ?? "Essencial"));
+
 const subscriptionSchema = new mongoose.Schema({
   commerce: { type: mongoose.Schema.Types.ObjectId, ref: "Commerce", required: true, unique: true },
   plan: { type: String, default: "Essencial" },

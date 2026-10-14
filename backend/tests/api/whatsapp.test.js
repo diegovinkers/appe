@@ -107,13 +107,14 @@ async function webhook(payload, signature) {
 async function setup({ enabled = true } = {}) {
   const { commerce, owner } = await createCommerceWithOwner({ slug: "loja-zap", paymentMethods: ["cash", "pix"] });
   await createMenu(commerce);
+  // Guardado con el nombre viejo del plan: tiene que seguir valiendo como Plus.
   await Subscription.create({ commerce: commerce._id, plan: "Member Plus", status: "active" });
   await Assistant.create({ commerce: commerce._id, enabled, phoneNumberId: PHONE_ID });
   return { commerce, owner };
 }
 
 describe("webhook de WhatsApp", () => {
-  it("no atiende por WhatsApp si el comercio no tiene Member Plus activa", async () => {
+  it("no atiende por WhatsApp si el comercio no tiene el plan Plus activo", async () => {
     const { commerce } = await setup();
     await Subscription.deleteOne({ commerce: commerce._id });
     fakeAi([say("No debería responder")]);

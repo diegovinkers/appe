@@ -229,7 +229,7 @@ async function handle({ phoneNumberId, waId, name, message }) {
   if (!settings) return ignored("ningún asistente encendido con ese número", { phoneNumberId });
   const store = await Commerce.exists({ _id: settings.commerce, status: "active" });
   if (!store || !(await hasAssistantPlus(settings.commerce))) {
-    return ignored("local inactivo o sin Member Plus", { commerce: String(settings.commerce) });
+    return ignored("local inactivo o sin el plan Plus", { commerce: String(settings.commerce) });
   }
   // Meta reenvía si no respondimos a tiempo: el mismo mensaje se procesa una sola vez.
   if (await ConversationMessage.exists({ externalId: message.id })) return;

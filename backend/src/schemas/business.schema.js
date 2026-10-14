@@ -2,10 +2,11 @@ import { z } from "zod";
 import { cents, dateTime, optionalText, requiredText } from "./common.schema.js";
 import { isValidDay } from "../lib/dates.js";
 import { PAYMENT_METHODS } from "../models/commerce.model.js";
+import { SUBSCRIPTION_PLANS } from "../models/subscription.model.js";
 
 const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(isValidDay, "Data inválida");
 export const subscriptionInput = z.object({
-  plan: requiredText(60), priceCents: cents, dueDate: day.nullable(), status: z.enum(["trial", "active", "cancelled"]),
+  plan: z.enum(SUBSCRIPTION_PLANS), priceCents: cents, dueDate: day.nullable(), status: z.enum(["trial", "active", "cancelled"]),
 });
 export const subscriptionPaymentInput = z.object({
   reference: z.uuid(), amountCents: cents.refine((value) => value > 0), paidAt: dateTime,

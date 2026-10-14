@@ -1,5 +1,5 @@
 import Commerce from "../models/commerce.model.js";
-import Subscription from "../models/subscription.model.js";
+import Subscription, { planName } from "../models/subscription.model.js";
 import Order from "../models/order.model.js";
 import { ACTIVE_STATUSES } from "../services/orderStatus.js";
 import { notFound, badRequest } from "../lib/errors.js";
@@ -8,7 +8,7 @@ import { operatingDayRange, todayIn, TIME_ZONE } from "../lib/dates.js";
 
 function view(subscription) {
   return { subscription: {
-    plan: subscription?.plan ?? "Essencial", priceCents: subscription?.priceCents ?? 7990,
+    plan: planName(subscription?.plan), priceCents: subscription?.priceCents ?? 7990,
     dueDate: subscription?.dueDate ?? null, status: subscription?.status ?? "trial",
     overdue: !!subscription?.dueDate && subscription.status !== "cancelled" && subscription.dueDate < todayIn(),
     payments: (subscription?.payments ?? []).map(({ reference, amountCents, paidAt, period, note }) => ({ reference, amountCents, paidAt, period, note })),

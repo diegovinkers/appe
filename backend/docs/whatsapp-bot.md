@@ -21,7 +21,7 @@ En la configuración del webhook de Meta usa esta URL de callback:
 
 `https://appe-l99l.onrender.com/api/whatsapp/webhook`
 
-Verifica y guarda el webhook, y suscribe el campo `messages`. Después, en la app, administración debe activar manualmente `Member Plus` para Fronteiriço Burger con estado activo y una fecha de vencimiento futura. El dueño entra a **Asistente → Configurar**, pega el `Phone number ID` del número de prueba y activa **Atender por WhatsApp**.
+Verifica y guarda el webhook, y suscribe el campo `messages`. Después, en la app, administración debe activar manualmente el plan `Plus` para Fronteiriço Burger con estado activo y una fecha de vencimiento futura. El dueño entra a **Asistente → Configurar**, pega el `Phone number ID` del número de prueba y activa **Atender por WhatsApp**.
 
 El flujo de prueba seguro es: escribe desde tu celular agregado a la lista **To** de Meta; confirma que el chat aparece en **Asistente → Conversaciones**; toma el control, responde desde la app y confirma que llegó a WhatsApp. Para probar pedidos, completa una conversación y confirma explícitamente el resumen antes de revisar **Pedidos nuevos**.
 

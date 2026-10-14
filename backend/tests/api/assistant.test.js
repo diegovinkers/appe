@@ -60,14 +60,14 @@ afterEach(() => {
 async function setup() {
   const { commerce, owner } = await createCommerceWithOwner({ slug: "loja-bot", paymentMethods: ["cash", "pix"] });
   await createMenu(commerce);
-  await Subscription.create({ commerce: commerce._id, plan: "Member Plus", status: "active" });
+  await Subscription.create({ commerce: commerce._id, plan: "Plus", status: "active" });
   const agent = await loginAs(app, owner.email);
   const say = (body) => agent.post("/api/owner/assistant/simulator").send({ customer, ...body });
   return { commerce, owner, agent, send: say };
 }
 
 describe("asistente: tomar un pedido", () => {
-  it("no permite activar WhatsApp sin Member Plus", async () => {
+  it("no permite activar WhatsApp sin el plan Plus", async () => {
     const { commerce, agent } = await setup();
     await Subscription.deleteOne({ commerce: commerce._id });
     const response = await agent.patch("/api/owner/assistant").send({ enabled: true, phoneNumberId: "123456789012345" });

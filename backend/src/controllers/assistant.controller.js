@@ -88,7 +88,7 @@ export const getAssistant = async (req, res) => res.json({ assistant: await sett
 export const updateAssistant = async (req, res) => {
   const changes = req.valid.body;
   if (changes.enabled === true && !(await hasAssistantPlus(req.commerce._id))) {
-    throw new AppError(403, "MEMBER_PLUS_REQUIRED", "Member Plus precisa estar ativa para ligar o assistente no WhatsApp");
+    throw new AppError(403, "MEMBER_PLUS_REQUIRED", "O plano Plus precisa estar ativo para ligar o assistente no WhatsApp");
   }
   try {
     await Assistant.updateOne({ commerce: req.commerce._id }, { $set: changes }, { upsert: true, runValidators: true });
@@ -194,7 +194,7 @@ export const releaseConversation = async (req, res) => {
   if (!existing) throw conversationNotFound();
   if (existing.automationBlocked) throw conflict("NUMBER_AUTOMATION_BLOCKED", "Primero vuelve a permitir la automatización para este número");
   if (existing.channel === "whatsapp" && !(await hasAssistantPlus(req.commerce._id))) {
-    throw new AppError(403, "MEMBER_PLUS_REQUIRED", "Member Plus precisa estar ativa para devolver a conversa ao assistente");
+    throw new AppError(403, "MEMBER_PLUS_REQUIRED", "O plano Plus precisa estar ativo para devolver a conversa ao assistente");
   }
   const conversation = await setStatus(req, "bot", null);
   await resumeAssistant(conversation);

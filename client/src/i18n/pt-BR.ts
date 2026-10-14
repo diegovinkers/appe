@@ -608,7 +608,7 @@ export const ptBR = {
       enabled: "Atender no WhatsApp",
       enabledHint: "Ligado, o assistente responde as mensagens que chegam no número conectado.",
       noWhatsapp: "O WhatsApp ainda não está conectado neste servidor. O passo a passo está em backend/docs/whatsapp-bot.md.",
-      plusRequired: "Para atender clientes pelo WhatsApp, o comércio precisa ter o Member Plus ativo.",
+      plusRequired: "Para atender clientes pelo WhatsApp, o comércio precisa ter o plano Plus ativo.",
       phoneNumberId: "ID do número na Meta",
       phoneNumberIdHint: "Aparece no painel da Meta, em WhatsApp → Configuração da API. Só números.",
       budget: "Limite de gasto por mês (US$)",

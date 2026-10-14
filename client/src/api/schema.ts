@@ -88,7 +88,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        plan: string;
+                        /** @enum {string} */
+                        plan: "Essencial" | "Plus";
                         priceCents: number;
                         dueDate: string | null;
                         /** @enum {string} */

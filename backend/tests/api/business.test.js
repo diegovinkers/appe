@@ -5,6 +5,7 @@ import { createApp } from "../../src/app.js";
 import { createCommerceWithOwner, createSuperadmin, createStaff, loginAs } from "../helpers.js";
 import Commerce from "../../src/models/commerce.model.js";
 import Order from "../../src/models/order.model.js";
+import Subscription from "../../src/models/subscription.model.js";
 const app = createApp();
 
 describe("suscripciones y reportes", () => {
@@ -84,5 +85,19 @@ describe("cierre de caja", () => {
       { day: "2026-01-02", count: 2, salesCents: 5300 },
       { day: "2026-01-03", count: 2, salesCents: 5500 },
     ]);
+  });
+});
+
+describe("planes Essencial y Plus", () => {
+  it("el plan se elige de la lista y el nombre viejo se muestra como Plus", async () => {
+    const { commerce, owner } = await createCommerceWithOwner({ slug: "planes" });
+    const admin = await createSuperadmin(); const root = await loginAs(app, admin.email);
+    const path = `/api/admin/commerces/${commerce._id}/subscription`;
+    const body = { priceCents: 9990, dueDate: null, status: "active" };
+    expect((await root.put(path).send({ ...body, plan: "Member+" })).status).toBe(400);
+    expect((await root.put(path).send({ ...body, plan: "Plus" })).body.subscription.plan).toBe("Plus");
+    await Subscription.updateOne({ commerce: commerce._id }, { $set: { plan: "Member Plus" } });
+    const agent = await loginAs(app, owner.email);
+    expect((await agent.get("/api/owner/subscription")).body.subscription.plan).toBe("Plus");
   });
 });
