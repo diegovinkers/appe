@@ -3,6 +3,8 @@ import {
   Bike,
   Bot,
   CalendarClock,
+  Check,
+  ChevronDown,
   Globe,
   type LucideIcon,
   MessageCircle,
@@ -15,7 +17,7 @@ import {
   Store,
   Wallet,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import type { Order } from "../../../api/types";
 import { can } from "../../../auth/permissions";
@@ -28,6 +30,7 @@ import { matchesSearch } from "../../../lib/text";
 import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { useNow } from "../../../hooks/useNow";
 import { useParamSheet } from "../../../hooks/useParamSheet";
+import { useDismiss } from "../../../hooks/useDismiss";
 import { Conversations } from "../assistant/Conversations";
 import { OrderDetail } from "../orders/OrderDetail";
 import {
@@ -262,9 +265,9 @@ export function NewOrderButton({ compact = false }: { compact?: boolean }) {
         to="/painel/pedidos/novo"
         aria-label={t.nav.newOrder}
         title={t.nav.newOrder}
-        className="grid size-11 shrink-0 place-items-center rounded-full bg-(--brand) text-(--on-brand) shadow-md ring-4 ring-(--brand)/20 transition-transform hover:scale-105 active:scale-95"
+        className="grid size-9 shrink-0 place-items-center rounded-full bg-(--brand) text-(--on-brand) shadow-sm ring-2 ring-(--brand)/20 transition-transform hover:scale-105 active:scale-95"
       >
-        <Plus aria-hidden strokeWidth={2.75} className="size-6" />
+        <Plus aria-hidden strokeWidth={2.75} className="size-5" />
       </Link>
     );
   }
@@ -276,8 +279,56 @@ export function NewOrderButton({ compact = false }: { compact?: boolean }) {
   );
 }
 
+// El filtro como menú desplegable (en la barra del panel Pedidos): muestra el elegido y cuántos hay.
+export function FilterMenu({ view }: { view: OrdersView }) {
+  const t = useT();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const close = () => setOpen(false);
+  useDismiss(ref, open, close);
+  const choose = (value: OrderFilter) => {
+    view.setParam("filtro", value === "active" ? null : value);
+    close();
+  };
+
+  return (
+    <div ref={ref} className="relative ml-2">
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-paper px-3 text-sm font-bold ring-1 ring-line hover:bg-surface"
+      >
+        {t.orders.filters[view.filter]}
+        <span className="font-normal tabular-nums text-ink-muted">{view.count(view.filter)}</span>
+        <ChevronDown aria-hidden className={`size-4 text-ink-muted transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div role="menu" aria-label={t.pages.orders.title} className="absolute top-full left-0 z-30 mt-1 w-52 overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-lg">
+          {ORDER_FILTERS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="menuitemradio"
+              aria-checked={view.filter === value}
+              onClick={() => choose(value)}
+              className={`flex min-h-11 w-full items-center gap-2 px-3 text-left hover:bg-paper ${view.filter === value ? "font-bold" : ""}`}
+            >
+              <Check aria-hidden className={`size-4 shrink-0 ${view.filter === value ? "" : "invisible"}`} />
+              <span className="flex-1">{t.orders.filters[value]}</span>
+              <span className="tabular-nums text-ink-muted">{view.count(value)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Buscador, filtros y la lista. En un panel, la lista tiene su propio scroll.
-export function OrdersList({ view, selectedId, onOpen }: { view: OrdersView; selectedId?: string | null; onOpen: (id: string) => void }) {
+// `filters`: los botones de filtro arriba de la lista (en el panel van en la barra, como menú).
+export function OrdersList({ view, selectedId, onOpen, filters = true }: { view: OrdersView; selectedId?: string | null; onOpen: (id: string) => void; filters?: boolean }) {
   const t = useT();
   const { orders, list, visible, filter, today, day, now } = view;
 
@@ -294,19 +345,21 @@ export function OrdersList({ view, selectedId, onOpen }: { view: OrdersView; sel
           className="h-11 w-full rounded-lg border border-line bg-surface pl-10 pr-3"
         />
       </label>
-      <div role="group" aria-label={t.pages.orders.title} className="mb-4 flex flex-wrap gap-2">
-        {ORDER_FILTERS.map((value) => (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={filter === value}
-            onClick={() => view.setParam("filtro", value === "active" ? null : value)}
-            className={`h-11 rounded-full px-4 text-sm ${filter === value ? "bg-action font-bold text-white" : "bg-surface ring-1 ring-line hover:bg-paper"}`}
-          >
-            {t.orders.filters[value]} <span className="tabular-nums opacity-75">{view.count(value)}</span>
-          </button>
-        ))}
-      </div>
+      {filters && (
+        <div role="group" aria-label={t.pages.orders.title} className="mb-4 flex flex-wrap gap-2">
+          {ORDER_FILTERS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={filter === value}
+              onClick={() => view.setParam("filtro", value === "active" ? null : value)}
+              className={`h-11 rounded-full px-4 text-sm ${filter === value ? "bg-action font-bold text-white" : "bg-surface ring-1 ring-line hover:bg-paper"}`}
+            >
+              {t.orders.filters[value]} <span className="tabular-nums opacity-75">{view.count(value)}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {orders.isPending && <Spinner />}
       {orders.isError && <p className="text-error">{t.errors.generic}</p>}

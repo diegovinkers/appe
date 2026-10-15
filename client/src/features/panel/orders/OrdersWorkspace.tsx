@@ -8,7 +8,7 @@ import { formatDay } from "../../../lib/format";
 import { needsPerson, useAssistantSettings, useConversations, useUpdateAssistant } from "../assistant/assistant";
 import { Conversations } from "../assistant/Conversations";
 import { usePanel } from "../PanelLayout";
-import { DayPicker, NewOrderButton, OpenOrder, OrdersList, useOrdersView } from "../pages/OrdersPage";
+import { DayPicker, FilterMenu, NewOrderButton, OpenOrder, OrdersList, useOrdersView } from "../pages/OrdersPage";
 import { SalonBoard } from "../salon/SalonBoard";
 import { TableTab } from "../salon/TableTab";
 import { useSalonTables } from "../salon/useSalon";
@@ -283,6 +283,8 @@ export function OrdersWorkspace() {
     orders: {
       badge: activeOrders,
       // El día y "Novo pedido" viven en la barra del panel: la lista se queda con todo el alto.
+      // Qué pedidos se ven, al lado del nombre; el día y "Novo pedido", a la derecha.
+      beside: <FilterMenu view={view} />,
       extra: (
         <span className="mr-1 flex items-center gap-2">
           <DayPicker compact view={view} />
@@ -291,7 +293,7 @@ export function OrdersWorkspace() {
       ),
       body: (
         <div className="p-3">
-          <OrdersList view={view} selectedId={selectedOrder} onOpen={(id) => setParam("pedido", id)} />
+          <OrdersList filters={false} view={view} selectedId={selectedOrder} onOpen={(id) => setParam("pedido", id)} />
         </div>
       ),
     },
