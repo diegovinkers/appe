@@ -1,5 +1,5 @@
-import { Armchair, ClipboardList, GripVertical, MessageCircle, PanelLeftClose, PanelTopClose } from "lucide-react";
-import { Fragment, type DragEvent, type KeyboardEvent, type ReactNode, useState } from "react";
+import { Armchair, ClipboardList, Columns2, GripVertical, MessageCircle, PanelLeftClose, PanelTopClose, X } from "lucide-react";
+import { Fragment, type DragEvent, type KeyboardEvent, type ReactNode, useEffect, useState } from "react";
 import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { can } from "../../../auth/permissions";
 import { Switch } from "../../../components/ui";
@@ -8,11 +8,11 @@ import { formatDay } from "../../../lib/format";
 import { needsPerson, useAssistantSettings, useConversations, useUpdateAssistant } from "../assistant/assistant";
 import { Conversations } from "../assistant/Conversations";
 import { usePanel } from "../PanelLayout";
-import { DayPicker, FilterMenu, NewOrderButton, OpenOrder, OrdersList, useOrdersView } from "../pages/OrdersPage";
+import { DayPicker, FilterMenu, NewOrderButton, OpenOrder, OrderStages, OrdersSearch, useOrdersView } from "../pages/OrdersPage";
 import { SalonBoard } from "../salon/SalonBoard";
 import { TableTab } from "../salon/TableTab";
 import { useSalonTables } from "../salon/useSalon";
-import { isActive } from "./orderFlow";
+import { type OrderFilter, isActive, isOrderFilter } from "./orderFlow";
 
 // El detalle no es un panel: se abre al tocar un pedido o una mesa, en una hoja al costado.
 type ColumnId = "whatsapp" | "orders";
@@ -24,6 +24,9 @@ const DEFAULT_SIZE: Record<PanelId, string> = { whatsapp: "34%", orders: "66%", 
 const ICONS = { whatsapp: MessageCircle, orders: ClipboardList, salon: Armchair };
 const ORDER_KEY = "painel.pedidos.paineis";
 const SALON_KEY = "painel.pedidos.salao";
+// Las listas del panel Pedidos (el filtro de cada una), hasta tres lado a lado.
+const LISTS_KEY = "painel.pedidos.listas";
+const MAX_LISTS = 3;
 const LAYOUT_PREFIX = "painel-pedidos-";
 const DRAG_TYPE = "application/x-painel";
 // Recogido, un panel queda como una pestaña finita (como el panel lateral de VS Code).
@@ -59,6 +62,16 @@ function readOrder(): ColumnId[] {
 }
 
 const readSalonAt = (): SalonAt => (storage.getItem(SALON_KEY) === "bottom" ? "bottom" : "top");
+
+function readLists(): OrderFilter[] {
+  try {
+    const saved: unknown = JSON.parse(storage.getItem(LISTS_KEY) ?? "null");
+    if (Array.isArray(saved) && saved.length >= 1 && saved.length <= MAX_LISTS && saved.every(isOrderFilter)) return saved;
+  } catch {
+    // Guardado roto: una sola lista.
+  }
+  return ["active"];
+}
 
 // Un panel: barra con el nombre (se arrastra para cambiarlo de lugar), recoger y su contenido.
 // `row`: una fila a todo el ancho (el salón): se mueve con ↑ ↓ y se recoge hacia arriba.
@@ -196,9 +209,11 @@ export function OrdersWorkspace() {
   const { params, setParam } = view;
   const [order, setOrder] = useState<ColumnId[]>(readOrder);
   const [salonAt, setSalonAt] = useState<SalonAt>(readSalonAt);
+  const [lists, setLists] = useState<OrderFilter[]>(readLists);
   // Tamaños y recogidos se guardan por panel (no dependen del orden): sobreviven a moverlos.
   const layout = useDefaultLayout({ id: `${LAYOUT_PREFIX}colunas`, storage });
   const rowsLayout = useDefaultLayout({ id: `${LAYOUT_PREFIX}filas`, storage });
+  const listsLayout = useDefaultLayout({ id: `${LAYOUT_PREFIX}listas-${lists.length}`, storage });
 
   const isOwner = can(user.role, "store:write");
   const assistant = useAssistantSettings(isOwner);
@@ -220,6 +235,23 @@ export function OrdersWorkspace() {
     next.set(name, value);
     return `/painel/pedidos?${next}`;
   };
+
+  const saveLists = (next: OrderFilter[]) => {
+    storage.setItem(LISTS_KEY, JSON.stringify(next));
+    setLists(next);
+  };
+  const setList = (index: number, value: OrderFilter) => saveLists(lists.map((current, i) => (i === index ? value : current)));
+  // Al dividir por primera vez: Nuevos | En preparación (no se repiten). Después, Todos.
+  const split = () => saveLists(lists.length === 1 ? ["new", "preparing"] : [...lists, "all"]);
+  const removeList = (index: number) => saveLists(lists.filter((_, i) => i !== index));
+  // Un link con ?filtro= (el aviso de pedidos nuevos, Início) cae en la primera lista.
+  const linked = params.get("filtro");
+  useEffect(() => {
+    if (!isOrderFilter(linked)) return;
+    saveLists([linked, ...readLists().slice(1)]);
+    setParam("filtro", null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linked]);
 
   const save = (next: ColumnId[]) => {
     storage.setItem(ORDER_KEY, JSON.stringify(next));
@@ -282,9 +314,24 @@ export function OrdersWorkspace() {
     },
     orders: {
       badge: activeOrders,
-      // El día y "Novo pedido" viven en la barra del panel: la lista se queda con todo el alto.
-      // Qué pedidos se ven, al lado del nombre; el día y "Novo pedido", a la derecha.
-      beside: <FilterMenu view={view} />,
+      // Qué pedidos se ven y "Dividir", al lado del nombre; el día y "Novo pedido", a la derecha.
+      // Con la lista dividida, cada lista tiene su propio menú.
+      beside: (
+        <span className="ml-2 flex min-w-0 items-center gap-1">
+          {lists.length === 1 && <FilterMenu value={lists[0]} onChange={(value) => setList(0, value)} count={view.count} />}
+          {lists.length < MAX_LISTS && (
+            <button
+              type="button"
+              onClick={split}
+              aria-label={t.workspace.split}
+              title={t.workspace.split}
+              className="grid size-9 shrink-0 place-items-center rounded-full text-ink-muted hover:bg-paper hover:text-ink"
+            >
+              <Columns2 aria-hidden className="size-5" />
+            </button>
+          )}
+        </span>
+      ),
       extra: (
         <span className="mr-1 flex items-center gap-2">
           <DayPicker compact view={view} />
@@ -292,8 +339,58 @@ export function OrdersWorkspace() {
         </span>
       ),
       body: (
-        <div className="p-3">
-          <OrdersList filters={false} view={view} selectedId={selectedOrder} onOpen={(id) => setParam("pedido", id)} />
+        <div className="flex h-full min-h-0 flex-col">
+          <div className="shrink-0 p-3 pb-2">
+            <OrdersSearch view={view} />
+          </div>
+          {lists.length === 1 ? (
+            <div className="@container min-h-0 flex-1 overflow-y-auto px-3 pb-3">
+              <OrderStages view={view} orders={view.ofFilter(lists[0])} selectedId={selectedOrder} onOpen={(id) => setParam("pedido", id)} />
+            </div>
+          ) : (
+            <Group
+              key={lists.length}
+              orientation="horizontal"
+              defaultLayout={listsLayout.defaultLayout}
+              onLayoutChanged={listsLayout.onLayoutChanged}
+              className="min-h-0 flex-1 px-1 pb-1"
+            >
+              {lists.map((value, index) => (
+                <Fragment key={index}>
+                  {index > 0 && <Edge />}
+                  <Panel id={`lista-${index}`} defaultSize={`${100 / lists.length}%`} minSize="22%" className="h-full">
+                    <section aria-label={t.orders.filters[value]} className="flex h-full min-h-0 flex-col">
+                      <div className="flex shrink-0 items-center gap-1 px-2 pb-2">
+                        <FilterMenu value={value} onChange={(next) => setList(index, next)} count={view.count} />
+                        <div className="flex-1" />
+                        {index > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => removeList(index)}
+                            aria-label={t.workspace.removeList}
+                            title={t.workspace.removeList}
+                            className="grid size-9 shrink-0 place-items-center rounded-full text-ink-muted hover:bg-paper hover:text-ink"
+                          >
+                            <X aria-hidden className="size-4" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="@container min-h-0 flex-1 overflow-y-auto px-2 pb-2">
+                        <OrderStages
+                          dense
+                          id={`lista-${index}`}
+                          view={view}
+                          orders={view.ofFilter(value)}
+                          selectedId={selectedOrder}
+                          onOpen={(id) => setParam("pedido", id)}
+                        />
+                      </div>
+                    </section>
+                  </Panel>
+                </Fragment>
+              ))}
+            </Group>
+          )}
         </div>
       ),
     },

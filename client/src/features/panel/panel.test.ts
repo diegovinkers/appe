@@ -3,7 +3,7 @@ import type { Opening, Order, OwnerStore } from "../../api/types";
 import { initials, readableTextOn } from "../../lib/color";
 import { setLanguage } from "../../i18n";
 import { formatMinutes, formatWhen, operatingDayISO } from "../../lib/format";
-import { byUrgency, orderSource, orderTiming, takenBy } from "./orders/orderFlow";
+import { byUrgency, matchesFilter, orderSource, orderTiming, takenBy } from "./orders/orderFlow";
 import { getDeviceSettings, setDeviceSetting } from "./orders/deviceSettings";
 import { bottomBarFor, menuTabsFor, navFor, settingsFor } from "./nav";
 import { settingsReadiness } from "./settings/readiness";
@@ -194,5 +194,22 @@ describe("de dónde vino cada pedido", () => {
     const at = "2026-10-14T20:00:00Z";
     expect(takenBy({ statusHistory: [{ status: "new", at, byName: "Ana" }, { status: "confirmed", at, byName: "Ana" }] })).toBe("Ana");
     expect(takenBy({ statusHistory: [{ status: "new", at }, { status: "confirmed", at, byName: "Ana" }] })).toBeNull();
+  });
+});
+
+describe("filtros para dividir la lista", () => {
+  const statuses = ["new", "confirmed", "ready", "out_for_delivery", "delivered", "cancelled"] as const;
+  const shown = (filter: Parameters<typeof matchesFilter>[1]) => statuses.filter((status) => matchesFilter(status, filter));
+
+  it("Nuevos y En preparación no repiten pedidos y juntos son En curso", () => {
+    expect(shown("new")).toEqual(["new"]);
+    expect(shown("preparing")).toEqual(["confirmed", "ready", "out_for_delivery"]);
+    expect([...shown("new"), ...shown("preparing")]).toEqual(shown("active"));
+  });
+
+  it("Listos y en camino; Terminados", () => {
+    expect(shown("ready")).toEqual(["ready", "out_for_delivery"]);
+    expect(shown("done")).toEqual(["delivered", "cancelled"]);
+    expect(shown("all")).toEqual([...statuses]);
   });
 });

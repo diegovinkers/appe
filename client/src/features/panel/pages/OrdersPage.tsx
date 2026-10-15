@@ -34,12 +34,14 @@ import { useDismiss } from "../../../hooks/useDismiss";
 import { Conversations } from "../assistant/Conversations";
 import { OrderDetail } from "../orders/OrderDetail";
 import {
+  BASIC_FILTERS,
   ORDER_FILTERS,
   type OrderFilter,
   type OrderSource,
   STATUS_MARK,
   STATUS_ORDER,
   byUrgency,
+  isOrderFilter,
   matchesFilter,
   nextLabel,
   nextStatus,
@@ -106,7 +108,7 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
       <span aria-hidden className={`w-1.5 shrink-0 ${late ? "bg-error" : STATUS_MARK[order.status]}`} />
       <div className="min-w-0 flex-1 py-3 pr-3 pl-3 @xl:flex @xl:items-start @xl:gap-4">
         <button type="button" onClick={onOpen} className="flex w-full min-w-0 flex-1 gap-3 text-left">
-          <span className="w-14 shrink-0">
+          <span className="w-12 shrink-0 @md:w-14">
             <span className="block text-lg leading-tight font-bold tabular-nums">#{order.number}</span>
             <span className="block text-sm text-ink-muted tabular-nums">{when}</span>
           </span>
@@ -119,7 +121,7 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
               <SourceIcon aria-hidden className="size-4 shrink-0" />
               <span className="truncate">{by ? o.sourceBy(o.source[source], by) : o.source[source]}</span>
             </span>
-            <span className="line-clamp-2 text-sm">{order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}</span>
+            <span className="line-clamp-1 text-sm @md:line-clamp-2">{order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}</span>
             <span className="flex flex-wrap gap-x-3 gap-y-0.5 pt-0.5 text-sm text-ink-muted">
               {place && (
                 <span className="inline-flex items-center gap-1.5">
@@ -157,7 +159,7 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
               onClick={() => printTicket(order._id, paper)}
               aria-label={t.alerts.print(order.number)}
               title={t.alerts.print(order.number)}
-              className="grid size-11 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted hover:bg-paper hover:text-ink"
+              className="grid size-10 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted hover:bg-paper hover:text-ink @md:size-11"
             >
               <Printer aria-hidden className="size-5" />
             </button>
@@ -166,7 +168,7 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
                 type="button"
                 disabled={change.isPending}
                 onClick={() => change.mutate({ id: order._id, status: next })}
-                className="h-11 min-w-32 rounded-lg bg-action px-3 text-sm font-bold text-white hover:bg-action-hover disabled:opacity-60"
+                className="h-10 min-w-28 rounded-lg bg-action px-3 text-sm font-bold text-white hover:bg-action-hover disabled:opacity-60 @md:h-11 @md:min-w-32"
               >
                 {label}
               </button>
@@ -205,7 +207,8 @@ export function useOrdersView() {
   const now = useNow();
   const today = operatingDayISO(new Date(now));
   const day = params.get("dia") ?? today;
-  const filter = (ORDER_FILTERS as string[]).includes(params.get("filtro") ?? "") ? (params.get("filtro") as OrderFilter) : "active";
+  const linked = params.get("filtro");
+  const filter: OrderFilter = isOrderFilter(linked) ? linked : "active";
   const [search, setSearch] = useState("");
   const orders = useOrders(day, day === today);
 
@@ -225,10 +228,11 @@ export function useOrdersView() {
     ? list.filter((order) => matchesSearch(`#${order.number} ${order.number} ${order.customer.name} ${order.customer.phone} ${order.customer.phone.replace(/\D/g, "")}`, search))
     : list;
   // Lo más urgente arriba en cada etapa; los terminados, el último primero.
-  const visible = found.filter((order) => matchesFilter(order.status, filter)).sort(byUrgency(now));
+  const ofFilter = (value: OrderFilter) => found.filter((order) => matchesFilter(order.status, value)).sort(byUrgency(now));
+  const visible = ofFilter(filter);
   const count = (value: OrderFilter) => found.filter((order) => matchesFilter(order.status, value)).length;
 
-  return { params, setParam, update, now, today, day, filter, search, setSearch, orders, list, visible, count };
+  return { params, setParam, update, now, today, day, filter, search, setSearch, orders, list, visible, ofFilter, count };
 }
 export type OrdersView = ReturnType<typeof useOrdersView>;
 
@@ -279,45 +283,45 @@ export function NewOrderButton({ compact = false }: { compact?: boolean }) {
   );
 }
 
-// El filtro como menú desplegable (en la barra del panel Pedidos): muestra el elegido y cuántos hay.
-export function FilterMenu({ view }: { view: OrdersView }) {
+// El filtro como menú desplegable: muestra el elegido y cuántos hay. Se usa en la barra del
+// panel Pedidos y arriba de cada lista cuando la lista está dividida.
+export function FilterMenu({ value, onChange, count }: { value: OrderFilter; onChange: (value: OrderFilter) => void; count: (value: OrderFilter) => number }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const close = () => setOpen(false);
   useDismiss(ref, open, close);
-  const choose = (value: OrderFilter) => {
-    view.setParam("filtro", value === "active" ? null : value);
-    close();
-  };
 
   return (
-    <div ref={ref} className="relative ml-2">
+    <div ref={ref} className="relative">
       <button
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-9 items-center gap-1.5 rounded-full bg-paper px-3 text-sm font-bold ring-1 ring-line hover:bg-surface"
+        onClick={() => setOpen((current) => !current)}
+        className="inline-flex h-9 max-w-full items-center gap-1.5 rounded-full bg-paper px-3 text-sm font-bold ring-1 ring-line hover:bg-surface"
       >
-        {t.orders.filters[view.filter]}
-        <span className="font-normal tabular-nums text-ink-muted">{view.count(view.filter)}</span>
-        <ChevronDown aria-hidden className={`size-4 text-ink-muted transition-transform ${open ? "rotate-180" : ""}`} />
+        <span className="truncate">{t.orders.filters[value]}</span>
+        <span className="font-normal tabular-nums text-ink-muted">{count(value)}</span>
+        <ChevronDown aria-hidden className={`size-4 shrink-0 text-ink-muted transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && (
-        <div role="menu" aria-label={t.pages.orders.title} className="absolute top-full left-0 z-30 mt-1 w-52 overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-lg">
-          {ORDER_FILTERS.map((value) => (
+        <div role="menu" aria-label={t.pages.orders.title} className="absolute top-full left-0 z-30 mt-1 w-56 overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-lg">
+          {ORDER_FILTERS.map((option) => (
             <button
-              key={value}
+              key={option}
               type="button"
               role="menuitemradio"
-              aria-checked={view.filter === value}
-              onClick={() => choose(value)}
-              className={`flex min-h-11 w-full items-center gap-2 px-3 text-left hover:bg-paper ${view.filter === value ? "font-bold" : ""}`}
+              aria-checked={value === option}
+              onClick={() => {
+                onChange(option);
+                close();
+              }}
+              className={`flex min-h-11 w-full items-center gap-2 px-3 text-left hover:bg-paper ${value === option ? "font-bold" : ""}`}
             >
-              <Check aria-hidden className={`size-4 shrink-0 ${view.filter === value ? "" : "invisible"}`} />
-              <span className="flex-1">{t.orders.filters[value]}</span>
-              <span className="tabular-nums text-ink-muted">{view.count(value)}</span>
+              <Check aria-hidden className={`size-4 shrink-0 ${value === option ? "" : "invisible"}`} />
+              <span className="flex-1">{t.orders.filters[option]}</span>
+              <span className="tabular-nums text-ink-muted">{count(option)}</span>
             </button>
           ))}
         </div>
@@ -326,71 +330,101 @@ export function FilterMenu({ view }: { view: OrdersView }) {
   );
 }
 
-// Buscador, filtros y la lista. En un panel, la lista tiene su propio scroll.
-// `filters`: los botones de filtro arriba de la lista (en el panel van en la barra, como menú).
-export function OrdersList({ view, selectedId, onOpen, filters = true }: { view: OrdersView; selectedId?: string | null; onOpen: (id: string) => void; filters?: boolean }) {
+// El buscador: uno solo para todas las listas.
+export function OrdersSearch({ view }: { view: OrdersView }) {
   const t = useT();
-  const { orders, list, visible, filter, today, day, now } = view;
+  return (
+    <label className="relative block">
+      <span className="sr-only">{t.workspace.search}</span>
+      <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-ink-muted" />
+      <input
+        type="search"
+        value={view.search}
+        onChange={(event) => view.setSearch(event.target.value)}
+        placeholder={t.workspace.search}
+        className="h-11 w-full rounded-lg border border-line bg-surface pl-10 pr-3"
+      />
+    </label>
+  );
+}
+
+// Los pedidos de una lista, por etapa y en el orden en que pasan: qué hay para aceptar, qué
+// está en la cocina… `dense`: títulos más chicos (lista dividida). `id`: para que dos listas
+// no repitan los ids de sus títulos.
+export function OrderStages({
+  view,
+  orders: shown,
+  selectedId,
+  onOpen,
+  dense = false,
+  id = "etapa",
+}: {
+  view: OrdersView;
+  orders: Order[];
+  selectedId?: string | null;
+  onOpen: (id: string) => void;
+  dense?: boolean;
+  id?: string;
+}) {
+  const t = useT();
+  const { orders, list, today, day, now } = view;
+  if (orders.isPending) return <Spinner />;
+  if (orders.isError) return <p className="text-error">{t.errors.generic}</p>;
+  if (shown.length === 0) {
+    return (
+      <p className={`rounded-xl border border-dashed border-line bg-surface text-ink-muted ${dense ? "p-4 text-sm" : "p-6"}`}>
+        {view.search.trim() ? t.workspace.noResults : list.length === 0 && day === today ? t.orders.empty : t.orders.emptyFilter}
+      </p>
+    );
+  }
+  return (
+    <div className={dense ? "space-y-4" : "space-y-5"}>
+      {STATUS_ORDER.map((status) => {
+        const inStage = shown.filter((order) => order.status === status);
+        if (!inStage.length) return null;
+        return (
+          <section key={status} aria-labelledby={`${id}-${status}`}>
+            <h3 id={`${id}-${status}`} className={`mb-2 flex items-center gap-2 font-bold ${dense ? "text-sm" : ""}`}>
+              <span aria-hidden className={`size-2.5 rounded-full ${STATUS_MARK[status]}`} />
+              {t.orders.sections[status]}
+              <span className="font-normal text-ink-muted tabular-nums">{inStage.length}</span>
+            </h3>
+            <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+              {inStage.map((order) => (
+                <OrderRow key={order._id} order={order} now={now} today={today} selected={order._id === selectedId} onOpen={() => onOpen(order._id)} />
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+// Celular y tablet: buscador, los botones de filtro y la lista.
+export function OrdersList({ view, selectedId, onOpen }: { view: OrdersView; selectedId?: string | null; onOpen: (id: string) => void }) {
+  const t = useT();
+  const { filter } = view;
 
   return (
     <div className="@container">
-      <label className="relative mb-3 block">
-        <span className="sr-only">{t.workspace.search}</span>
-        <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-ink-muted" />
-        <input
-          type="search"
-          value={view.search}
-          onChange={(event) => view.setSearch(event.target.value)}
-          placeholder={t.workspace.search}
-          className="h-11 w-full rounded-lg border border-line bg-surface pl-10 pr-3"
-        />
-      </label>
-      {filters && (
-        <div role="group" aria-label={t.pages.orders.title} className="mb-4 flex flex-wrap gap-2">
-          {ORDER_FILTERS.map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={filter === value}
-              onClick={() => view.setParam("filtro", value === "active" ? null : value)}
-              className={`h-11 rounded-full px-4 text-sm ${filter === value ? "bg-action font-bold text-white" : "bg-surface ring-1 ring-line hover:bg-paper"}`}
-            >
-              {t.orders.filters[value]} <span className="tabular-nums opacity-75">{view.count(value)}</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {orders.isPending && <Spinner />}
-      {orders.isError && <p className="text-error">{t.errors.generic}</p>}
-      {orders.data &&
-        (visible.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-line bg-surface p-6 text-ink-muted">
-            {view.search.trim() ? t.workspace.noResults : list.length === 0 && day === today ? t.orders.empty : t.orders.emptyFilter}
-          </p>
-        ) : (
-          // Por etapa, en el orden en que pasan: qué hay para aceptar, qué está en la cocina…
-          <div className="space-y-5">
-            {STATUS_ORDER.map((status) => {
-              const orders = visible.filter((order) => order.status === status);
-              if (!orders.length) return null;
-              return (
-                <section key={status} aria-labelledby={`etapa-${status}`}>
-                  <h3 id={`etapa-${status}`} className="mb-2 flex items-center gap-2 font-bold">
-                    <span aria-hidden className={`size-2.5 rounded-full ${STATUS_MARK[status]}`} />
-                    {t.orders.sections[status]}
-                    <span className="font-normal text-ink-muted tabular-nums">{orders.length}</span>
-                  </h3>
-                  <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
-                    {orders.map((order) => (
-                      <OrderRow key={order._id} order={order} now={now} today={today} selected={order._id === selectedId} onOpen={() => onOpen(order._id)} />
-                    ))}
-                  </ul>
-                </section>
-              );
-            })}
-          </div>
+      <div className="mb-3">
+        <OrdersSearch view={view} />
+      </div>
+      <div role="group" aria-label={t.pages.orders.title} className="mb-4 flex flex-wrap gap-2">
+        {BASIC_FILTERS.map((value) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={filter === value}
+            onClick={() => view.setParam("filtro", value === "active" ? null : value)}
+            className={`h-11 rounded-full px-4 text-sm ${filter === value ? "bg-action font-bold text-white" : "bg-surface ring-1 ring-line hover:bg-paper"}`}
+          >
+            {t.orders.filters[value]} <span className="tabular-nums opacity-75">{view.count(value)}</span>
+          </button>
         ))}
+      </div>
+      <OrderStages view={view} orders={view.visible} selectedId={selectedId} onOpen={onOpen} />
     </div>
   );
 }

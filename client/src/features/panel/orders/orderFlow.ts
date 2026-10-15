@@ -43,13 +43,29 @@ export function nextLabel(order: Pick<Order, "status" | "fulfillment">, t: Dicti
   }
 }
 
-export type OrderFilter = "active" | "new" | "done" | "all";
-export const ORDER_FILTERS: OrderFilter[] = ["active", "new", "done", "all"];
+// preparing: en curso sin los nuevos (así "Nuevos" | "En preparación" no repite pedidos).
+// ready: listos para servir o retirar y en camino.
+export type OrderFilter = "active" | "new" | "preparing" | "ready" | "done" | "all";
+export const ORDER_FILTERS: OrderFilter[] = ["active", "new", "preparing", "ready", "done", "all"];
+// Los botones de filtro del celular: los de siempre (los otros son para dividir la lista en la PC).
+export const BASIC_FILTERS: OrderFilter[] = ["active", "new", "done", "all"];
+export const isOrderFilter = (value: unknown): value is OrderFilter => (ORDER_FILTERS as unknown[]).includes(value);
 
 export function matchesFilter(status: OrderStatus, filter: OrderFilter) {
-  if (filter === "all") return true;
-  if (filter === "new") return status === "new";
-  return filter === "active" ? isActive(status) : !isActive(status);
+  switch (filter) {
+    case "all":
+      return true;
+    case "new":
+      return status === "new";
+    case "preparing":
+      return isActive(status) && status !== "new";
+    case "ready":
+      return status === "ready" || status === "out_for_delivery";
+    case "active":
+      return isActive(status);
+    default:
+      return !isActive(status);
+  }
 }
 
 // Cuántos minutos puede esperar un pedido nuevo sin que nadie lo acepte antes de marcarlo.
