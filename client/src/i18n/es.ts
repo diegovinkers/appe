@@ -180,6 +180,9 @@ export const es: Dictionary = {
     view: "Ver",
     tapToEnable: "Tocá la pantalla para activar el sonido",
     offline: "Los pedidos no se están actualizando. Revisá internet.",
+    // La pastilla de la barra de arriba: corta.
+    pendingShort: (count: number) => (count === 1 ? "1 nuevo" : `${count} nuevos`),
+    offlineShort: "Sin conexión",
     retry: "Actualizar",
     limit: "La lista muestra hasta 500 pedidos del día.",
     tabTitle: (count: number) => `(${count}) Pedido nuevo`,

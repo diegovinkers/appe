@@ -1,7 +1,6 @@
-import { BellRing, WifiOff } from "lucide-react";
+import { BellRing, VolumeX, WifiOff } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
-import { button } from "../../../components/ui";
 import { useT } from "../../../i18n";
 import { operatingDayISO } from "../../../lib/format";
 import { getDeviceSettings, useDeviceSettings } from "./deviceSettings";
@@ -12,8 +11,9 @@ import { useOrders } from "./useOrders";
 const REPEAT_MS = 15_000;
 
 // Aviso de pedidos nuevos para todo el panel. Suena (y vibra) al llegar uno y repite hasta
-// que alguien lo acepte; el número queda en la pestaña y la pantalla no se apaga. Solo ocupa
-// lugar cuando hay algo que hacer: pedidos esperando, el sonido trabado o sin conexión.
+// que alguien lo acepte; el número queda en la pestaña y la pantalla no se apaga. Se ve como
+// una pastilla chica en la barra de arriba (no le quita lugar a la página), solo cuando hay
+// algo: pedidos esperando o sin conexión.
 export function OrderAlerts() {
   const t = useT();
   const settings = useDeviceSettings();
@@ -97,30 +97,42 @@ export function OrderAlerts() {
   const full = (query.data?.orders.length ?? 0) >= 500;
   if (!pending && !offline && !full) return null;
 
+  const muted = blocked && settings.sound;
   return (
-    <div aria-label={t.alerts.label} className="sticky top-18 z-20 mb-5 space-y-2 print:hidden">
+    <div aria-label={t.alerts.label} className="flex shrink-0 items-center gap-2 print:hidden">
       {pending > 0 && (
-        <div role="status" className="flex min-h-12 items-center gap-3 rounded-xl bg-[#fff4d6] px-4 py-1.5 text-[#7a4e00] shadow-sm ring-1 ring-[#f0d48a]">
+        <Link
+          to="/painel/pedidos?filtro=new"
+          role="status"
+          aria-label={`${t.alerts.pending(pending)}${muted ? `. ${t.alerts.tapToEnable}` : ""}`}
+          title={muted ? t.alerts.tapToEnable : t.alerts.pending(pending)}
+          // En el celular ya está el número en "Pedidos" de la barra de abajo: ahí no hace falta.
+          className="relative hidden h-11 items-center gap-1.5 rounded-full bg-[#fff4d6] px-3 font-bold text-[#7a4e00] ring-1 ring-[#f0d48a] hover:bg-[#ffecb8] lg:inline-flex"
+        >
+          {/* El punto late mientras haya pedidos esperando (quieto si el aparato pide menos movimiento). */}
+          <span aria-hidden className="absolute -top-0.5 -right-0.5 flex size-3">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#e0a21b] opacity-75" />
+            <span className="relative inline-flex size-3 rounded-full bg-[#e0a21b]" />
+          </span>
           <BellRing aria-hidden className="size-5 shrink-0" />
-          <p className="min-w-0 flex-1 leading-tight">
-            <strong>{t.alerts.pending(pending)}</strong>
-            {blocked && settings.sound && <span className="block text-sm">{t.alerts.tapToEnable}</span>}
-          </p>
-          <Link to="/painel/pedidos?filtro=new" className="inline-flex h-11 shrink-0 items-center rounded-lg bg-[#7a4e00] px-4 font-bold text-white">
-            {t.alerts.view}
-          </Link>
-        </div>
+          {t.alerts.pendingShort(pending)}
+          {muted && <VolumeX aria-hidden className="size-4 shrink-0" />}
+        </Link>
       )}
       {offline && (
-        <div role="alert" className="flex min-h-12 items-center gap-3 rounded-xl bg-error-soft px-4 py-1.5 text-error ring-1 ring-error/30">
+        <button
+          type="button"
+          role="alert"
+          onClick={() => void query.refetch()}
+          aria-label={`${t.alerts.offline} ${t.alerts.retry}`}
+          title={t.alerts.offline}
+          className="inline-flex h-11 items-center gap-1.5 rounded-full bg-error-soft px-3 font-bold text-error ring-1 ring-error/30"
+        >
           <WifiOff aria-hidden className="size-5 shrink-0" />
-          <p className="min-w-0 flex-1 font-bold leading-tight">{t.alerts.offline}</p>
-          <button type="button" className={button.secondary} onClick={() => void query.refetch()}>
-            {t.alerts.retry}
-          </button>
-        </div>
+          <span className="hidden sm:inline">{t.alerts.offlineShort}</span>
+        </button>
       )}
-      {full && <p className="text-sm text-warning">{t.alerts.limit}</p>}
+      {full && !pending && !offline && <span className="sr-only">{t.alerts.limit}</span>}
     </div>
   );
 }

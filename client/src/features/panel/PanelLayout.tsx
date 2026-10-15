@@ -119,6 +119,7 @@ export function PanelLayout() {
           </div>
         </div>
 
+        {can(user.role, "orders:read") && <OrderAlerts />}
         <StoreStatusControl store={store} opening={opening} canChange={can(user.role, "store:open")} />
         {can(user.role, "orders:read") && <AlertSettingsControl />}
         <UserMenu user={user} />
@@ -166,7 +167,6 @@ export function PanelLayout() {
         {/* Pedidos en la PC ancha: el espacio de trabajo usa todo el ancho y el alto. */}
         <main className={workspace ? "flex h-[calc(100dvh-4rem)] min-w-0 flex-1 flex-col px-4 py-3" : "min-w-0 flex-1 px-4 pt-6 pb-24 sm:px-6 lg:px-10 lg:py-8"}>
           <div className={workspace ? "flex min-h-0 flex-1 flex-col" : "mx-auto max-w-5xl"}>
-            {can(user.role, "orders:read") && <OrderAlerts />}
             {/* En el espacio de trabajo (el panel de WhatsApp) y en Início ya se ven las que esperan a una persona. */}
             {can(user.role, "orders:read") && !workspace && pathname !== "/painel/inicio" && <AssistantAlert />}
             <Outlet context={context} />

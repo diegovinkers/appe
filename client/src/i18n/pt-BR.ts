@@ -177,6 +177,9 @@ export const ptBR = {
     label: "Avisos de pedidos",
     pending: (count: number) => (count === 1 ? "1 pedido novo aguardando" : `${count} pedidos novos aguardando`),
     view: "Ver",
+    // La pastilla de la barra de arriba: corta.
+    pendingShort: (count: number) => (count === 1 ? "1 novo" : `${count} novos`),
+    offlineShort: "Sem conexão",
     tapToEnable: "Toque na tela para ligar o som",
     offline: "Os pedidos não estão atualizando. Confira a internet.",
     retry: "Atualizar",
