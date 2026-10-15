@@ -338,9 +338,8 @@ export const es: Dictionary = {
     expand: (name: string) => `Abrir ${name}`,
     search: "Buscar por nombre, número o teléfono",
     noResults: "No hay pedidos con esa búsqueda.",
-    assistantOn: "Asistente activado",
-    assistantOff: "Asistente desactivado",
-    configure: "Configurar",
+    ai: "IA",
+    aiHint: "Asistente con IA en WhatsApp: prendelo o apagalo. La configuración está en Asistente.",
     views: "Ver",
   },
 

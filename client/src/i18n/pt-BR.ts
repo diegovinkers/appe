@@ -337,9 +337,8 @@ export const ptBR = {
     expand: (name: string) => `Abrir ${name}`,
     search: "Buscar por nome, número ou telefone",
     noResults: "Nenhum pedido com essa busca.",
-    assistantOn: "Assistente ligado",
-    assistantOff: "Assistente desligado",
-    configure: "Configurar",
+    ai: "IA",
+    aiHint: "Assistente com IA no WhatsApp: ligue ou desligue. As configurações ficam em Assistente.",
     views: "Ver",
   },
 

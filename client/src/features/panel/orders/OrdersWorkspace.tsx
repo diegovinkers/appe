@@ -1,11 +1,11 @@
 import { Armchair, ClipboardList, GripVertical, MessageCircle, PanelLeftClose, PanelTopClose } from "lucide-react";
 import { Fragment, type DragEvent, type KeyboardEvent, type ReactNode, useState } from "react";
-import { Link } from "react-router";
 import { Group, Panel, Separator, useDefaultLayout, usePanelRef } from "react-resizable-panels";
 import { can } from "../../../auth/permissions";
-import { useT } from "../../../i18n";
+import { Switch } from "../../../components/ui";
+import { errorText, useT } from "../../../i18n";
 import { formatDay } from "../../../lib/format";
-import { needsPerson, useAssistantSettings, useConversations } from "../assistant/assistant";
+import { needsPerson, useAssistantSettings, useConversations, useUpdateAssistant } from "../assistant/assistant";
 import { Conversations } from "../assistant/Conversations";
 import { usePanel } from "../PanelLayout";
 import { DayPicker, NewOrderButton, OpenOrder, OrdersList, useOrdersView } from "../pages/OrdersPage";
@@ -66,6 +66,7 @@ function WorkspacePanel({
   id,
   row = false,
   badge,
+  beside,
   extra,
   onSwap,
   onMove,
@@ -74,6 +75,8 @@ function WorkspacePanel({
   id: PanelId;
   row?: boolean;
   badge?: number;
+  // Pegado al nombre (el interruptor "IA"); `extra` va a la derecha.
+  beside?: ReactNode;
   extra?: ReactNode;
   onSwap: (from: PanelId, to: PanelId) => void;
   onMove: (id: PanelId, step: -1 | 1) => void;
@@ -152,6 +155,7 @@ function WorkspacePanel({
             <Icon aria-hidden className="size-5 shrink-0 text-ink-muted" />
             <h2 className="min-w-0 truncate font-bold">{name}</h2>
             {count}
+            {beside}
             <div className="min-w-0 flex-1" />
             {extra}
             <button
@@ -243,20 +247,27 @@ export function OrdersWorkspace() {
   };
 
   const assistantData = assistant.data?.assistant;
-  const content: Record<PanelId, { badge?: number; extra?: ReactNode; body: ReactNode }> = {
+  const toggleAssistant = useUpdateAssistant();
+  const content: Record<PanelId, { badge?: number; beside?: ReactNode; extra?: ReactNode; body: ReactNode }> = {
     whatsapp: {
       badge: waiting,
+      // Prender o apagar el asistente sin salir de Pedidos (solo el dueño).
+      beside: isOwner && assistantData && (
+        <span className="ml-2" title={t.workspace.aiHint}>
+          <Switch
+            label={t.workspace.ai}
+            checked={assistantData.enabled}
+            disabled={toggleAssistant.isPending}
+            onChange={(enabled) => toggleAssistant.mutate({ enabled })}
+          />
+        </span>
+      ),
       body: (
         <div className="p-3">
-          {isOwner && assistantData && (
-            <p className="mb-3 flex flex-wrap items-center gap-2 text-sm">
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-bold ${assistantData.enabled ? "bg-[#e3f4ea] text-[#16603b]" : "bg-paper text-ink-muted ring-1 ring-line"}`}>
-                <span aria-hidden className={`size-2 rounded-full ${assistantData.enabled ? "bg-open" : "bg-ink-muted"}`} />
-                {assistantData.enabled ? t.workspace.assistantOn : t.workspace.assistantOff}
-              </span>
-              <Link to="/painel/assistente?aba=configurar" className="inline-flex min-h-11 items-center font-bold underline underline-offset-4">
-                {t.workspace.configure}
-              </Link>
+          {/* Si no se pudo (por ejemplo, el plan no incluye el asistente), el motivo queda acá. */}
+          {toggleAssistant.isError && (
+            <p role="alert" className="mb-3 rounded-lg bg-error-soft px-3 py-2 text-sm font-bold text-error ring-1 ring-error/30">
+              {errorText(toggleAssistant.error, t)}
             </p>
           )}
           <Conversations
@@ -301,7 +312,7 @@ export function OrdersWorkspace() {
       {order.map((id, index) => (
         <Fragment key={id}>
           {index > 0 && <Edge />}
-          <WorkspacePanel id={id} badge={content[id].badge} extra={content[id].extra} onSwap={swap} onMove={move}>
+          <WorkspacePanel id={id} badge={content[id].badge} beside={content[id].beside} extra={content[id].extra} onSwap={swap} onMove={move}>
             {content[id].body}
           </WorkspacePanel>
         </Fragment>
