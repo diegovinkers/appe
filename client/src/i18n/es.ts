@@ -968,6 +968,8 @@ export const es: Dictionary = {
   // El backend responde en portugués: acá van los códigos que el panel puede mostrar hoy.
   apiErrors: {
     NETWORK_ERROR: "Sin conexión. Revisá internet e intentá de nuevo.",
+    // El servidor todavía no tiene esta función (se está actualizando).
+    ROUTE_NOT_FOUND: "Esta función todavía se está instalando en el servidor. Probá de nuevo en unos minutos.",
     UNKNOWN: "Algo salió mal. Intentá de nuevo.",
     INTERNAL_ERROR: "Algo salió mal. Intentá de nuevo.",
     INVALID_CREDENTIALS: "E-mail o contraseña incorrectos",

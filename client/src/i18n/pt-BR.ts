@@ -968,6 +968,8 @@ export const ptBR = {
   // Por código de error. Si un código no está, se muestra el mensaje del backend (que ya viene en portugués).
   apiErrors: {
     NETWORK_ERROR: "Sem conexão. Verifique a internet e tente de novo.",
+    // El servidor todavía no tiene esta función (se está actualizando).
+    ROUTE_NOT_FOUND: "Esta função ainda está sendo instalada no servidor. Tente de novo em alguns minutos.",
     UNKNOWN: "Algo deu errado. Tente de novo.",
     UPLOAD_FAILED: "Não foi possível enviar a foto. Tente de novo.",
     EMAIL_TAKEN: "Esse e-mail já está em uso.",

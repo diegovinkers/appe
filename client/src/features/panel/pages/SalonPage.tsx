@@ -62,7 +62,7 @@ export function SalonPage() {
           </button>
         }
       />
-      {failure && (
+      {failure && !query.isError && (
         <div className="mb-4">
           <Notice tone="error">{errorText(failure, t)}</Notice>
         </div>
