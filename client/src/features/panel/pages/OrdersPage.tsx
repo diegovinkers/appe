@@ -106,23 +106,32 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
     <li aria-current={selected || undefined} className={`flex ${selected ? "bg-paper" : ""}`}>
       {/* El color de la etapa; rojo si está atrasado. */}
       <span aria-hidden className={`w-1.5 shrink-0 ${late ? "bg-error" : STATUS_MARK[order.status]}`} />
-      <div className="min-w-0 flex-1 py-3 pr-3 pl-3 @xl:flex @xl:items-start @xl:gap-4">
+      <div className="min-w-0 flex-1 py-3 pr-3 pl-3 @xl:flex @xl:items-center @xl:gap-4 @xl:py-2.5">
         <button type="button" onClick={onOpen} className="flex w-full min-w-0 flex-1 gap-3 text-left">
           <span className="w-12 shrink-0 @md:w-14">
             <span className="block text-lg leading-tight font-bold tabular-nums">#{order.number}</span>
             <span className="block text-sm text-ink-muted tabular-nums">{when}</span>
           </span>
           <span className="min-w-0 flex-1 space-y-0.5">
-            <span className="flex items-baseline justify-between gap-3">
+            <span className="flex items-baseline justify-between gap-3 @xl:items-center @xl:justify-start">
               <span className={`truncate font-bold ${order.status === "cancelled" ? "text-ink-muted line-through" : ""}`}>{order.customer.name}</span>
+              {/* En un panel ancho, el tiempo va al lado del nombre: lo urgente se ve primero. */}
+              <span className="hidden @xl:inline-flex">
+                <Elapsed order={order} now={now} />
+              </span>
               <span className="shrink-0 font-bold tabular-nums @xl:hidden">{total}</span>
             </span>
-            <span className="flex items-center gap-1.5 text-sm text-ink-muted">
+            {/* En un panel ancho, el origen va en la línea de entrega y pago: una línea menos. */}
+            <span className="flex items-center gap-1.5 text-sm text-ink-muted @xl:hidden">
               <SourceIcon aria-hidden className="size-4 shrink-0" />
               <span className="truncate">{by ? o.sourceBy(o.source[source], by) : o.source[source]}</span>
             </span>
             <span className="line-clamp-1 text-sm @md:line-clamp-2">{order.items.map((item) => `${item.quantity}x ${item.name}`).join(", ")}</span>
             <span className="flex flex-wrap gap-x-3 gap-y-0.5 pt-0.5 text-sm text-ink-muted">
+              <span className="hidden items-center gap-1.5 @xl:inline-flex">
+                <SourceIcon aria-hidden className="size-4 shrink-0" />
+                {by ? o.sourceBy(o.source[source], by) : o.source[source]}
+              </span>
               {place && (
                 <span className="inline-flex items-center gap-1.5">
                   <FulfillmentIcon aria-hidden className="size-4 shrink-0" />
@@ -150,9 +159,12 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
             </span>
           </span>
         </button>
-        <div className="mt-2 flex flex-wrap items-center gap-2 @xl:mt-0 @xl:w-56 @xl:shrink-0 @xl:flex-col @xl:items-end">
+        {/* En un panel ancho: el total y, debajo, los botones. */}
+        <div className="mt-2 flex flex-wrap items-center gap-2 @xl:mt-0 @xl:shrink-0 @xl:flex-col @xl:items-end @xl:gap-1.5">
           <span className="hidden text-lg leading-tight font-bold tabular-nums @xl:block">{total}</span>
-          <Elapsed order={order} now={now} />
+          <span className="@xl:hidden">
+            <Elapsed order={order} now={now} />
+          </span>
           <span className="ml-auto flex gap-2 @xl:ml-0">
             <button
               type="button"
