@@ -37,3 +37,24 @@ export async function playAlert(): Promise<boolean> {
   }
   return true;
 }
+
+// Un tono corto y suave: un mensaje nuevo que el asistente ya está atendiendo.
+export async function playChime(): Promise<boolean> {
+  if (!(await unlockSound()) || !context) return false;
+  const oscillator = context.createOscillator();
+  const gain = context.createGain();
+  oscillator.frequency.value = 660;
+  oscillator.connect(gain);
+  gain.connect(context.destination);
+  const start = context.currentTime;
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(0.12, start + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, start + 0.25);
+  oscillator.start(start);
+  oscillator.stop(start + 0.27);
+  oscillator.onended = () => {
+    oscillator.disconnect();
+    gain.disconnect();
+  };
+  return true;
+}

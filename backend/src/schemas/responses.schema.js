@@ -655,6 +655,7 @@ export const conversation = z.strictObject({
   lastMessageAt: date,
   preview: z.string(),
   lastRole: z.enum(MESSAGE_ROLES).nullable(),
+  replying: z.boolean(),
   usage: aiUsage,
   ...timestamps,
 });

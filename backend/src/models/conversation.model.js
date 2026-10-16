@@ -62,6 +62,8 @@ const conversationSchema = new mongoose.Schema(
     // una persona y lo último no es del local, alguien tiene que contestar.
     preview: { type: String, default: "" },
     lastRole: { type: String, enum: ["customer", "assistant", "staff", null], default: null },
+    // Desde cuándo el asistente está preparando una respuesta (null: no está respondiendo).
+    replyingSince: { type: Date, default: null },
     usage: usageFields,
   },
   { timestamps: true, versionKey: false }

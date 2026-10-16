@@ -127,12 +127,20 @@ async function sendVoice(conversation, text) {
   }
 }
 
+// El panel muestra "escribiendo…" mientras el asistente prepara la respuesta.
+const markReplying = (conversationId, since) =>
+  Conversation.updateOne({ _id: conversationId }, { $set: { replyingSince: since } }).catch(() => {});
+
 export function scheduleReply(conversationId) {
   const key = String(conversationId);
   clearTimeout(pending.get(key)?.timer);
+  void markReplying(conversationId, new Date());
   const run = () => {
     pending.delete(key);
-    return answer(conversationId).catch((error) => logger.error({ err: error, conversation: key }, "whatsapp: falló la respuesta"));
+    return answer(conversationId)
+      .catch((error) => logger.error({ err: error, conversation: key }, "whatsapp: falló la respuesta"))
+      // Si llegó otro mensaje mientras respondía, hay otra respuesta programada: sigue la marca.
+      .finally(() => !pending.has(key) && markReplying(conversationId, null));
   };
   pending.set(key, { timer: setTimeout(run, replyDelayMs), run });
 }
@@ -225,8 +233,9 @@ async function handle({ phoneNumberId, waId, name, message }) {
   if (!phoneNumberId || !waId || !message?.id) {
     return ignored("incompleto", { phoneNumberId: phoneNumberId ?? null, waId: Boolean(waId), userId: Boolean(message?.from_user_id), id: Boolean(message?.id) });
   }
-  const settings = await Assistant.findOne({ phoneNumberId, enabled: true }).lean();
-  if (!settings) return ignored("ningún asistente encendido con ese número", { phoneNumberId });
+  // Con el asistente apagado los mensajes igual entran al panel (los atiende una persona).
+  const settings = await Assistant.findOne({ phoneNumberId }).lean();
+  if (!settings) return ignored("ningún local con ese número", { phoneNumberId });
   const store = await Commerce.exists({ _id: settings.commerce, status: "active" });
   if (!store || !(await hasAssistantPlus(settings.commerce))) {
     return ignored("local inactivo o sin el plan Plus", { commerce: String(settings.commerce) });
@@ -236,6 +245,10 @@ async function handle({ phoneNumberId, waId, name, message }) {
 
   const blocked = (settings.blockedWaIds ?? []).includes(waId);
   const conversation = await conversationFor(settings.commerce, { waId, name, blocked });
+  if (!settings.enabled && conversation.status === "bot") {
+    conversation.status = "human";
+    conversation.handoff = { reason: "Assistente desligado", at: new Date() };
+  }
   const client = getWhatsappClient();
   client.markRead({ phoneNumberId, messageId: message.id }).catch(() => {});
 
@@ -264,7 +277,7 @@ async function handle({ phoneNumberId, waId, name, message }) {
     if (error.code === 11000) return;
     throw error;
   }
-  if (conversation.status === "bot" && !blocked) scheduleReply(conversation._id);
+  if (conversation.status === "bot" && !blocked && settings.enabled) scheduleReply(conversation._id);
 }
 
 async function transcribeAudio(client, mediaId, locale) {

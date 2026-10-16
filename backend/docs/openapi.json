@@ -23587,6 +23587,9 @@
                             }
                           ]
                         },
+                        "replying": {
+                          "type": "boolean"
+                        },
                         "usage": {
                           "type": "object",
                           "properties": {
@@ -23650,6 +23653,7 @@
                         "lastMessageAt",
                         "preview",
                         "lastRole",
+                        "replying",
                         "usage",
                         "createdAt",
                         "updatedAt"
@@ -24014,6 +24018,9 @@
                             }
                           ]
                         },
+                        "replying": {
+                          "type": "boolean"
+                        },
                         "usage": {
                           "type": "object",
                           "properties": {
@@ -24077,6 +24084,7 @@
                         "lastMessageAt",
                         "preview",
                         "lastRole",
+                        "replying",
                         "usage",
                         "createdAt",
                         "updatedAt"
@@ -24490,6 +24498,9 @@
                               }
                             ]
                           },
+                          "replying": {
+                            "type": "boolean"
+                          },
                           "usage": {
                             "type": "object",
                             "properties": {
@@ -24553,6 +24564,7 @@
                           "lastMessageAt",
                           "preview",
                           "lastRole",
+                          "replying",
                           "usage",
                           "createdAt",
                           "updatedAt"
@@ -24741,6 +24753,9 @@
                             }
                           ]
                         },
+                        "replying": {
+                          "type": "boolean"
+                        },
                         "usage": {
                           "type": "object",
                           "properties": {
@@ -24804,6 +24819,7 @@
                         "lastMessageAt",
                         "preview",
                         "lastRole",
+                        "replying",
                         "usage",
                         "createdAt",
                         "updatedAt"
@@ -25124,6 +25140,9 @@
                             }
                           ]
                         },
+                        "replying": {
+                          "type": "boolean"
+                        },
                         "usage": {
                           "type": "object",
                           "properties": {
@@ -25187,6 +25206,7 @@
                         "lastMessageAt",
                         "preview",
                         "lastRole",
+                        "replying",
                         "usage",
                         "createdAt",
                         "updatedAt"
@@ -25374,6 +25394,9 @@
                             }
                           ]
                         },
+                        "replying": {
+                          "type": "boolean"
+                        },
                         "usage": {
                           "type": "object",
                           "properties": {
@@ -25437,6 +25460,7 @@
                         "lastMessageAt",
                         "preview",
                         "lastRole",
+                        "replying",
                         "usage",
                         "createdAt",
                         "updatedAt"
@@ -25764,6 +25788,9 @@
                             }
                           ]
                         },
+                        "replying": {
+                          "type": "boolean"
+                        },
                         "usage": {
                           "type": "object",
                           "properties": {
@@ -25827,6 +25854,7 @@
                         "lastMessageAt",
                         "preview",
                         "lastRole",
+                        "replying",
                         "usage",
                         "createdAt",
                         "updatedAt"

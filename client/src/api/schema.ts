@@ -8537,6 +8537,7 @@ export interface paths {
                                 lastMessageAt: string;
                                 preview: string;
                                 lastRole: ("customer" | "assistant" | "staff") | null;
+                                replying: boolean;
                                 usage: {
                                     inputTokens: number;
                                     outputTokens: number;
@@ -8675,6 +8676,7 @@ export interface paths {
                                 lastMessageAt: string;
                                 preview: string;
                                 lastRole: ("customer" | "assistant" | "staff") | null;
+                                replying: boolean;
                                 usage: {
                                     inputTokens: number;
                                     outputTokens: number;
@@ -8863,6 +8865,7 @@ export interface paths {
                                 lastMessageAt: string;
                                 preview: string;
                                 lastRole: ("customer" | "assistant" | "staff") | null;
+                                replying: boolean;
                                 usage: {
                                     inputTokens: number;
                                     outputTokens: number;
@@ -8960,6 +8963,7 @@ export interface paths {
                                 lastMessageAt: string;
                                 preview: string;
                                 lastRole: ("customer" | "assistant" | "staff") | null;
+                                replying: boolean;
                                 usage: {
                                     inputTokens: number;
                                     outputTokens: number;
@@ -9083,6 +9087,7 @@ export interface paths {
                                 lastMessageAt: string;
                                 preview: string;
                                 lastRole: ("customer" | "assistant" | "staff") | null;
+                                replying: boolean;
                                 usage: {
                                     inputTokens: number;
                                     outputTokens: number;
@@ -9180,6 +9185,7 @@ export interface paths {
                                 lastMessageAt: string;
                                 preview: string;
                                 lastRole: ("customer" | "assistant" | "staff") | null;
+                                replying: boolean;
                                 usage: {
                                     inputTokens: number;
                                     outputTokens: number;
@@ -9366,6 +9372,7 @@ export interface paths {
                                 lastMessageAt: string;
                                 preview: string;
                                 lastRole: ("customer" | "assistant" | "staff") | null;
+                                replying: boolean;
                                 usage: {
                                     inputTokens: number;
                                     outputTokens: number;

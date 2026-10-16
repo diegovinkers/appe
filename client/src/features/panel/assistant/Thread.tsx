@@ -129,11 +129,14 @@ export function Thread({
   messages,
   storeSide,
   pending,
+  typing = false,
   voice = null,
 }: {
   messages: ConversationMessage[];
   storeSide: boolean;
   pending?: string;
+  // El asistente está preparando la respuesta (WhatsApp).
+  typing?: boolean;
   voice?: Voice;
 }) {
   const t = useT();
@@ -142,7 +145,7 @@ export function Thread({
   useEffect(() => {
     const box = end.current?.closest("[data-chat-scroll]");
     if (box) box.scrollTop = box.scrollHeight;
-  }, [messages.length, pending]);
+  }, [messages.length, pending, typing]);
   return (
     // `@container`: los globos se miden contra el ancho del chat, no el de la pantalla.
     <ol aria-live="polite" className="@container flex flex-col gap-3">
@@ -161,7 +164,26 @@ export function Thread({
           </li>
         </>
       )}
+      {typing && !pending && (
+        <li className={`flex ${storeSide ? "justify-end" : "justify-start"}`}>
+          <p role="status" className="flex items-center gap-1.5 rounded-2xl bg-surface px-3 py-2 text-sm text-ink-muted ring-1 ring-line">
+            <TypingDots />
+            <span className="sr-only">{t.assistant.typing}</span>
+          </p>
+        </li>
+      )}
       <li ref={end} aria-hidden />
     </ol>
+  );
+}
+
+// Tres puntos que laten: alguien está escribiendo.
+export function TypingDots() {
+  return (
+    <span aria-hidden className="flex items-center gap-1">
+      {[0, 150, 300].map((delay) => (
+        <span key={delay} className="size-1.5 animate-bounce rounded-full bg-current" style={{ animationDelay: `${delay}ms` }} />
+      ))}
+    </span>
   );
 }

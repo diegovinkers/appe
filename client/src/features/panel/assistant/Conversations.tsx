@@ -1,4 +1,4 @@
-import { ArrowLeft, MoreHorizontal, SendHorizontal } from "lucide-react";
+import { ArrowLeft, BotOff, FlaskConical, MoreHorizontal, SendHorizontal, UserRound } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import type { Conversation } from "../../../api/types";
@@ -19,7 +19,7 @@ import {
   useConversations,
   useStaffMessage,
 } from "./assistant";
-import { Thread } from "./Thread";
+import { Thread, TypingDots } from "./Thread";
 
 const FILTERS: ChannelFilter[] = ["all", "whatsapp", "simulator"];
 
@@ -34,6 +34,47 @@ function StatusLabel({ conversation }: { conversation: Conversation }) {
 
 // Botón de ícono de la cabecera: chico en una conversación angosta, del tamaño de siempre en una ancha.
 const headerIcon = "grid size-8 shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-paper hover:text-ink @md:size-11";
+
+// Interruptor de IA del chat: verde si el asistente le contesta a este número.
+function AiSwitch({ on, disabled, onChange }: { on: boolean; disabled: boolean; onChange: (on: boolean) => void }) {
+  const c = useT().assistant.conversations;
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={on ? c.aiOn : c.aiOff}
+      title={on ? c.aiOn : c.aiOff}
+      disabled={disabled}
+      onClick={() => onChange(!on)}
+      className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg px-1 text-xs font-bold text-ink-muted hover:bg-paper disabled:opacity-60 @md:h-11"
+    >
+      <span aria-hidden className={`relative h-5 w-9 rounded-full transition-colors ${on ? "bg-open" : "bg-line"}`}>
+        <span className={`absolute top-0.5 size-4 rounded-full bg-white shadow transition-[left] ${on ? "left-4.5" : "left-0.5"}`} />
+      </span>
+      <span aria-hidden>{c.aiSwitch}</span>
+    </button>
+  );
+}
+
+// Lo importante de un chat en íconos chicos: necesita una persona, IA apagada para el número o
+// conversación del simulador. Sin ícono: la atiende el asistente.
+function ConversationIcons({ conversation }: { conversation: Conversation }) {
+  const c = useT().assistant.conversations;
+  const icons: { Icon: typeof BotOff; label: string; tone: string }[] = [];
+  if (needsPerson(conversation)) icons.push({ Icon: UserRound, label: c.needsPerson, tone: "text-error" });
+  if (conversation.automationBlocked) icons.push({ Icon: BotOff, label: c.aiBlocked, tone: "text-ink-muted" });
+  if (conversation.channel === "simulator") icons.push({ Icon: FlaskConical, label: c.channels.simulator, tone: "text-ink-muted" });
+  return (
+    <>
+      {icons.map(({ Icon, label, tone }) => (
+        <Icon key={label} role="img" aria-label={label} className={`size-4 shrink-0 ${tone}`}>
+          <title>{label}</title>
+        </Icon>
+      ))}
+    </>
+  );
+}
 
 const who = (conversation: Conversation) => conversation.customer.name || formatPhone(conversation.customer.phone);
 
@@ -59,28 +100,21 @@ function Detail({ id, onBack, canListen, compact, orderHref }: { id: string; onB
       {conversation.customer.name && ` · ${formatPhone(conversation.customer.phone)}`} · {formatUsd(conversation.usage.costMicros)}
     </>
   );
+  const isWhatsapp = conversation.channel === "whatsapp";
+  // WhatsApp: el interruptor de IA del número. Prendido = el asistente contesta este chat.
+  const aiOn = !conversation.automationBlocked && conversation.status === "bot";
+  const toggleAi = (on: boolean) => {
+    if (!on && !window.confirm(c.blockConfirm)) return;
+    automationBlock.mutate({ id, blocked: !on });
+  };
   const actions = (
     <>
-      {conversation.channel === "whatsapp" && canAnswer && (
-        <button
-          type="button"
-          className={button.secondary}
-          disabled={automationBlock.isPending}
-          onClick={() => {
-            const blocked = !conversation.automationBlocked;
-            if (blocked && !window.confirm(c.blockConfirm)) return;
-            automationBlock.mutate({ id, blocked });
-          }}
-        >
-          {conversation.automationBlocked ? c.unblockNumber : c.blockNumber}
-        </button>
-      )}
       {canAnswer &&
         (conversation.status === "bot" ? (
           <button type="button" className={button.secondary} disabled={action.isPending} onClick={() => action.mutate({ id, action: "takeover" })}>
             {t.assistant.takeover}
           </button>
-        ) : !conversation.automationBlocked ? (
+        ) : !isWhatsapp && !conversation.automationBlocked ? (
           <button type="button" className={button.secondary} disabled={action.isPending} onClick={() => action.mutate({ id, action: "release" })}>
             {t.assistant.release}
           </button>
@@ -125,6 +159,7 @@ function Detail({ id, onBack, canListen, compact, orderHref }: { id: string; onB
           <StatusLabel conversation={conversation} />
           {actions}
         </div>
+        {isWhatsapp && canAnswer && <AiSwitch on={aiOn} disabled={automationBlock.isPending} onChange={toggleAi} />}
         <button
           type="button"
           aria-expanded={moreOpen}
@@ -146,12 +181,17 @@ function Detail({ id, onBack, canListen, compact, orderHref }: { id: string; onB
           {orderLinks}
         </div>
       )}
+      {automationBlock.isError && (
+        <p role="alert" className="border-b border-line bg-error-soft px-3 py-1.5 text-sm font-bold text-error">
+          {errorText(automationBlock.error, t)}
+        </p>
+      )}
       {/* Angosta: el motivo va en "⋯", para que la conversación tenga todo el lugar. */}
       {handoffText && <p className="hidden border-b border-line bg-surface px-4 py-2 text-sm @md:block">{handoffText}</p>}
       {orderLinks && <div className="hidden border-b border-line bg-surface px-4 py-2 @md:block">{orderLinks}</div>}
 
       <div data-chat-scroll className={`flex-1 overflow-y-auto p-2 @md:p-4 ${compact ? "min-h-0" : "max-h-[60dvh]"}`}>
-        <Thread messages={messages} storeSide voice={canListen ? { locale: conversation.locale } : null} />
+        <Thread messages={messages} storeSide typing={conversation.replying} voice={canListen ? { locale: conversation.locale } : null} />
       </div>
 
       {canAnswer && (
@@ -239,21 +279,30 @@ export function Conversations({
           <p className="rounded-xl border border-dashed border-line bg-surface p-6 text-ink-muted">{c.empty}</p>
         )}
         {conversations.length > 0 && (
-          <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+          <ul className="@container divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
             {conversations.map((conversation) => (
               <li key={conversation._id}>
                 <button
                   type="button"
                   aria-current={selected === conversation._id}
                   onClick={() => onSelect(conversation._id)}
-                  className="block w-full px-4 py-3 text-left hover:bg-paper aria-[current=true]:bg-paper"
+                  className={`block w-full border-l-4 px-3 py-2.5 text-left hover:bg-paper aria-[current=true]:bg-paper @xs:px-4 ${needsPerson(conversation) ? "border-l-error" : "border-l-transparent"}`}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-1.5">
+                    <ConversationIcons conversation={conversation} />
                     <span className="min-w-0 flex-1 truncate font-bold">{who(conversation)}</span>
                     <span className="shrink-0 text-xs text-ink-muted">{formatWhen(conversation.lastMessageAt)}</span>
                   </span>
-                  <span className="mt-0.5 block truncate text-sm text-ink-muted">{conversation.preview}</span>
-                  <span className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+                  {conversation.replying ? (
+                    <span className="mt-0.5 flex items-center gap-2 text-sm text-ink-muted">
+                      <TypingDots />
+                      {t.assistant.typingShort}
+                    </span>
+                  ) : (
+                    <span className="mt-0.5 block truncate text-sm text-ink-muted">{conversation.preview}</span>
+                  )}
+                  {/* Con lugar, el estado y los pedidos; en una columna angosta lo dicen los íconos. */}
+                  <span className="mt-1.5 hidden flex-wrap items-center gap-2 text-xs text-ink-muted @xs:flex">
                     <StatusLabel conversation={conversation} />
                     {c.channels[conversation.channel]}
                     {conversation.orders.length > 0 && <span>· {c.orders(conversation.orders.length)}</span>}

@@ -24,6 +24,9 @@ const usageView = (usage) => ({
   costMicros: usage?.costMicros ?? 0,
 });
 
+// Más que esto "respondiendo" ya no es real (por ejemplo, el servidor se reinició a mitad).
+const REPLYING_MAX_MS = 2 * 60 * 1000;
+
 export const conversationView = (conversation) => ({
   _id: conversation._id,
   channel: conversation.channel,
@@ -38,6 +41,7 @@ export const conversationView = (conversation) => ({
   lastMessageAt: conversation.lastMessageAt,
   preview: conversation.preview,
   lastRole: conversation.lastRole ?? null,
+  replying: Boolean(conversation.replyingSince && Date.now() - conversation.replyingSince.getTime() < REPLYING_MAX_MS),
   usage: usageView(conversation.usage),
   createdAt: conversation.createdAt,
   updatedAt: conversation.updatedAt,
@@ -209,6 +213,9 @@ export const setConversationAutomationBlock = async (req, res) => {
   if (!conversation) throw conversationNotFound();
   const { waId } = conversation;
   const blocked = req.valid.body.blocked;
+  if (!blocked && !(await hasAssistantPlus(req.commerce._id))) {
+    throw new AppError(403, "MEMBER_PLUS_REQUIRED", "O plano Plus precisa estar ativo para o assistente responder");
+  }
   const assistant = await Assistant.findOneAndUpdate(
     { commerce: req.commerce._id },
     blocked ? { $addToSet: { blockedWaIds: waId } } : { $pull: { blockedWaIds: waId } },
@@ -220,6 +227,15 @@ export const setConversationAutomationBlock = async (req, res) => {
       ? { $set: { automationBlocked: true, status: "human", handoff: { reason: "Automatización pausada para este número", at: new Date() } } }
       : { $set: { automationBlocked: false } }
   );
+  // Volver a automatizar: el chat abierto pasa al asistente, que contesta si quedó algo pendiente.
+  if (!blocked && conversation.status !== "closed") {
+    const current = await Conversation.findOneAndUpdate(
+      { _id: conversation._id, commerce: req.commerce._id },
+      { $set: { status: "bot", handoff: null } },
+      { returnDocument: "after" }
+    );
+    await resumeAssistant(current);
+  }
   await audit(req, {
     action: blocked ? "assistant.number_blocked" : "assistant.number_unblocked",
     entity: { type: "commerce", id: req.commerce._id },

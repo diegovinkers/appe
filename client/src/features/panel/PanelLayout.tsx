@@ -20,6 +20,7 @@ import { OrderAlerts } from "./orders/OrderAlerts";
 import { AlertSettingsControl } from "./orders/AlertSettingsControl";
 import { useDensity } from "./orders/deviceSettings";
 import { AssistantAlert } from "./assistant/AssistantAlert";
+import { ConversationNotices } from "./assistant/ConversationNotices";
 import { BottomBar } from "./BottomBar";
 
 export type PanelContext = { user: SessionUser; store: OwnerStore; opening: Opening; storeUrl: string };
@@ -122,6 +123,7 @@ export function PanelLayout() {
         </div>
 
         {can(user.role, "orders:read") && <OrderAlerts dayStart={store.hours.dayStart} />}
+        {can(user.role, "orders:read") && <ConversationNotices />}
         <StoreStatusControl store={store} opening={opening} canChange={can(user.role, "store:open")} />
         {can(user.role, "orders:read") && <AlertSettingsControl />}
         <UserMenu user={user} />

@@ -1,3 +1,5 @@
+import type { Conversation } from "../../../api/types";
+import { noticeFor } from "./ConversationNotices";
 import { describe, expect, it } from "vitest";
 import { average, blobToBase64, formatUsd, needsPerson, whatsappPieces } from "./assistant";
 
@@ -45,4 +47,29 @@ it("un audio en base64, también si es más grande que un bloque", async () => {
   const encoded = await blobToBase64(new Blob([bytes], { type: "audio/webm" }));
   const decoded = Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0));
   expect(decoded).toEqual(bytes);
+});
+
+describe("avisos de WhatsApp", () => {
+  const base = {
+    _id: "c1", status: "bot", automationBlocked: false, handoff: null, lastRole: "customer",
+    lastCustomerMessageAt: "2026-10-16T20:00:00.000Z",
+  } as unknown as Conversation;
+  const snap = (changes = {}) => ({ lastCustomerMessageAt: "2026-10-16T19:00:00.000Z", status: "bot" as const, handoffAt: null, ...changes });
+
+  it("mensaje nuevo: al asistente o a un chat que nadie automatiza", () => {
+    expect(noticeFor(base, snap())).toBe("message");
+    expect(noticeFor({ ...base, automationBlocked: true, status: "human" }, snap({ status: "human" }))).toBe("unattended");
+    // Un chat nuevo con el asistente apagado.
+    expect(noticeFor({ ...base, status: "human", handoff: { reason: "Assistente desligado", at: "2026-10-16T20:00:00.000Z" } }, undefined)).toBe("unattended");
+  });
+
+  it("el asistente lo pasó a una persona", () => {
+    const handed = { ...base, status: "human", lastRole: "assistant", handoff: { reason: "Reclamo", at: "2026-10-16T20:01:00.000Z" } } as Conversation;
+    expect(noticeFor(handed, snap({ lastCustomerMessageAt: base.lastCustomerMessageAt }))).toBe("handoff");
+  });
+
+  it("sin cambios, o si lo último lo escribió el local, no avisa", () => {
+    expect(noticeFor(base, snap({ lastCustomerMessageAt: base.lastCustomerMessageAt }))).toBeNull();
+    expect(noticeFor({ ...base, lastRole: "staff" }, snap())).toBeNull();
+  });
 });

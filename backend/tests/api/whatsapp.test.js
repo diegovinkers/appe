@@ -146,6 +146,30 @@ describe("webhook de WhatsApp", () => {
     expect(whatsapp.sent).toEqual([]);
   });
 
+  it("al volver a automatizar el número, el chat abierto vuelve al asistente y contesta lo pendiente", async () => {
+    const { owner, commerce } = await setup();
+    const agent = await loginAs(app, owner.email);
+    fakeAi([say("Hola")]);
+    await webhook(incoming());
+    await flushReplies();
+    const conversation = await Conversation.findOne({ commerce: commerce._id, channel: "whatsapp" });
+    await agent.post(`/api/owner/assistant/conversations/${conversation._id}/automation-block`).send({ blocked: true });
+    await webhook(incoming({ id: "wamid.mientras-bloqueado", body: "tem x-burger?" }));
+    whatsapp.sent = [];
+
+    fakeAi([say("Tem sim!")]);
+    const unblocked = await agent.post(`/api/owner/assistant/conversations/${conversation._id}/automation-block`).send({ blocked: false });
+    expect(unblocked.body.blocked).toBe(false);
+    expect(await Conversation.findById(conversation._id).lean()).toMatchObject({ status: "bot", automationBlocked: false, handoff: null });
+    // Mientras prepara la respuesta, el panel lo ve "escribiendo".
+    const listing = await agent.get("/api/owner/assistant/conversations");
+    expect(listing.body.conversations[0].replying).toBe(true);
+    await flushReplies();
+    expect(whatsapp.sent.map((message) => message.text)).toEqual(["Tem sim!"]);
+    const after = await agent.get("/api/owner/assistant/conversations");
+    expect(after.body.conversations[0].replying).toBe(false);
+  });
+
   it("Meta verifica el webhook con nuestro token", async () => {
     const ok = await request(app).get("/api/whatsapp/webhook").query({ "hub.mode": "subscribe", "hub.verify_token": "verificacion-de-prueba", "hub.challenge": "desafio-123" });
     expect(ok.status).toBe(200);
@@ -194,11 +218,14 @@ describe("webhook de WhatsApp", () => {
     expect(whatsapp.sent).toHaveLength(1);
   });
 
-  it("un número de Uruguay empieza en español; un local sin el asistente encendido no contesta", async () => {
+  it("un número de Uruguay empieza en español; con el asistente apagado el mensaje entra al panel sin respuesta", async () => {
     await setup({ enabled: false });
     fakeAi([]);
     await webhook(incoming({ from: "59899123456" }));
-    expect(await Conversation.countDocuments()).toBe(0);
+    expect(await Conversation.findOne().lean()).toMatchObject({ status: "human", handoff: { reason: "Assistente desligado" } });
+    expect(await ConversationMessage.countDocuments({ role: "customer" })).toBe(1);
+    expect(whatsapp.sent).toEqual([]);
+    await Conversation.deleteMany({});
 
     await Assistant.updateOne({}, { $set: { enabled: true } });
     fakeAi([say("¡Hola!")]);
