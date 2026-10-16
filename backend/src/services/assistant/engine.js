@@ -14,6 +14,7 @@ import { costMicros, monthSpendMicros } from "./costs.js";
 import { instructions } from "./prompt.js";
 import { TOOLS, runTool } from "./tools.js";
 import { hasAssistantPlus } from "./entitlements.js";
+import { isConfirmation } from "./confirmation.js";
 
 // Llamadas a la IA por respuesta: cada herramienta usada es una vuelta más.
 const MAX_STEPS = 6;
@@ -179,6 +180,18 @@ function systemText(conversation, toolCalls) {
   return null;
 }
 
+// El cliente contestó al resumen que mandó el sistema solo para confirmar ("sim", "confirmo",
+// "dale"): lo último del asistente es ese resumen y todo lo que escribió después confirma.
+async function confirmsQuote(conversation) {
+  if (!conversation.draft) return false;
+  const recent = await ConversationMessage.find({ conversation: conversation._id }).sort({ createdAt: -1 }).limit(5).select("role text").lean();
+  const answered = recent.findIndex((message) => message.role !== "customer");
+  if (answered <= 0 || recent[answered].role !== "assistant") return false;
+  const quote = String(recent[answered].text ?? "");
+  if (!Object.values(TEXTS).some((texts) => quote.endsWith(texts.confirmQuote))) return false;
+  return recent.slice(0, answered).every((message) => isConfirmation(message.text));
+}
+
 async function reply(conversationId) {
   const conversation = await Conversation.findById(conversationId);
   if (!conversation || conversation.status !== "bot") return [];
@@ -188,6 +201,17 @@ async function reply(conversationId) {
   // Contesta solo si lo último que hay es del cliente.
   const last = await ConversationMessage.findOne({ conversation: conversation._id }).sort({ createdAt: -1 }).select("role").lean();
   if (last?.role !== "customer") return [];
+
+  // Confirmar el resumen no depende de la IA: a veces contesta "pedido confirmado" sin crearlo.
+  // Si no se puede crear (cambió el menú, cerró el local), sigue la IA con el motivo y lo explica.
+  let attempt = null;
+  if (await confirmsQuote(conversation)) {
+    const input = { versao: conversation.draft.version };
+    attempt = { name: "criar_pedido", input, output: await runTool("criar_pedido", input, { store, conversation }) };
+    if (attempt.output.ok) {
+      return [await saveReply(conversation, { text: textsFor(conversation.locale).created(attempt.output), toolCalls: [attempt] })];
+    }
+  }
 
   const provider = getAiProvider();
   if (!provider) return [await giveUp(conversation, store, "O assistente está sem IA configurada")];
@@ -207,9 +231,15 @@ async function reply(conversationId) {
     { text: await momentInfo({ store, conversation }) },
   ];
   const messages = await history(conversation);
+  if (attempt) {
+    const reasons = attempt.output.erros?.join(" ") ?? "";
+    messages.at(-1).content += `
+
+[O cliente confirmou o resumo e o sistema tentou criar o pedido, mas não conseguiu: ${reasons}]`;
+  }
   const context = { store, conversation, menu };
   const usage = emptyUsage();
-  const toolCalls = [];
+  const toolCalls = attempt ? [attempt] : [];
   let model = provider.model;
   let text = "";
   let earlierText = "";

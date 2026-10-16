@@ -153,6 +153,29 @@ describe("asistente: tomar un pedido", () => {
     expect(await Order.countDocuments({ commerce: commerce._id })).toBe(0);
   });
 
+  it("si el cliente solo confirma, el sistema crea el pedido aunque la IA no lo haga", async () => {
+    const { commerce, send } = await setup();
+    fakeAi([use("cotar_pedido", pickupQuote), say("Total R$ 31,00. Confirma?")]);
+    const first = await send({ text: "um x-burger ao ponto e uma coca, pix, retiro", realOrders: true });
+    // La IA de la captura: dice que confirmó sin llamar a criar_pedido. No se le pregunta.
+    const calls = fakeAi([say("Pedido confirmado! 🎉")]);
+    const second = await send({ conversationId: first.body.conversation._id, text: "Confirmo", realOrders: true });
+    expect(calls).toHaveLength(0);
+    expect(second.body.messages[1].text).toContain("Recebemos seu pedido *#1*");
+    expect(second.body.messages[1].toolCalls[0]).toMatchObject({ name: "criar_pedido", output: { ok: true, numero: 1 } });
+    expect(await Order.countDocuments({ commerce: commerce._id })).toBe(1);
+  });
+
+  it("una respuesta con cambios no es solo confirmar: la contesta la IA", async () => {
+    const { commerce, send } = await setup();
+    fakeAi([use("cotar_pedido", pickupQuote), say("Total R$ 31,00. Confirma?")]);
+    const first = await send({ text: "um x-burger ao ponto e uma coca, pix, retiro", realOrders: true });
+    const calls = fakeAi([say("Claro! Sem cebola, vou cotar de novo.")]);
+    await send({ conversationId: first.body.conversation._id, text: "sim, mas sem cebola", realOrders: true });
+    expect(calls).toHaveLength(1);
+    expect(await Order.countDocuments({ commerce: commerce._id })).toBe(0);
+  });
+
   it("una cotización vieja no se crea: hay que cotizar de nuevo", async () => {
     const { commerce, send } = await setup();
     fakeAi([use("cotar_pedido", pickupQuote), say("Total R$ 31,00. Confirma?")]);
@@ -389,15 +412,14 @@ describe("asistente: panel", () => {
     const { agent, send } = await setup();
     fakeAi([use("cotar_pedido", pickupQuote), say("Total R$ 31,00. Confirma?")]);
     const first = await send({ text: "x-burger e coca", realOrders: true });
-    fakeAi([use("criar_pedido", { versao: 1 }), say("Feito!")]);
     await send({ conversationId: first.body.conversation._id, text: "sim", realOrders: true });
 
     const res = await agent.patch("/api/owner/assistant").send({ enabled: true, phoneNumberId: "123456789012345", monthlyBudgetUsdCents: 500 });
     expect(res.status).toBe(200);
     expect(res.body.assistant).toMatchObject({ enabled: true, phoneNumberId: "123456789012345", monthlyBudgetUsdCents: 500 });
     expect(res.body.assistant.month).toMatchObject({ conversations: 1, orders: 1 });
-    // 4 llamadas a la IA de prueba: 4 × (1000 × 1 + 100 × 5 + 4000 × 0,1) = 7600 millonésimos.
-    expect(res.body.assistant.month.costMicros).toBe(7600);
+    // 2 llamadas a la IA de prueba (el "sim" lo resuelve el sistema): 2 × (1000 × 1 + 100 × 5 + 4000 × 0,1) = 3800 millonésimos.
+    expect(res.body.assistant.month.costMicros).toBe(3800);
     expect(res.body.assistant.available.ai).toBe(true);
 
     const other = await createCommerceWithOwner({ slug: "loja-outra" });
