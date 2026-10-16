@@ -202,6 +202,9 @@ export const es: Dictionary = {
     autoPrint: "Imprimir la comanda al confirmar",
     paper: "Papel de la impresora",
     deviceHint: "Vale solo para este aparato.",
+    density: "Tamaño de la pantalla",
+    densityCompact: "Compacto",
+    densityComfortable: "Cómodo",
     print: (number: number) => `Imprimir comanda del pedido #${number}`,
   },
 

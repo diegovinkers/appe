@@ -60,6 +60,14 @@ html[data-theme="dark"] {
     background: var(--color-paper);
     color: var(--color-ink);
   }
+  /* Panel compacto en la PC con mouse: todo está en rem, así que achicar la raíz achica letras,
+     controles y márgenes juntos. Los breakpoints no cambian (en media queries, rem = 16px).
+     En el celular y la tablet táctil queda en 16px; el menú público no lleva data-density. */
+  @media (min-width: 1024px) and (pointer: fine) {
+    html[data-density="compact"] {
+      font-size: var(--panel-font-size, 14px);
+    }
+  }
   /* Foco siempre visible con teclado. */
   :focus-visible {
     outline: 3px solid #2f7de1;

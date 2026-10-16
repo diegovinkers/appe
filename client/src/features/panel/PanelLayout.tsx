@@ -18,6 +18,7 @@ import { UserMenu } from "./UserMenu";
 import { useOwnerStore } from "./useOwnerStore";
 import { OrderAlerts } from "./orders/OrderAlerts";
 import { AlertSettingsControl } from "./orders/AlertSettingsControl";
+import { useDensity } from "./orders/deviceSettings";
 import { AssistantAlert } from "./assistant/AssistantAlert";
 import { BottomBar } from "./BottomBar";
 
@@ -52,6 +53,7 @@ export function PanelLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { pathname } = useLocation();
   const workspace = isWide && pathname.replace(/\/$/, "") === "/painel/pedidos";
+  useDensity();
 
   // En el celular, el cajón se cierra al cambiar de página, al pasar a pantalla grande y con Esc.
   useEffect(() => setDrawerOpen(false), [pathname, isDesktop]);

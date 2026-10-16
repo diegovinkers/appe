@@ -201,6 +201,9 @@ export const ptBR = {
     autoPrint: "Imprimir a comanda ao confirmar",
     paper: "Papel da impressora",
     deviceHint: "Vale só para este aparelho.",
+    density: "Tamanho da tela",
+    densityCompact: "Compacto",
+    densityComfortable: "Confortável",
     print: (number: number) => `Imprimir comanda do pedido #${number}`,
   },
 

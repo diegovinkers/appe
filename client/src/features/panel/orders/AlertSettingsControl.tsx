@@ -2,14 +2,16 @@ import { Bell, BellOff } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Switch, button } from "../../../components/ui";
 import { useDismiss } from "../../../hooks/useDismiss";
+import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { useT } from "../../../i18n";
 import { playAlert } from "./alertSound";
-import { setDeviceSetting, useDeviceSettings } from "./deviceSettings";
+import { DENSITY_QUERY, type Density, setDeviceSetting, useDeviceSettings } from "./deviceSettings";
 
 // La campana del encabezado: sonido e impresión de este aparato, a un toque.
 export function AlertSettingsControl() {
   const t = useT();
   const settings = useDeviceSettings();
+  const densityApplies = useMediaQuery(DENSITY_QUERY);
   const [open, setOpen] = useState(false);
   const [testFailed, setTestFailed] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -60,6 +62,19 @@ export function AlertSettingsControl() {
               <option value={58}>58 mm</option>
             </select>
           </label>
+          {densityApplies && (
+            <label className="flex items-center justify-between gap-3">
+              <span>{t.alerts.density}</span>
+              <select
+                value={settings.density}
+                onChange={(event) => setDeviceSetting("density", event.target.value as Density)}
+                className="h-11 rounded-lg border border-line bg-surface px-2"
+              >
+                <option value="compact">{t.alerts.densityCompact}</option>
+                <option value="comfortable">{t.alerts.densityComfortable}</option>
+              </select>
+            </label>
+          )}
           <p className="text-sm text-ink-muted">{t.alerts.deviceHint}</p>
         </div>
       )}
