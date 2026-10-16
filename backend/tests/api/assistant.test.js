@@ -262,6 +262,15 @@ describe("asistente: tomar un pedido", () => {
     expect(await Order.countDocuments({ commerce: commerce._id })).toBe(1);
   });
 
+  it("explicar que el pedido todavía no se creó no es inventar uno", async () => {
+    const { send } = await setup();
+    fakeAi([use("criar_pedido", { versao: 1 }), say("Seu pedido ainda não foi criado: preciso que você confirme o resumo de novo.")]);
+    const res = await send({ text: "confirmo", realOrders: true });
+    expect(res.body.messages[1].toolCalls[0].output.ok).toBe(false);
+    expect(res.body.messages[1].text).toContain("ainda não foi criado");
+    expect(res.body.conversation.status).toBe("bot");
+  });
+
   it("si la IA falla después de crear el pedido, el cliente igual recibe la confirmación", async () => {
     const { commerce, send } = await setup();
     fakeAi([use("cotar_pedido", pickupQuote), say("Confirma?")]);

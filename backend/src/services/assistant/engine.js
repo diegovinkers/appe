@@ -144,14 +144,19 @@ async function giveUp(conversation, store, reason, spent = {}) {
 // "recibimos tu pedido" o "pedido registrado" (la IA a veces copia la confirmación anterior).
 const ORDER_NUMBER = /#\s?(\d+)/g;
 const CREATING_ORDER =
-  /\b(criando|creando)\b[^.\n]{0,20}\bpedido|\b(recebemos|recibimos|registramos|anotamos)\b[^.\n]{0,30}\bpedido|\bpedido\b[^.\n]{0,25}\b(criado|creado|registrado|recebido|recibido|confirmado)\b/i;
+  /\b(criando|creando)\b[^.\n]{0,20}\bpedido|\b(recebemos|recibimos|registramos|anotamos)\b[^.\n]{0,30}\bpedido|\bpedido\b[^.\n]{0,25}\b(criado|creado|registrado|recebido|recibido|confirmado)\b/gi;
+// "Ainda não criei o pedido", "tu pedido todavía no fue registrado": explicar por qué no se
+// pudo no es decir que se creó.
+const NEGATION = /\b(não|nao|no|nunca|ainda|todavía|todavia|sem|sin)\b/i;
+const claimsOrder = (text) =>
+  [...text.matchAll(CREATING_ORDER)].some((match) => !NEGATION.test(text.slice(Math.max(0, match.index - 20), match.index + match[0].length)));
 
 // La IA a veces dice que creó un pedido sin haber llamado a criar_pedido. Un pedido que el
 // cliente cree hecho y el local nunca ve es peor que pasarle la conversación a una persona.
 async function inventsOrder(text, conversation, toolCalls) {
   const created = toolCalls.some((call) => call.name === "criar_pedido" && call.output?.ok);
   const numbers = [...text.matchAll(ORDER_NUMBER)].map((match) => Number(match[1]));
-  if (!numbers.length) return !created && CREATING_ORDER.test(text);
+  if (!numbers.length) return !created && claimsOrder(text);
   const orders = await Order.find({ _id: { $in: conversation.orders }, commerce: conversation.commerce }).select("number").lean();
   const known = new Set(orders.map((order) => order.number));
   return numbers.some((number) => !known.has(number));
