@@ -239,6 +239,29 @@ describe("asistente: tomar un pedido", () => {
     expect(second.body.conversation.status).toBe("bot");
   });
 
+  it("en el segundo pedido de la conversación, la IA no puede copiar la confirmación del primero", async () => {
+    const { commerce, send } = await setup();
+    fakeAi([use("cotar_pedido", pickupQuote), say("Confirma?")]);
+    const first = await send({ text: "un x-burger al punto y una coca, pix, retiro", locale: "es", realOrders: true });
+    const id = first.body.conversation._id;
+    fakeAi([use("criar_pedido", { versao: 1 }), say("Listo")]);
+    const created = await send({ conversationId: id, text: "sí", locale: "es", realOrders: true });
+    const order = await Order.findOne({ commerce: commerce._id }).lean();
+    expect(created.body.messages[1].text).toContain(`/pedido/${order.trackingToken}`);
+
+    // Lo que pasó en producción: sin cotizar ni crear, la IA imita la confirmación anterior.
+    const calls = fakeAi([say(`✅ ¡Recibimos tu pedido! Total: R$ 29,00.\nSeguilo acá: http://localhost:5173/pedido/${order.trackingToken}`)]);
+    const second = await send({ conversationId: id, text: "y otra coca más, sí confirmo", locale: "es", realOrders: true });
+    // La confirmación vieja le llega como nota, sin el link para copiar.
+    const seen = JSON.stringify(calls[0].messages);
+    expect(seen).toContain(`confirmação do pedido #${order.number}`);
+    expect(seen).not.toContain(order.trackingToken);
+    // Y lo que inventó no se manda: pasa a una persona.
+    expect(second.body.messages[1].text).not.toContain("Recibimos");
+    expect(second.body.conversation).toMatchObject({ status: "human", handoff: { reason: "O assistente disse que criou um pedido que não existe" } });
+    expect(await Order.countDocuments({ commerce: commerce._id })).toBe(1);
+  });
+
   it("si la IA falla después de crear el pedido, el cliente igual recibe la confirmación", async () => {
     const { commerce, send } = await setup();
     fakeAi([use("cotar_pedido", pickupQuote), say("Confirma?")]);

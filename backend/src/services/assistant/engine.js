@@ -80,20 +80,28 @@ function withLock(key, task) {
   return next;
 }
 
+// El pedido que se creó en esa respuesta (la confirmación la escribió el sistema).
+const createdIn = (message) => message.toolCalls?.findLast((call) => call.name === "criar_pedido" && call.output?.ok)?.output;
+
 // Lo anterior de la conversación, en texto. Las herramientas de respuestas anteriores no
-// se repiten: lo importante (el pedido cotado, el cliente) va en lo del momento.
+// se repiten: lo importante (el pedido cotado, el cliente) va en lo del momento. La
+// confirmación de un pedido creado va como nota, sin el link: si la IA la ve como texto suyo,
+// la copia para el pedido siguiente sin crearlo.
 async function history(conversation) {
   const recent = (await ConversationMessage.find({ conversation: conversation._id }).sort({ createdAt: -1 }).limit(HISTORY).lean()).reverse();
   const messages = [];
   for (const message of recent) {
     if (!message.text) continue;
+    const created = createdIn(message);
     const role = message.role === "customer" ? "user" : "assistant";
     const text =
       message.role === "staff"
         ? `[Mensagem de uma pessoa da loja]: ${message.text}`
-        : message.kind === "audio"
-          ? `[Áudio] ${message.text}`
-          : message.text;
+        : created
+          ? `[O sistema enviou a confirmação do pedido #${created.numero}. Um pedido novo precisa de cotar_pedido e criar_pedido.]`
+          : message.kind === "audio"
+            ? `[Áudio] ${message.text}`
+            : message.text;
     const previous = messages.at(-1);
     if (previous?.role === role) previous.content += `\n\n${text}`;
     else messages.push({ role, content: text });
@@ -132,9 +140,11 @@ async function giveUp(conversation, store, reason, spent = {}) {
   return saveReply(conversation, { text: textsFor(conversation.locale).fallback(storeUrl(store)), ...spent });
 }
 
-// Números de pedido en la respuesta ("#12", "# 12") y frases de "estoy creando tu pedido".
+// Números de pedido en la respuesta ("#12", "# 12") y frases de "estoy creando tu pedido",
+// "recibimos tu pedido" o "pedido registrado" (la IA a veces copia la confirmación anterior).
 const ORDER_NUMBER = /#\s?(\d+)/g;
-const CREATING_ORDER = /\b(criando|creando)\b[^.\n]{0,20}\bpedido/i;
+const CREATING_ORDER =
+  /\b(criando|creando)\b[^.\n]{0,20}\bpedido|\b(recebemos|recibimos|registramos|anotamos)\b[^.\n]{0,30}\bpedido|\bpedido\b[^.\n]{0,25}\b(criado|creado|registrado|recebido|recibido|confirmado)\b/i;
 
 // La IA a veces dice que creó un pedido sin haber llamado a criar_pedido. Un pedido que el
 // cliente cree hecho y el local nunca ve es peor que pasarle la conversación a una persona.
