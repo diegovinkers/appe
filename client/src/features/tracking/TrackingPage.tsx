@@ -9,7 +9,7 @@ import { LanguageSwitch } from "../../components/LanguageSwitch";
 import { StoreMark } from "../../components/StoreMark";
 import { type Dictionary, useT } from "../../i18n";
 import { readableTextOn } from "../../lib/color";
-import { formatMoney, formatTime } from "../../lib/format";
+import { formatMoney, formatTime, formatWhen } from "../../lib/format";
 import { whatsappLink } from "../../lib/whatsapp";
 import { CopyButton } from "../../components/CopyButton";
 import { SignupCard } from "../account/SignupCard";
@@ -89,7 +89,10 @@ export function TrackingPage() {
         <section className="rounded-2xl bg-surface p-4 ring-1 ring-line">
           <h1 className="text-2xl font-bold tracking-tight">{t.tracking.title(order.number)}</h1>
           {order.eta && !cancelled && (
-            <p className="mt-1 text-ink-muted">{t.tracking.eta(formatTime(order.eta.from), formatTime(order.eta.to))}</p>
+            <p className="mt-1 text-ink-muted">
+              {/* Programado: una hora sola, con el día. */}
+              {order.eta.from === order.eta.to ? t.tracking.scheduledFor(formatWhen(order.eta.from)) : t.tracking.eta(formatTime(order.eta.from), formatTime(order.eta.to))}
+            </p>
           )}
 
           {cancelled ? (

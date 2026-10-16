@@ -7,23 +7,39 @@ import { PageHeader } from "../../../components/PageHeader";
 import { Field, Switch, button, input } from "../../../components/ui";
 import { useDirtyForm } from "../../../hooks/useDirtyForm";
 import { errorText, useT } from "../../../i18n";
+import { formatMinutes } from "../../../lib/format";
 import { usePanel } from "../PanelLayout";
 import { ownerStoreKey } from "../useOwnerStore";
 import { statusView } from "../storeStatus";
 import { useHoursCopy } from "../settings/hoursCopy";
-import { DAY_START_OPTIONS, HOUR_DAYS, hoursDraft, validateHours, todayForHours, type HourDay, type HourInterval, type StoreHours, type HoursErrors } from "../settings/hoursForm";
+import { DAYS_AHEAD_OPTIONS, DAY_START_OPTIONS, HOUR_DAYS, LEAD_OPTIONS, schedulingDraft, withCurrent, type Scheduling, hoursDraft, validateHours, todayForHours, type HourDay, type HourInterval, type StoreHours, type HoursErrors } from "../settings/hoursForm";
 import { SettingsSection } from "./StorePage";
 
 export function HoursPage() {
   const { store, opening } = usePanel(); const c = useHoursCopy(); const t = useT(); const cache = useQueryClient();
   const [baseline, setBaseline] = useState(() => hoursDraft(store.hours));
   const [draft, setDraft] = useState(baseline); const [errors, setErrors] = useState<HoursErrors>({});
-  const dirty = JSON.stringify(draft) !== JSON.stringify(baseline); useDirtyForm(dirty);
-  const save = useMutation<OwnerStoreResponse, ApiError, StoreHours>({
-    mutationFn: (body) => api("/owner/store/hours", { method: "PUT", body }),
-    onSuccess: (data) => { const next = hoursDraft(data.store.hours); setBaseline(next); setDraft(next); cache.setQueryData(ownerStoreKey, data); cache.invalidateQueries({ queryKey: ["public-store"] }); cache.invalidateQueries({ queryKey: ["public-stores"] }); },
+  // Los pedidos programados se guardan con el mismo botón, pero van en los datos del local.
+  const [schedulingBase, setSchedulingBase] = useState(() => schedulingDraft(store.scheduling));
+  const [scheduling, setScheduling] = useState(schedulingBase);
+  const hoursDirty = JSON.stringify(draft) !== JSON.stringify(baseline);
+  const schedulingDirty = JSON.stringify(scheduling) !== JSON.stringify(schedulingBase);
+  const dirty = hoursDirty || schedulingDirty; useDirtyForm(dirty);
+  const save = useMutation<OwnerStoreResponse, ApiError, { hours?: StoreHours; scheduling?: Scheduling }>({
+    mutationFn: async (body) => {
+      let data: OwnerStoreResponse | undefined;
+      if (body.hours) data = await api<OwnerStoreResponse>("/owner/store/hours", { method: "PUT", body: body.hours });
+      if (body.scheduling) data = await api<OwnerStoreResponse>("/owner/store", { method: "PATCH", body: { scheduling: body.scheduling } });
+      return data!;
+    },
+    onSuccess: (data) => {
+      const next = hoursDraft(data.store.hours); setBaseline(next); setDraft(next);
+      const nextScheduling = schedulingDraft(data.store.scheduling); setSchedulingBase(nextScheduling); setScheduling(nextScheduling);
+      cache.setQueryData(ownerStoreKey, data); cache.invalidateQueries({ queryKey: ["public-store"] }); cache.invalidateQueries({ queryKey: ["public-stores"] }); cache.invalidateQueries({ queryKey: ["public-slots"] });
+    },
   });
   const change = (value: StoreHours) => { setDraft(value); setErrors({}); save.reset(); };
+  const changeScheduling = (value: Partial<Scheduling>) => { setScheduling({ ...scheduling, ...value }); save.reset(); };
   const setDay = (day: HourDay, intervals: HourInterval[]) => change({ ...draft, weekly: { ...draft.weekly, [day]: intervals } });
   const errorFor = (path: string) => errors[path] ? c[errors[path]] : undefined;
   // Turnos de un día, compactos: "18:00 – 23:00 ✕" por línea y "+ Agregar turno".
@@ -52,7 +68,7 @@ export function HoursPage() {
   }
   const [copySource, setCopySource] = useState<HourDay>("mon");
   const copyToAll = () => { if (window.confirm(c.copyAllConfirm)) change({ ...draft, weekly: Object.fromEntries(HOUR_DAYS.map((day) => [day, draft.weekly[copySource].map((v) => ({ ...v }))])) as StoreHours["weekly"] }); };
-  function submit(event: FormEvent) { event.preventDefault(); if (save.isPending) return; const issues = validateHours(draft); setErrors(issues); if (Object.keys(issues).length) document.getElementById(Object.keys(issues)[0])?.focus(); else save.mutate(draft); }
+  function submit(event: FormEvent) { event.preventDefault(); if (save.isPending) return; const issues = validateHours(draft); setErrors(issues); if (Object.keys(issues).length) document.getElementById(Object.keys(issues)[0])?.focus(); else save.mutate({ hours: hoursDirty ? draft : undefined, scheduling: schedulingDirty ? scheduling : undefined }); }
   const status = statusView(opening);
   return <><PageHeader title={c.title} description={c.description} />
     <div className="mb-5 rounded-xl border border-line bg-surface p-4"><h2 className="font-bold">{c.statusTitle}: {status.label}</h2><p className="mt-1 text-sm text-ink-muted">{store.override ? c.manual : c.automatic}</p>{status.detail && <p className="mt-1 text-sm">{status.detail}</p>}</div>
@@ -99,6 +115,15 @@ export function HoursPage() {
           })}
           <button type="button" className={button.secondary} disabled={draft.exceptions.length >= 60} onClick={() => change({ ...draft, exceptions: [...draft.exceptions, { date: todayForHours(), closed: true, note: "", intervals: [] }] })}>{c.addException}</button>
         </SettingsSection>
+        <SettingsSection title={c.schedulingTitle}>
+          <Switch label={c.schedulingSwitch} checked={scheduling.enabled} onChange={(enabled) => changeScheduling({ enabled })} />
+          <p className="text-sm text-ink-muted">{c.schedulingHelp}</p>
+          {scheduling.enabled && <div className="grid gap-4 sm:grid-cols-3">
+            <Field id="scheduling-lead" label={c.minLead}><select id="scheduling-lead" className={input} value={scheduling.minLeadMinutes} onChange={(e) => changeScheduling({ minLeadMinutes: Number(e.target.value) })}>{withCurrent(LEAD_OPTIONS, scheduling.minLeadMinutes).map((minutes) => <option key={minutes} value={minutes}>{formatMinutes(minutes)}</option>)}</select></Field>
+            <Field id="scheduling-days" label={c.daysAhead}><select id="scheduling-days" className={input} value={scheduling.maxDaysAhead} onChange={(e) => changeScheduling({ maxDaysAhead: Number(e.target.value) })}>{withCurrent(DAYS_AHEAD_OPTIONS, scheduling.maxDaysAhead).map((days) => <option key={days} value={days}>{c.daysAheadOption(days)}</option>)}</select></Field>
+            <Field id="scheduling-slot" label={c.slotSize}><select id="scheduling-slot" className={input} value={scheduling.slotMinutes} onChange={(e) => changeScheduling({ slotMinutes: Number(e.target.value) as Scheduling["slotMinutes"] })}>{([15, 30, 60] as const).map((minutes) => <option key={minutes} value={minutes}>{c.slotOption(minutes)}</option>)}</select></Field>
+          </div>}
+        </SettingsSection>
         <SettingsSection title={c.dayStartTitle}>
           <Field id="day-start" label={c.dayStartLabel}>
             <select id="day-start" className="h-11 w-32 rounded-lg border border-line bg-surface px-3 tabular-nums" value={draft.dayStart} onChange={(e) => change({ ...draft, dayStart: e.target.value })}>
@@ -113,7 +138,7 @@ export function HoursPage() {
       {!!Object.keys(errors).length && <p role="alert" className="text-error">{c.correctErrors}</p>}
       {save.isError && <p role="alert" className="text-error">{errorText(save.error, t)}</p>}
       {save.isSuccess && <p role="status" className="text-success">{c.saved}</p>}
-      <div className="sticky bottom-16 lg:bottom-0 flex flex-wrap items-center gap-3 border-t border-line bg-paper py-4"><button className={button.primary} disabled={save.isPending || !dirty}>{save.isPending ? c.saving : c.save}</button><button type="button" className={button.secondary} disabled={save.isPending || !dirty} onClick={() => { if (window.confirm(c.discardConfirm)) { setDraft(baseline); setErrors({}); save.reset(); } }}>{c.discard}</button>{dirty && <span className="text-sm text-ink-muted">{c.unsaved}</span>}</div>
+      <div className="sticky bottom-16 lg:bottom-0 flex flex-wrap items-center gap-3 border-t border-line bg-paper py-4"><button className={button.primary} disabled={save.isPending || !dirty}>{save.isPending ? c.saving : c.save}</button><button type="button" className={button.secondary} disabled={save.isPending || !dirty} onClick={() => { if (window.confirm(c.discardConfirm)) { setDraft(baseline); setScheduling(schedulingBase); setErrors({}); save.reset(); } }}>{c.discard}</button>{dirty && <span className="text-sm text-ink-muted">{c.unsaved}</span>}</div>
     </form>
   </>;
 }

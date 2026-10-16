@@ -7,7 +7,7 @@ import { paymentMethodsFor } from "../../lib/payments";
 import type { Coupon, CouponCheck, CustomerAddress, OrderReceipt, PaymentMethod, PublicOrderInput, PublicStore } from "../../api/types";
 import { Sheet } from "../../components/Sheet";
 import { errorText, useLanguage, useT } from "../../i18n";
-import { formatMoney } from "../../lib/format";
+import { formatDayChoice, formatMoney, formatTime, formatWhen } from "../../lib/format";
 import { parseMoney } from "../../lib/money";
 import { formatPhone } from "../../lib/phone";
 import { newId } from "../../lib/id";
@@ -16,6 +16,7 @@ import { addressLine, useCustomer, useRefreshAccount } from "../account/account"
 import { type CustomerDetails, loadCustomer, saveCustomer } from "./customer";
 import type { ResolvedLine } from "./lines";
 import { orderTotals } from "./pricing";
+import { slotsByDay, useSlots } from "./schedule";
 
 type Props = {
   store: PublicStore;
@@ -25,7 +26,7 @@ type Props = {
   onPlaced: (receipt: OrderReceipt) => void;
 };
 
-type FieldName = "fulfillment" | "zone" | "street" | "number" | "name" | "phone" | "payment" | "changeFor";
+type FieldName = "slot" | "fulfillment" | "zone" | "street" | "number" | "name" | "phone" | "payment" | "changeFor";
 const FORM_ID = "form-pedido";
 // Qué aviso de error corresponde a cada dato del comprador.
 const FIELD_OF: Partial<Record<keyof CustomerDetails, FieldName>> = {
@@ -55,7 +56,7 @@ const SERVER_FIELDS: Record<string, FieldName> = {
 
 const inputClass = "h-12 w-full rounded-lg border border-line bg-surface px-3 aria-invalid:border-closed";
 
-function Field({ name, label, error, hint, children }: { name: FieldName | "reference" | "notes" | "coupon"; label: string; error?: string; hint?: string; children: ReactNode }) {
+function Field({ name, label, error, hint, children }: { name: FieldName | "day" | "reference" | "notes" | "coupon"; label: string; error?: string; hint?: string; children: ReactNode }) {
   return (
     <div>
       <label htmlFor={`campo-${name}`} className="mb-1.5 block font-bold">
@@ -135,6 +136,17 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
     setForm((current) => ({ ...current, name: account.name, phone: formatPhone(account.phone), ...(first && fromSaved(first)) }));
     setAddressChoice(first?._id ?? OTHER);
   }
+  // Pedido programado: si el local está cerrado es la única forma; si está abierto, se elige.
+  const scheduling = store.scheduling.enabled;
+  const [when, setWhen] = useState<"now" | "later">(store.isOpen ? "now" : "later");
+  const later = scheduling && (when === "later" || !store.isOpen);
+  const slots = useSlots(slug, scheduling);
+  const days = slotsByDay(slots.data?.slots ?? []);
+  const [chosenDay, setDay] = useState("");
+  const day = days.find((item) => item.day === chosenDay) ?? days[0];
+  const [chosenSlot, setSlot] = useState("");
+  // Un horario que ya pasó (la lista se actualiza) no cuenta.
+  const slot = slots.data?.slots.includes(chosenSlot) ? chosenSlot : "";
   const [changeFor, setChangeFor] = useState("");
   // Las formas de pago de este modo (entrega o retiro). Si la elegida no vale para el modo, no cuenta.
   const methods = form.fulfillment ? paymentMethodsFor(store, form.fulfillment) : store.paymentMethods;
@@ -184,6 +196,11 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
       onPlaced(receipt);
     },
     onError: (error) => {
+      if (error.code === "INVALID_SCHEDULE_TIME") {
+        setSlot("");
+        void slots.refetch();
+        return;
+      }
       if (error.code !== "VALIDATION_ERROR" || !Array.isArray(error.details)) return;
       const found: Partial<Record<FieldName, string>> = {};
       for (const detail of error.details as { path?: string }[]) {
@@ -196,6 +213,7 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
 
   function validate() {
     const found: Partial<Record<FieldName, string>> = {};
+    if (later && !slot) found.slot = t.checkout.chooseOne;
     if (!form.fulfillment) found.fulfillment = t.checkout.chooseOne;
     if (isDelivery) {
       if (zones ? !form.zoneId : !form.neighborhood.trim()) found.zone = zones ? t.checkout.chooseOne : t.checkout.required;
@@ -244,12 +262,13 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
         ...(line.notes && { notes: line.notes }),
       })),
       ...(coupon && { couponCode: coupon.code }),
+      ...(later && { scheduledFor: slot }),
       locale: language,
     });
   };
 
   const invalid = (name: FieldName) => (errors[name] ? { "aria-invalid": true, "aria-describedby": `${fieldId(name)}-erro` } : {});
-  const blocked = !store.isOpen || totals.missingForMinimumCents > 0 || place.isPending;
+  const blocked = (!store.isOpen && !scheduling) || totals.missingForMinimumCents > 0 || place.isPending;
 
   return (
     <Sheet
@@ -263,7 +282,7 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
               {errorText(place.error, t)}
             </p>
           )}
-          {!store.isOpen && <p className="text-sm font-bold text-error">{t.checkout.closed}</p>}
+          {!store.isOpen && !scheduling && <p className="text-sm font-bold text-error">{t.checkout.closed}</p>}
           <button
             type="submit"
             form={FORM_ID}
@@ -276,6 +295,41 @@ export function CheckoutSheet({ store, slug, lines, onClose, onPlaced }: Props) 
       }
     >
       <form id={FORM_ID} onSubmit={submit} noValidate>
+        {scheduling && (
+          <Section title={t.checkout.when}>
+            {store.isOpen && (
+              <div role="radiogroup" aria-label={t.checkout.when} className="grid gap-2 sm:grid-cols-2">
+                <Choice name="quando" checked={!later} onChange={() => { setWhen("now"); clearError("slot"); }} title={t.checkout.now} />
+                <Choice name="quando" checked={later} onChange={() => setWhen("later")} title={t.checkout.later} detail={t.checkout.laterDetail} />
+              </div>
+            )}
+            {later &&
+              (slots.isPending ? (
+                <p className="text-ink-muted">{t.loading}</p>
+              ) : slots.isError ? (
+                <p role="alert" className="font-bold text-error">{t.checkout.slotsError}</p>
+              ) : !day ? (
+                <p role="alert" className="font-bold text-error">{t.checkout.noSlots}</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field name="day" label={t.checkout.day}>
+                      <select id="campo-day" className={inputClass} value={day.day} onChange={(e) => { setDay(e.target.value); setSlot(""); }}>
+                        {days.map((item) => <option key={item.day} value={item.day}>{formatDayChoice(item.slots[0])}</option>)}
+                      </select>
+                    </Field>
+                    <Field name="slot" label={t.checkout.time} error={errors.slot}>
+                      <select id={fieldId("slot")} className={inputClass} value={slot} {...invalid("slot")} onChange={(e) => { setSlot(e.target.value); clearError("slot"); }}>
+                        <option value="" disabled>--:--</option>
+                        {day.slots.map((item) => <option key={item} value={item}>{formatTime(item)}</option>)}
+                      </select>
+                    </Field>
+                  </div>
+                  {slot && <p className="text-sm text-ink-muted">{t.checkout.scheduledFor(formatWhen(slot))}</p>}
+                </>
+              ))}
+          </Section>
+        )}
         <Section title={t.checkout.howToReceive}>
           <div role="radiogroup" aria-label={t.checkout.howToReceive} className="grid gap-2 sm:grid-cols-2">
             {fulfillments.map((option, index) => (

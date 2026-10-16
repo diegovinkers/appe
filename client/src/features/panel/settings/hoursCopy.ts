@@ -22,6 +22,11 @@ const pt = {
   dayStartTitle: "Fim do dia de trabalho", dayStartLabel: "O dia termina às",
   dayStartHelp: (time: string) => `Pedidos feitos antes das ${time} contam no dia anterior: na lista de pedidos, no Início e no caixa. Cada pedido guarda sempre a data e a hora reais.`,
   dayStartMidnight: "Cada dia vai da meia-noite à meia-noite.", dayStartReports: "Mudar este horário reorganiza também os relatórios de dias anteriores.",
+  schedulingTitle: "Pedidos agendados", schedulingSwitch: "Aceitar pedidos agendados",
+  schedulingHelp: "Ao finalizar, o cliente escolhe o dia e o horário, sempre dentro do seu horário de atendimento. Com a loja fechada, ainda dá para agendar.",
+  minLead: "Antecedência mínima", daysAhead: "Até quando", slotSize: "Horários",
+  daysAheadOption: (days: number) => days === 0 ? "Só para hoje" : days === 1 ? "Hoje e amanhã" : `Hoje e os próximos ${days} dias`,
+  slotOption: (minutes: number) => minutes === 60 ? "De hora em hora" : `De ${minutes} em ${minutes} min`,
   days: { mon: "Segunda-feira", tue: "Terça-feira", wed: "Quarta-feira", thu: "Quinta-feira", fri: "Sexta-feira", sat: "Sábado", sun: "Domingo" },
 };
 
@@ -48,6 +53,11 @@ const es: Copy = {
   dayStartTitle: "Fin del día de trabajo", dayStartLabel: "El día termina a las",
   dayStartHelp: (time: string) => `Los pedidos hechos antes de las ${time} cuentan en el día anterior: en la lista de pedidos, en Inicio y en la caja. Cada pedido guarda siempre su fecha y hora reales.`,
   dayStartMidnight: "Cada día va de medianoche a medianoche.", dayStartReports: "Si cambiás esta hora, también se reorganizan los reportes de días anteriores.",
+  schedulingTitle: "Pedidos programados", schedulingSwitch: "Aceptar pedidos programados",
+  schedulingHelp: "Al finalizar, el cliente elige el día y la hora, siempre dentro de tu horario de atención. Con el local cerrado, igual puede programar.",
+  minLead: "Anticipación mínima", daysAhead: "Hasta cuándo", slotSize: "Horarios",
+  daysAheadOption: (days: number) => days === 0 ? "Solo para hoy" : days === 1 ? "Hoy y mañana" : `Hoy y los próximos ${days} días`,
+  slotOption: (minutes: number) => minutes === 60 ? "Cada hora" : `Cada ${minutes} min`,
   days: { mon: "Lunes", tue: "Martes", wed: "Miércoles", thu: "Jueves", fri: "Viernes", sat: "Sábado", sun: "Domingo" },
 };
 

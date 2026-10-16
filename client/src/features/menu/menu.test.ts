@@ -3,6 +3,8 @@ import type { PublicOptionGroup, PublicProduct, PublicStore } from "../../api/ty
 import { lineKey } from "./cart";
 import { indexMenu, resolveLines } from "./lines";
 import { groupCost, orderTotals, unitPrice, unmetGroups } from "./pricing";
+import { canOrderNow, slotsByDay } from "./schedule";
+import { formatDayChoice } from "../../lib/format";
 
 const product = (changes: Partial<PublicProduct> = {}): PublicProduct => ({
   _id: "p1",
@@ -140,5 +142,30 @@ describe("carrito", () => {
       [false, 3200, ""],
       [false, 0, ""],
     ]);
+  });
+});
+
+describe("pedidos programados", () => {
+  it("con el local cerrado solo se puede pedir si acepta programados", () => {
+    const scheduling = { enabled: false, minLeadMinutes: 30, maxDaysAhead: 2, slotMinutes: 30 as const };
+    expect(canOrderNow({ isOpen: true, scheduling })).toBe(true);
+    expect(canOrderNow({ isOpen: false, scheduling })).toBe(false);
+    expect(canOrderNow({ isOpen: false, scheduling: { ...scheduling, enabled: true } })).toBe(true);
+  });
+
+  it("agrupa los horarios por día de Brasil", () => {
+    // Viernes 23:30 y sábado 00:00 en Brasil son días distintos.
+    const slots = ["2026-09-26T02:00:00.000Z", "2026-09-26T02:30:00.000Z", "2026-09-26T03:00:00.000Z"];
+    expect(slotsByDay(slots)).toEqual([
+      { day: "2026-09-25", slots: slots.slice(0, 2) },
+      { day: "2026-09-26", slots: slots.slice(2) },
+    ]);
+  });
+
+  it("nombra el día: hoy, mañana o el día de la semana", () => {
+    const now = new Date("2026-09-25T15:00:00Z"); // viernes 12:00
+    expect(formatDayChoice("2026-09-25T22:00:00Z", now)).toBe("Hoy");
+    expect(formatDayChoice("2026-09-26T22:00:00Z", now)).toBe("Mañana");
+    expect(formatDayChoice("2026-09-27T22:00:00Z", now)).toBe("dom 27/09");
   });
 });

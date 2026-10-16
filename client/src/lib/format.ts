@@ -14,6 +14,19 @@ const money = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL
 
 export const formatTime = (date: Date | string) => timeFormat.format(new Date(date));
 
+const dayMonthFormat = new Intl.DateTimeFormat("pt-BR", { timeZone: TIME_ZONE, day: "2-digit", month: "2-digit" });
+
+// El día de una fecha, para elegir: "Hoje", "Amanhã" o "sáb 27/09" (en español: "Hoy", "Mañana").
+export function formatDayChoice(date: Date | string, now = new Date()): string {
+  const t = getT();
+  const target = new Date(date);
+  const day = dayFormat.format(target);
+  const capitalized = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
+  if (day === dayFormat.format(now)) return capitalized(t.status.today);
+  if (day === dayFormat.format(new Date(now.getTime() + 24 * 60 * 60 * 1000))) return capitalized(t.status.tomorrow);
+  return `${weekdayFormats[getLanguage()].format(target).replace(".", "")} ${dayMonthFormat.format(target)}`;
+}
+
 export const formatMoney = (cents: number) => money.format(cents / 100);
 
 // "hoje 18:00", "amanhã 18:00" o "sáb 18:00" (en español: "hoy", "mañana", "sáb").

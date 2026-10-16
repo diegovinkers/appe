@@ -12,6 +12,13 @@ export const todayForHours = (now = new Date()) => new Intl.DateTimeFormat("en-C
   timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
 }).format(now);
 
+export type Scheduling = OwnerStore["scheduling"];
+export const schedulingDraft = ({ enabled, minLeadMinutes, maxDaysAhead, slotMinutes }: Scheduling): Scheduling => ({ enabled, minLeadMinutes, maxDaysAhead, slotMinutes });
+// Lo que se puede elegir para los pedidos programados (más lo que ya esté guardado).
+export const LEAD_OPTIONS = [15, 30, 45, 60, 90, 120, 180, 240, 1440];
+export const DAYS_AHEAD_OPTIONS = [0, 1, 2, 3, 4, 5, 6, 7, 14];
+export const withCurrent = (options: number[], current: number) => [...new Set([...options, current])].sort((a, b) => a - b);
+
 // Horas de corte que se pueden elegir: de medianoche al mediodía, cada media hora.
 export const DAY_START_OPTIONS = Array.from({ length: 25 }, (_, index) => `${String(Math.floor(index / 2)).padStart(2, "0")}:${index % 2 ? "30" : "00"}`);
 

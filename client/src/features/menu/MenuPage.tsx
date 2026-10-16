@@ -22,6 +22,7 @@ import { BottomNav, SearchBox, TopBar } from "./MenuChrome";
 import { CategorySection, MenuSection } from "./ProductList";
 import { ProductSheet } from "./ProductSheet";
 import { ReviewsList } from "./ReviewsList";
+import { canOrderNow } from "./schedule";
 import { StoreHero, StoreInfo } from "./StoreHero";
 import { usePublicStore } from "./usePublicStore";
 
@@ -118,7 +119,7 @@ function StoreMenu({ slug, data }: { slug: string; data: PublicStoreResponse }) 
     try {
       const latest = await api<PublicStoreResponse>(`/public/stores/${encodeURIComponent(slug)}?lang=${es ? "es" : "pt"}`);
       cache.setQueryData(["public-store", slug, es ? "es" : "pt"], latest);
-      if (!latest.store.isOpen) { setReorderMessage(t.checkout.closed); return; }
+      if (!canOrderNow(latest.store)) { setReorderMessage(t.checkout.closed); return; }
       const checked = resolveLines(previous, indexMenu(latest.categories), new Map(latest.optionGroups.map((group) => [group._id, group])));
       if (!checked.length || checked.some((line) => !line.available)) { setReorderMessage(es ? "Hay productos o adicionales que cambiaron. Armá un nuevo pedido con el menú actual." : "Há produtos ou adicionais que mudaram. Monte um novo pedido com o cardápio atual."); return; }
       cart.clear(); checked.forEach(({ line }) => cart.add(line.productId, line.quantity, line.options, ""));
@@ -134,7 +135,7 @@ function StoreMenu({ slug, data }: { slug: string; data: PublicStoreResponse }) 
 
       <div className="mx-auto min-h-dvh max-w-[70rem] pb-24 sm:bg-paper sm:px-4 sm:pb-12">
         <StoreHero store={store} onMore={() => sheets.open({ ver: "info" })} onReviews={() => sheets.open({ ver: "avaliacoes" })} />
-        {previous.length > 0 && <div className="space-y-2 px-4 py-3 sm:px-0"><button type="button" className={button.secondary} disabled={reordering || !store.isOpen} onClick={() => void reorder()}>{reordering ? t.loading : es ? "Repetir mi último pedido" : "Repetir meu último pedido"}</button><p className="text-xs text-ink-muted">{es ? "De este dispositivo. Se usarán los precios actuales; las observaciones no se guardan." : "Deste aparelho. Serão usados os preços atuais; as observações não são salvas."}</p>{reorderMessage && <p role="status" className="text-sm">{reorderMessage}</p>}</div>}
+        {previous.length > 0 && <div className="space-y-2 px-4 py-3 sm:px-0"><button type="button" className={button.secondary} disabled={reordering || !canOrderNow(store)} onClick={() => void reorder()}>{reordering ? t.loading : es ? "Repetir mi último pedido" : "Repetir meu último pedido"}</button><p className="text-xs text-ink-muted">{es ? "De este dispositivo. Se usarán los precios actuales; las observaciones no se guardan." : "Deste aparelho. Serão usados os preços atuais; as observações não são salvas."}</p>{reorderMessage && <p role="status" className="text-sm">{reorderMessage}</p>}</div>}
         <div className="px-4 pt-3 pb-2 sm:hidden">
           <SearchBox value={search} onChange={setSearch} />
         </div>
@@ -165,7 +166,7 @@ function StoreMenu({ slug, data }: { slug: string; data: PublicStoreResponse }) 
           key={selected.product._id}
           product={selected.product}
           groups={groups}
-          canOrder={store.isOpen && selected.product.available && selected.category.availableNow}
+          canOrder={selected.product.available && (store.isOpen ? selected.category.availableNow : store.scheduling.enabled)}
           onAdd={(quantity, options, notes) => {
             cart.add(selected.product._id, quantity, options, notes);
             sheets.closeAll();
@@ -176,7 +177,7 @@ function StoreMenu({ slug, data }: { slug: string; data: PublicStoreResponse }) 
       {sheets.view === "sacola" && (
         <CartSheet
           lines={lines}
-          canOrder={store.isOpen}
+          canOrder={canOrderNow(store)}
           onQuantity={cart.setQuantity}
           onContinue={() => sheets.open({ ver: "finalizar" })}
           onClose={sheets.closeAll}
