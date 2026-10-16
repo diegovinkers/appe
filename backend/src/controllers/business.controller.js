@@ -4,7 +4,7 @@ import Order from "../models/order.model.js";
 import { ACTIVE_STATUSES } from "../services/orderStatus.js";
 import { notFound, badRequest } from "../lib/errors.js";
 import { audit } from "../lib/audit.js";
-import { operatingDayRange, todayIn, TIME_ZONE } from "../lib/dates.js";
+import { dayStartOf, minutesOf, operatingDayRange, todayIn, TIME_ZONE } from "../lib/dates.js";
 
 function view(subscription) {
   return { subscription: {
@@ -38,15 +38,18 @@ export const recordSubscriptionPayment = async (req, res) => {
   res.status(result.modifiedCount ? 201 : 200).json(view(await Subscription.findOne({ commerce })));
 };
 // El día de operación de un pedido, para agrupar: Brasil no tiene horario de verano, así que
-// alcanza con correr 5 horas antes de tomar la fecha local.
-const OPERATING_DAY_OF = { $dateToString: { format: "%Y-%m-%d", date: { $subtract: ["$createdAt", 5 * 60 * 60 * 1000] }, timezone: TIME_ZONE } };
+// alcanza con correr la hora de corte hacia atrás antes de tomar la fecha local.
+const operatingDayOf = (dayStart) => ({
+  $dateToString: { format: "%Y-%m-%d", date: { $subtract: ["$createdAt", minutesOf(dayStart) * 60 * 1000] }, timezone: TIME_ZONE },
+});
 const byKey = (key) => [{ $match: { status: "delivered" } }, { $group: { _id: key, count: { $sum: 1 }, salesCents: { $sum: "$totalCents" } } }, { $sort: { _id: 1 } }];
 
-// Por día de operación (de 05:00 a 05:00): la venta de la madrugada cuenta en la noche anterior.
+// Por día de operación (desde la hora de corte del local): la venta de la madrugada cuenta en la noche anterior.
 // Las ventas son los pedidos entregados; los que siguen abiertos se informan aparte para el cierre.
 export const getReports = async (req, res) => {
   const { from, to } = req.valid.query;
-  const filter = { commerce: req.commerce._id, createdAt: { $gte: operatingDayRange(from).start, $lt: operatingDayRange(to).end } };
+  const dayStart = dayStartOf(req.commerce);
+  const filter = { commerce: req.commerce._id, createdAt: { $gte: operatingDayRange(from, dayStart).start, $lt: operatingDayRange(to, dayStart).end } };
   const [totals] = await Order.aggregate([
     { $match: filter },
     { $facet: {
@@ -55,7 +58,7 @@ export const getReports = async (req, res) => {
       open: [{ $match: { status: { $in: ACTIVE_STATUSES } } }, { $group: { _id: null, count: { $sum: 1 }, salesCents: { $sum: "$totalCents" } } }],
       payments: byKey("$paymentMethod"),
       fulfillment: byKey("$fulfillment"),
-      days: byKey(OPERATING_DAY_OF),
+      days: byKey(operatingDayOf(dayStart)),
       sources: byKey({ $ifNull: ["$acquisitionSource", "unknown"] }),
       products: [{ $match: { status: "delivered" } }, { $unwind: "$items" }, { $group: { _id: "$items.product", name: { $last: "$items.name" }, quantity: { $sum: "$items.quantity" }, totalCents: { $sum: "$items.totalCents" } } }, { $sort: { quantity: -1, _id: 1 } }, { $limit: 20 }],
     } },

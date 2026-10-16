@@ -59,20 +59,27 @@ export function isValidDay(day) {
   return parsed.getUTCFullYear() === year && parsed.getUTCMonth() === month - 1 && parsed.getUTCDate() === date;
 }
 
-// El día de operación de un local termina a las 05:00: un pedido de la 01:00 del sábado
-// es de la noche del viernes (lista de pedidos del panel y cierre de caja).
+// El día de operación de un local termina a la hora de corte que elige el local (05:00 si no
+// eligió): con corte a las 05:00, un pedido de la 01:00 del sábado es de la noche del viernes
+// (lista de pedidos del panel y cierre de caja). El pedido conserva su fecha real.
 export const OPERATING_DAY_START = "05:00";
 
+// Minutos desde la medianoche de una hora "HH:MM".
+export const minutesOf = (time) => Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5));
+
 // Inicio (incluido) y fin (excluido) del día de operación "YYYY-MM-DD", como instantes UTC.
-export function operatingDayRange(day, timeZone = TIME_ZONE) {
+export function operatingDayRange(day, dayStart = OPERATING_DAY_START, timeZone = TIME_ZONE) {
   return {
-    start: localToUtc(day, OPERATING_DAY_START, timeZone),
-    end: localToUtc(addDays(day, 1), OPERATING_DAY_START, timeZone),
+    start: localToUtc(day, dayStart, timeZone),
+    end: localToUtc(addDays(day, 1), dayStart, timeZone),
   };
 }
 
-// Día de operación en curso: antes de las 05:00 sigue siendo el de ayer.
-export function operatingDayIn(timeZone = TIME_ZONE, now = new Date()) {
+// Día de operación en curso: antes de la hora de corte sigue siendo el de ayer.
+export function operatingDayIn(dayStart = OPERATING_DAY_START, now = new Date(), timeZone = TIME_ZONE) {
   const today = todayIn(timeZone, now);
-  return now < operatingDayRange(today, timeZone).start ? addDays(today, -1) : today;
+  return now < operatingDayRange(today, dayStart, timeZone).start ? addDays(today, -1) : today;
 }
+
+// Hora de corte de un local.
+export const dayStartOf = (store) => store?.hours?.dayStart || OPERATING_DAY_START;

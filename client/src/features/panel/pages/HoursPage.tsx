@@ -11,7 +11,7 @@ import { usePanel } from "../PanelLayout";
 import { ownerStoreKey } from "../useOwnerStore";
 import { statusView } from "../storeStatus";
 import { useHoursCopy } from "../settings/hoursCopy";
-import { HOUR_DAYS, hoursDraft, validateHours, todayForHours, type HourDay, type HourInterval, type StoreHours, type HoursErrors } from "../settings/hoursForm";
+import { DAY_START_OPTIONS, HOUR_DAYS, hoursDraft, validateHours, todayForHours, type HourDay, type HourInterval, type StoreHours, type HoursErrors } from "../settings/hoursForm";
 import { SettingsSection } from "./StorePage";
 
 export function HoursPage() {
@@ -98,6 +98,16 @@ export function HoursPage() {
             </div>;
           })}
           <button type="button" className={button.secondary} disabled={draft.exceptions.length >= 60} onClick={() => change({ ...draft, exceptions: [...draft.exceptions, { date: todayForHours(), closed: true, note: "", intervals: [] }] })}>{c.addException}</button>
+        </SettingsSection>
+        <SettingsSection title={c.dayStartTitle}>
+          <Field id="day-start" label={c.dayStartLabel}>
+            <select id="day-start" className="h-11 w-32 rounded-lg border border-line bg-surface px-3 tabular-nums" value={draft.dayStart} onChange={(e) => change({ ...draft, dayStart: e.target.value })}>
+              {/* Una hora guardada fuera de la lista (puesta por la API) también se puede ver. */}
+              {[...new Set([...DAY_START_OPTIONS, draft.dayStart])].sort().map((time) => <option key={time} value={time}>{time}</option>)}
+            </select>
+          </Field>
+          <p className="text-sm text-ink-muted">{draft.dayStart === "00:00" ? c.dayStartMidnight : c.dayStartHelp(draft.dayStart)}</p>
+          {draft.dayStart !== baseline.dayStart && <p className="text-sm text-warning">{c.dayStartReports}</p>}
         </SettingsSection>
       </fieldset>
       {!!Object.keys(errors).length && <p role="alert" className="text-error">{c.correctErrors}</p>}

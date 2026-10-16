@@ -58,7 +58,7 @@ export function HomePage() {
   const h = t.home;
   const { user, store, opening, storeUrl } = usePanel();
   const now = useNow();
-  const today = operatingDayISO(new Date(now));
+  const today = operatingDayISO(new Date(now), store.hours.dayStart);
   const isOwner = can(user.role, "store:write");
 
   const orders = useOrders(today, true);

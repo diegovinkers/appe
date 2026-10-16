@@ -29,13 +29,16 @@ export function formatWhen(date: Date | string, now = new Date()): string {
   return `${weekdayFormats[getLanguage()].format(target).replace(".", "")} ${time}`;
 }
 
-// El día de operación termina a las 05:00 (como en el backend): a la 01:30 del sábado sigue
-// siendo el viernes. Brasil no tiene horario de verano, así que alcanza con restar 5 horas.
-const OPERATING_DAY_START_HOURS = 5;
+// El día de operación termina a la hora de corte del local (`store.hours.dayStart`, 05:00 si no
+// eligió, como en el backend): con corte a las 05:00, a la 01:30 del sábado sigue siendo el
+// viernes. Brasil no tiene horario de verano, así que alcanza con restar la hora de corte.
+export const DEFAULT_DAY_START = "05:00";
 
 // "2026-09-27": el día de operación en curso, en Brasil (lista de pedidos y cierre de caja).
-export const operatingDayISO = (now = new Date()) =>
-  dayFormat.format(new Date(now.getTime() - OPERATING_DAY_START_HOURS * 60 * 60 * 1000));
+export function operatingDayISO(now = new Date(), dayStart = DEFAULT_DAY_START) {
+  const [hours, minutes] = dayStart.split(":").map(Number);
+  return dayFormat.format(new Date(now.getTime() - (hours * 60 + minutes) * 60_000));
+}
 
 // Minutos para mostrar: "7 min", "1 h", "1 h 05 min".
 export function formatMinutes(minutes: number): string {

@@ -93,7 +93,7 @@ export const store = z.strictObject({
   secondaryColor: z.string(),
   whatsapp: z.string(),
   address: z.string(),
-  hours: z.strictObject({ weekly, exceptions: z.array(hourException) }),
+  hours: z.strictObject({ weekly, exceptions: z.array(hourException), dayStart: z.string() }),
   override: z.strictObject({ mode: z.enum(OVERRIDE_MODES), until: date.nullable(), message: z.string() }).nullable(),
   fulfillment,
   estimates,

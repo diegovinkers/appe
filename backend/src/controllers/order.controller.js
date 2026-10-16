@@ -6,7 +6,7 @@ import Order from "../models/order.model.js";
 import Product from "../models/product.model.js";
 import { audit } from "../lib/audit.js";
 import { AppError, conflict, notFound } from "../lib/errors.js";
-import { operatingDayIn, operatingDayRange } from "../lib/dates.js";
+import { dayStartOf, operatingDayIn, operatingDayRange } from "../lib/dates.js";
 import { trackingUrl as trackingUrlOf } from "../lib/links.js";
 import { placeOrder } from "../services/orderPlacement.service.js";
 import { notifyOrderStatus } from "../services/assistant/whatsapp.js";
@@ -94,13 +94,14 @@ export const createManualOrder = async (req, res) => {
 };
 
 // GET /api/owner/orders — por defecto, los del día de operación en curso (hora de Brasil, de
-// 05:00 a 05:00), más nuevos primero. Un pedido programado aparece el día para el que está
+// la hora de corte del local a la del día siguiente), más nuevos primero. Un pedido programado aparece el día para el que está
 // programado. En el día en curso también vienen los que quedaron abiertos de días anteriores:
 // un pedido sin cerrar nunca desaparece de la lista.
 export const listOrders = async (req, res) => {
-  const today = operatingDayIn();
+  const dayStart = dayStartOf(req.commerce);
+  const today = operatingDayIn(dayStart);
   const { date = today, status, updatedSince } = req.valid.query;
-  const { start, end } = operatingDayRange(date);
+  const { start, end } = operatingDayRange(date, dayStart);
   const range = { $gte: start, $lt: end };
   const ofDay = [{ scheduledFor: null, createdAt: range }, { scheduledFor: range }];
   if (date === today) {

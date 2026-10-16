@@ -19,6 +19,9 @@ const pt = {
   overlap: "Os turnos deste dia se sobrepõem. Ajuste os horários.", invalidDate: "Escolha uma data válida de hoje em diante.", duplicateDate: "Esta data já está cadastrada.",
   emptyIntervals: "Informe pelo menos um turno ou marque a data como fechada.", tooManyIntervals: "Cada dia pode ter até 4 turnos.", longNote: "Use no máximo 60 caracteres.",
   loading: "Carregando horários…", retry: "Tentar novamente", copied: "Horários copiados. Salve para aplicar.",
+  dayStartTitle: "Fim do dia de trabalho", dayStartLabel: "O dia termina às",
+  dayStartHelp: (time: string) => `Pedidos feitos antes das ${time} contam no dia anterior: na lista de pedidos, no Início e no caixa. Cada pedido guarda sempre a data e a hora reais.`,
+  dayStartMidnight: "Cada dia vai da meia-noite à meia-noite.", dayStartReports: "Mudar este horário reorganiza também os relatórios de dias anteriores.",
   days: { mon: "Segunda-feira", tue: "Terça-feira", wed: "Quarta-feira", thu: "Quinta-feira", fri: "Sexta-feira", sat: "Sábado", sun: "Domingo" },
 };
 
@@ -42,6 +45,9 @@ const es: Copy = {
   overlap: "Los turnos de este día se superponen. Ajustá los horarios.", invalidDate: "Elegí una fecha válida de hoy en adelante.", duplicateDate: "Esta fecha ya está registrada.",
   emptyIntervals: "Ingresá al menos un turno o marcá la fecha como cerrada.", tooManyIntervals: "Cada día puede tener hasta 4 turnos.", longNote: "Usá como máximo 60 caracteres.",
   loading: "Cargando horarios…", retry: "Reintentar", copied: "Horarios copiados. Guardá para aplicar.",
+  dayStartTitle: "Fin del día de trabajo", dayStartLabel: "El día termina a las",
+  dayStartHelp: (time: string) => `Los pedidos hechos antes de las ${time} cuentan en el día anterior: en la lista de pedidos, en Inicio y en la caja. Cada pedido guarda siempre su fecha y hora reales.`,
+  dayStartMidnight: "Cada día va de medianoche a medianoche.", dayStartReports: "Si cambiás esta hora, también se reorganizan los reportes de días anteriores.",
   days: { mon: "Lunes", tue: "Martes", wed: "Miércoles", thu: "Jueves", fri: "Viernes", sat: "Sábado", sun: "Domingo" },
 };
 

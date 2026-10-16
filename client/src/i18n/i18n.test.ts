@@ -56,7 +56,7 @@ describe("panel en español", () => {
       source: "schedule",
     };
     expect(statusView(opening)).toMatchObject({ label: "Abierto", detail: "hasta las 23:30" });
-    const store = { hours: { weekly: { sun: [], mon: [], tue: [], wed: [], thu: [], fri: [], sat: [] }, exceptions: [] }, override: null };
+    const store = { hours: { weekly: { sun: [], mon: [], tue: [], wed: [], thu: [], fri: [], sat: [] }, exceptions: [], dayStart: "05:00" }, override: null };
     const labels = statusActions(store as Pick<OwnerStore, "hours" | "override">, opening).map((action) => action.label);
     expect(labels).toEqual(["Pausar 15 min", "Pausar 30 min", "Pausar 1 hora", "Cerrar ahora"]);
   });

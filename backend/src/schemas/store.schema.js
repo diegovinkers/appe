@@ -124,7 +124,12 @@ const exceptionSchema = z
     path: ["intervals"],
   });
 
+// Hora de corte del día de trabajo: de medianoche al mediodía.
+const dayStart = time.refine((value) => value <= "12:00", "Escolha um horário entre 00:00 e 12:00");
+
 export const hoursSchema = z.object({
+  // Sin mandar, queda la que estaba.
+  dayStart: dayStart.optional(),
   weekly: z.object(Object.fromEntries(WEEKDAYS.map((day) => [day, dayIntervals.default([])]))),
   exceptions: z
     .array(exceptionSchema)

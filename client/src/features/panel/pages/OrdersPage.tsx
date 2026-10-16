@@ -82,7 +82,7 @@ const FULFILLMENT_ICON: Record<Order["fulfillment"], LucideIcon> = { delivery: B
 function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpen: () => void; now: number; today: string; selected: boolean }) {
   const t = useT();
   const o = t.orders;
-  const { user } = usePanel();
+  const { user, store } = usePanel();
   const change = useChangeStatus();
   const next = nextStatus(order);
   const label = nextLabel(order, t);
@@ -93,7 +93,7 @@ function OrderRow({ order, onOpen, now, today, selected }: { order: Order; onOpe
   const SourceIcon = SOURCE_ICON[source];
   const by = takenBy(order);
   const FulfillmentIcon = FULFILLMENT_ICON[order.fulfillment];
-  const when = operatingDayISO(new Date(order.createdAt)) === today ? formatTime(order.createdAt) : formatWhen(order.createdAt, new Date(now));
+  const when = operatingDayISO(new Date(order.createdAt), store.hours.dayStart) === today ? formatTime(order.createdAt) : formatWhen(order.createdAt, new Date(now));
   // En la mesa el nombre ya es "Mesa 4": no se repite.
   const place = order.fulfillment === "delivery" ? [o.delivery, order.address?.neighborhood].filter(Boolean).join(", ") : order.fulfillment === "pickup" ? o.pickup : null;
   const method = order.paymentMethod ? t.checkout.methods[order.paymentMethod] : null;
@@ -204,8 +204,9 @@ export function OpenOrder({
 // Lo que comparten la página y el espacio de trabajo: el día, el filtro, la búsqueda y la lista.
 export function useOrdersView() {
   const [params, setParams] = useSearchParams();
+  const { store } = usePanel();
   const now = useNow();
-  const today = operatingDayISO(new Date(now));
+  const today = operatingDayISO(new Date(now), store.hours.dayStart);
   const day = params.get("dia") ?? today;
   const linked = params.get("filtro");
   const filter: OrderFilter = isOrderFilter(linked) ? linked : "active";

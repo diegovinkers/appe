@@ -73,6 +73,7 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { store, categories, optionGroups } = data;
+  const { dayStart } = usePanel().store.hours;
   const groups = useMemo(() => new Map(optionGroups.map((group) => [group._id, group])), [optionGroups]);
   const index = useMemo(() => indexMenu(categories), [categories]);
   // Cada mesa tiene su propio borrador: no se mezcla con el pedido del mostrador.
@@ -107,7 +108,7 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
     onSuccess: ({ order }) => {
       cart.clear();
       setClientOrderId(newId());
-      queryClient.invalidateQueries({ queryKey: ordersKey(operatingDayISO()) });
+      queryClient.invalidateQueries({ queryKey: ordersKey(operatingDayISO(new Date(), dayStart)) });
       queryClient.invalidateQueries({ queryKey: tablesKey });
       printIfConfirmed(order);
       navigate(`/painel/pedidos?ver=salao&mesa=${table?._id}`);
@@ -118,7 +119,7 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
     onSuccess: ({ order }) => {
       cart.clear();
       setClientOrderId(newId());
-      queryClient.invalidateQueries({ queryKey: ordersKey(operatingDayISO()) });
+      queryClient.invalidateQueries({ queryKey: ordersKey(operatingDayISO(new Date(), dayStart)) });
       // Los cargados en el panel entran confirmados.
       printIfConfirmed(order);
       navigate(`/painel/pedidos?pedido=${order._id}`);

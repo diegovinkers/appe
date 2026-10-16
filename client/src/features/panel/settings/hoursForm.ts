@@ -12,9 +12,13 @@ export const todayForHours = (now = new Date()) => new Intl.DateTimeFormat("en-C
   timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
 }).format(now);
 
+// Horas de corte que se pueden elegir: de medianoche al mediodía, cada media hora.
+export const DAY_START_OPTIONS = Array.from({ length: 25 }, (_, index) => `${String(Math.floor(index / 2)).padStart(2, "0")}:${index % 2 ? "30" : "00"}`);
+
 // Keep only API fields; old exceptions are discarded by the server on save.
 export function hoursDraft(hours: StoreHours, today = todayForHours()): StoreHours {
   return {
+    dayStart: hours.dayStart,
     weekly: Object.fromEntries(HOUR_DAYS.map((day) => [day, hours.weekly[day].map(({ open, close }) => ({ open, close }))])) as StoreHours["weekly"],
     exceptions: hours.exceptions.filter((item) => item.date >= today).map(({ date, closed, note, intervals }) => ({
       date, closed, note, intervals: intervals.map(({ open, close }) => ({ open, close })),

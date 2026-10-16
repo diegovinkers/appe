@@ -2548,6 +2548,7 @@ export interface paths {
                                         }[];
                                         note: string;
                                     }[];
+                                    dayStart: string;
                                 };
                                 override: {
                                     /** @enum {string} */
@@ -2812,6 +2813,7 @@ export interface paths {
                                         }[];
                                         note: string;
                                     }[];
+                                    dayStart: string;
                                 };
                                 override: {
                                     /** @enum {string} */
@@ -2941,6 +2943,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        dayStart?: string;
                         weekly: {
                             /** @default [] */
                             sun?: {
@@ -3058,6 +3061,7 @@ export interface paths {
                                         }[];
                                         note: string;
                                     }[];
+                                    dayStart: string;
                                 };
                                 override: {
                                     /** @enum {string} */
@@ -3277,6 +3281,7 @@ export interface paths {
                                         }[];
                                         note: string;
                                     }[];
+                                    dayStart: string;
                                 };
                                 override: {
                                     /** @enum {string} */
@@ -9695,6 +9700,7 @@ export interface paths {
                                         }[];
                                         note: string;
                                     }[];
+                                    dayStart: string;
                                 };
                                 override: {
                                     /** @enum {string} */
@@ -9886,6 +9892,7 @@ export interface paths {
                                         }[];
                                         note: string;
                                     }[];
+                                    dayStart: string;
                                 };
                                 override: {
                                     /** @enum {string} */
@@ -10099,6 +10106,7 @@ export interface paths {
                                         }[];
                                         note: string;
                                     }[];
+                                    dayStart: string;
                                 };
                                 override: {
                                     /** @enum {string} */

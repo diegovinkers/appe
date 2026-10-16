@@ -90,6 +90,9 @@ const commerceSchema = new mongoose.Schema(
         sat: dayIntervals,
       },
       exceptions: { type: [exceptionSchema], default: [] },
+      // Hora de corte del día de operación ("HH:MM", de 00:00 a 12:00): lo de antes cuenta en
+      // el día anterior (lista de pedidos, Início, reportes). Ver operatingDayRange.
+      dayStart: { type: String, default: "05:00" },
     },
     override: { type: overrideSchema, default: null },
 

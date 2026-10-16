@@ -61,6 +61,18 @@ describe("horarios (PUT /api/owner/store/hours)", () => {
     expect(order.body.error).toMatchObject({ code: "STORE_CLOSED", details: { nextOpenAt: "2026-09-25T21:00:00.000Z" } });
   });
 
+  it("guarda la hora de corte del día y la conserva si no se manda", async () => {
+    expect((await owner.get("/api/owner/store")).body.store.hours.dayStart).toBe("05:00");
+    const res = await owner.put("/api/owner/store/hours").send({ weekly, dayStart: "02:30" });
+    expect(res.status).toBe(200);
+    expect(res.body.store.hours.dayStart).toBe("02:30");
+    const again = await owner.put("/api/owner/store/hours").send({ weekly });
+    expect(again.body.store.hours.dayStart).toBe("02:30");
+
+    const late = await owner.put("/api/owner/store/hours").send({ weekly, dayStart: "13:00" });
+    expect(late.status).toBe(400);
+  });
+
   it("descarta las excepciones de días pasados y muestra las próximas", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-09-25T15:00:00Z"));

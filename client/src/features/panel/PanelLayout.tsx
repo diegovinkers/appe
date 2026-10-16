@@ -119,7 +119,7 @@ export function PanelLayout() {
           </div>
         </div>
 
-        {can(user.role, "orders:read") && <OrderAlerts />}
+        {can(user.role, "orders:read") && <OrderAlerts dayStart={store.hours.dayStart} />}
         <StoreStatusControl store={store} opening={opening} canChange={can(user.role, "store:open")} />
         {can(user.role, "orders:read") && <AlertSettingsControl />}
         <UserMenu user={user} />
@@ -173,7 +173,7 @@ export function PanelLayout() {
           </div>
         </main>
       </div>
-      {!isDesktop && <BottomBar role={user.role} onMore={() => setDrawerOpen(true)} />}
+      {!isDesktop && <BottomBar role={user.role} dayStart={store.hours.dayStart} onMore={() => setDrawerOpen(true)} />}
     </div>
   );
 }

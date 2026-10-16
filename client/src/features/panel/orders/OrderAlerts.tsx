@@ -14,10 +14,10 @@ const REPEAT_MS = 15_000;
 // que alguien lo acepte; el número queda en la pestaña y la pantalla no se apaga. Se ve como
 // una pastilla chica en la barra de arriba (no le quita lugar a la página), solo cuando hay
 // algo: pedidos esperando o sin conexión.
-export function OrderAlerts() {
+export function OrderAlerts({ dayStart }: { dayStart: string }) {
   const t = useT();
   const settings = useDeviceSettings();
-  const day = operatingDayISO();
+  const day = operatingDayISO(new Date(), dayStart);
   const query = useOrders(day, true);
   const [blocked, setBlocked] = useState(false);
   const seen = useRef<{ day: string; ids: Set<string> } | null>(null);

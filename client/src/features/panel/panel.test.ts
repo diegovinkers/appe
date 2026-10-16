@@ -52,7 +52,7 @@ const opening = (changes: Partial<Opening>): Opening => ({
 const empty = { sun: [], mon: [], tue: [], wed: [], thu: [], fri: [], sat: [] };
 const withSchedule = { ...empty, fri: [{ open: "18:00", close: "23:30" }] };
 const store = (weekly: OwnerStore["hours"]["weekly"], override: OwnerStore["override"] = null) =>
-  ({ hours: { weekly, exceptions: [] }, override }) as Pick<OwnerStore, "hours" | "override">;
+  ({ hours: { weekly, exceptions: [], dayStart: "05:00" }, override }) as Pick<OwnerStore, "hours" | "override">;
 const keys = (actions: ReturnType<typeof statusActions>) => actions.map((action) => action.key);
 
 describe("cartel de estado", () => {
@@ -152,6 +152,12 @@ describe("tiempos de la lista de pedidos", () => {
   it("el día de operación termina a las 5 de la mañana", () => {
     expect(operatingDayISO(new Date("2026-09-26T04:30:00Z"))).toBe("2026-09-25"); // sábado 01:30
     expect(operatingDayISO(new Date("2026-09-26T08:00:00Z"))).toBe("2026-09-26"); // sábado 05:00
+  });
+
+  it("cada local puede elegir la hora en que termina su día", () => {
+    expect(operatingDayISO(new Date("2026-09-26T04:30:00Z"), "00:00")).toBe("2026-09-26"); // sábado 01:30
+    expect(operatingDayISO(new Date("2026-09-26T11:00:00Z"), "08:30")).toBe("2026-09-25"); // sábado 08:00
+    expect(operatingDayISO(new Date("2026-09-26T11:30:00Z"), "08:30")).toBe("2026-09-26"); // sábado 08:30
   });
 
   it("muestra los minutos en horas cuando pasan de 60", () => {

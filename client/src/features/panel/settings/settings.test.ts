@@ -5,7 +5,7 @@ import type { PaymentMethod } from "../../../api/types";
 import { paymentMethodsFor } from "../../../lib/payments";
 import { isValidPixKey } from "../../../lib/pix";
 
-const hours = (): StoreHours => ({ weekly: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] }, exceptions: [] });
+const hours = (): StoreHours => ({ weekly: { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] }, exceptions: [], dayStart: "05:00" });
 const delivery = (): DeliveryDraft => ({ delivery: true, pickup: true, mode: "fixed", fee: "5,50", minimum: "0", freeEnabled: false, freeFrom: "", deliveryMin: "30", deliveryMax: "60", pickupMin: "10", pickupMax: "20", zones: [] });
 
 describe("configuración de horarios", () => {

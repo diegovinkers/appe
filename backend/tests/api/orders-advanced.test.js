@@ -215,6 +215,21 @@ describe("lista del panel por día de operación", () => {
     expect(numbers(await owner.get("/api/owner/orders?date=2026-09-27"))).toEqual([1]);
   });
 
+  it("usa la hora de corte del local", async () => {
+    await insert(1, "2026-09-26T02:50:00Z", "delivered"); // viernes 23:50
+    await insert(2, "2026-09-26T04:10:00Z", "delivered"); // sábado 01:10
+    await Commerce.updateOne({ _id: commerce._id }, { "hours.dayStart": "00:00" });
+    const res = await owner.get("/api/owner/orders");
+    expect(res.body.day).toBe("2026-09-26");
+    expect(numbers(res)).toEqual([2]);
+    expect(numbers(await owner.get("/api/owner/orders?date=2026-09-25"))).toEqual([1]);
+
+    // Los reportes agrupan por la misma jornada: con corte a las 02:00, las dos son del viernes.
+    await Commerce.updateOne({ _id: commerce._id }, { "hours.dayStart": "02:00" });
+    const reports = await owner.get("/api/owner/reports?from=2026-09-25&to=2026-09-25");
+    expect(reports.body.days).toEqual([{ day: "2026-09-25", count: 2, salesCents: 0 }]);
+  });
+
   it("no trae pedidos abiertos de otro local", async () => {
     const { commerce: other } = await createCommerceWithOwner({ slug: "loja-b" });
     await Order.collection.insertOne({ commerce: other._id, clientOrderId: randomUUID(), number: 9, status: "new", createdAt: new Date("2026-09-20T22:00:00Z"), scheduledFor: null, items: [] });

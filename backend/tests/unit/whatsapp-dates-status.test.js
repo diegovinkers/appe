@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayRange, isValidDay, operatingDayIn, operatingDayRange, todayIn } from "../../src/lib/dates.js";
+import { dayRange, dayStartOf, isValidDay, operatingDayIn, operatingDayRange, todayIn } from "../../src/lib/dates.js";
 import { formatBRL } from "../../src/lib/money.js";
 import { canTransition } from "../../src/services/orderStatus.js";
 import { buildOrderMessage, buildWhatsappUrl } from "../../src/services/whatsapp.service.js";
@@ -37,6 +37,18 @@ describe("dates", () => {
     expect(operatingDayIn(undefined, new Date("2026-09-26T04:30:00Z"))).toBe("2026-09-25");
     expect(operatingDayIn(undefined, new Date("2026-09-26T07:59:00Z"))).toBe("2026-09-25");
     expect(operatingDayIn(undefined, new Date("2026-09-26T08:00:00Z"))).toBe("2026-09-26");
+  });
+
+  it("cada local puede elegir su hora de corte", () => {
+    const { start, end } = operatingDayRange("2026-09-26", "00:00");
+    expect(start.toISOString()).toBe("2026-09-26T03:00:00.000Z");
+    expect(end.toISOString()).toBe("2026-09-27T03:00:00.000Z");
+    // Con corte a medianoche, el sábado 01:30 ya es sábado; con corte a las 08:30, todavía es viernes.
+    expect(operatingDayIn("00:00", new Date("2026-09-26T04:30:00Z"))).toBe("2026-09-26");
+    expect(operatingDayIn("08:30", new Date("2026-09-26T11:00:00Z"))).toBe("2026-09-25");
+    expect(operatingDayIn("08:30", new Date("2026-09-26T11:30:00Z"))).toBe("2026-09-26");
+    expect(dayStartOf({ hours: { weekly: {} } })).toBe("05:00");
+    expect(dayStartOf({ hours: { dayStart: "02:00" } })).toBe("02:00");
   });
 
   it("valida fechas reales", () => {

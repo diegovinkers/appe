@@ -286,7 +286,7 @@ Las cuatro rutas que cambian el local devuelven lo mismo que `GET`: `{ "store", 
   - `deliveryZones` reemplaza la lista entera: `[{ "_id"?, "name", "feeCents", "minOrderCents"?, "estimateMin"?, "estimateMax"?, "active"? }]`. Mandá el `_id` de los barrios que se mantienen.
   - El `slug` y el `status` los cambia solo el superadmin; los horarios y la apertura tienen sus rutas (acá se ignoran).
   - Errores (400): `NO_FULFILLMENT` si quedan las dos formas de entrega apagadas; `PIX_KEY_REQUIRED` si acepta Pix sin chave; `INVALID_PIX_KEY` si la chave nueva no es un CPF, CNPJ, e-mail, celular o chave aleatória (la que ya estaba guardada no se revalida); `NO_PAYMENT_FOR_FULFILLMENT` si la entrega o la retirada activa queda sin ninguna forma de pago; `INVALID_ESTIMATES` si un mínimo supera al máximo; `NO_DELIVERY_ZONES` si entrega por barrio sin ningún barrio activo; `DUPLICATE_ZONE` si hay barrios con el mismo nombre; `INVALID_ZONE` si un `_id` no es de un barrio del local.
-- `PUT /api/owner/store/hours` (`store:write`). Reemplaza los horarios. Las excepciones de días que ya pasaron se descartan.
+- `PUT /api/owner/store/hours` (`store:write`). Reemplaza los horarios. Las excepciones de días que ya pasaron se descartan. `dayStart` (opcional, `HH:MM` de 00:00 a 12:00, 05:00 por defecto) es la hora de corte del día de operación: lo de antes cuenta en el día anterior. Sin mandarlo queda el que estaba.
   ```json
   {
     "weekly": { "mon": [], "tue": [ { "open": "18:00", "close": "23:30" } ], "fri": [ { "open": "11:00", "close": "14:30" }, { "open": "18:00", "close": "02:00" } ] },
@@ -377,7 +377,7 @@ Para cargarle el menú rápido a un local: se exporta, se edita en Excel y se im
 
 ### Pedidos
 - `GET /api/owner/orders?date=YYYY-MM-DD&status=new&updatedSince=<ISO>` → `{ "orders": [...], "day": "YYYY-MM-DD", "serverTime": "<ISO>" }`.
-  - `date`: día de operación en hora de Brasil, de 05:00 a 05:00 (un pedido de la 01:00 del sábado es del viernes); por defecto, el día en curso, que vuelve en `day`. Un pedido programado aparece el día para el que está programado. En el día en curso también vienen los pedidos que quedaron abiertos (`new`, `confirmed`, `ready`, `out_for_delivery`) de días anteriores. Más nuevos primero; hasta 500.
+  - `date`: día de operación en hora de Brasil, desde la hora de corte del local (`hours.dayStart`, 05:00 por defecto: un pedido de la 01:00 del sábado es del viernes); por defecto, el día en curso, que vuelve en `day`. Un pedido programado aparece el día para el que está programado. En el día en curso también vienen los pedidos que quedaron abiertos (`new`, `confirmed`, `ready`, `out_for_delivery`) de días anteriores. Más nuevos primero; hasta 500.
   - `status`: `new`, `confirmed`, `ready`, `out_for_delivery`, `delivered` o `cancelled`.
   - `updatedSince`: solo los que cambiaron desde ese momento. **Polling del panel:** la primera vez pedí la lista sin `updatedSince`; después, cada ~10 s, pedí con `updatedSince=<serverTime de la respuesta anterior>` y mezclá por `_id`. Usá siempre el `serverTime` de la API, no el reloj de la PC.
   - **Qué trae cada pedido:**
@@ -408,7 +408,7 @@ Para cargarle el menú rápido a un local: se exporta, se edita en Excel y se im
   - Trae todo lo que necesitan la cocina y el repartidor: cliente y teléfono, dirección completa, ítems con sus opciones, totales, pago con troco, observaciones y notas internas.
 
 ### Relatórios y cierre de caja (`store:write`)
-- `GET /api/owner/reports?from=YYYY-MM-DD&to=YYYY-MM-DD` (hasta 367 días) → por día de operación (de 05:00 a 05:00, hora de Brasil). Las ventas son los pedidos `delivered`:
+- `GET /api/owner/reports?from=YYYY-MM-DD&to=YYYY-MM-DD` (hasta 367 días) → por día de operación (desde la hora de corte del local, hora de Brasil). Las ventas son los pedidos `delivered`:
   - `completed`, `cancelled`, `salesCents`, `averageCents`; `subtotalCents`, `deliveryFeeCents` y `discountCents` (lo vendido separado).
   - `open: { count, salesCents }`: los que siguen sin cerrar (`new`, `confirmed`, `ready`, `out_for_delivery`), para revisar antes de cerrar la caja.
   - `payments: [{ method, count, salesCents }]` (`cash`, `pix`, `card`), `fulfillment: [{ type, count, salesCents }]` y `days: [{ day, count, salesCents }]`.

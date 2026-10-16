@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import { audit, diffFields } from "../lib/audit.js";
 import { checkImageUrl } from "../lib/cloudinary.js";
-import { todayIn } from "../lib/dates.js";
+import { dayStartOf, todayIn } from "../lib/dates.js";
 import { badRequest } from "../lib/errors.js";
 import { isValidPixKey } from "../lib/pix.js";
 import { paymentMethodsFor } from "../services/payments.service.js";
@@ -121,10 +121,12 @@ export const updateStore = async (req, res) => {
 export const setHours = async (req, res) => {
   const store = req.commerce;
   const today = todayIn();
-  const { weekly, exceptions } = req.valid.body;
-  store.hours = { weekly, exceptions: exceptions.filter((exception) => exception.date >= today) };
+  const { weekly, exceptions, dayStart = dayStartOf(store) } = req.valid.body;
+  const before = dayStartOf(store);
+  store.hours = { weekly, exceptions: exceptions.filter((exception) => exception.date >= today), dayStart };
   await store.save();
-  await audit(req, { action: "store.hours_updated", entity: { type: "commerce", id: store._id } });
+  const changes = dayStart !== before ? { dayStart: { from: before, to: dayStart } } : undefined;
+  await audit(req, { action: "store.hours_updated", entity: { type: "commerce", id: store._id }, changes });
   res.json(storeView(store));
 };
 

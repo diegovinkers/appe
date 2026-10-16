@@ -5835,11 +5835,15 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "dayStart": {
+                              "type": "string"
                             }
                           },
                           "required": [
                             "weekly",
-                            "exceptions"
+                            "exceptions",
+                            "dayStart"
                           ],
                           "additionalProperties": false
                         },
@@ -6931,11 +6935,15 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "dayStart": {
+                              "type": "string"
                             }
                           },
                           "required": [
                             "weekly",
-                            "exceptions"
+                            "exceptions",
+                            "dayStart"
                           ],
                           "additionalProperties": false
                         },
@@ -7453,6 +7461,10 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "dayStart": {
+                    "type": "string",
+                    "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$"
+                  },
                   "weekly": {
                     "type": "object",
                     "properties": {
@@ -7983,11 +7995,15 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "dayStart": {
+                              "type": "string"
                             }
                           },
                           "required": [
                             "weekly",
-                            "exceptions"
+                            "exceptions",
+                            "dayStart"
                           ],
                           "additionalProperties": false
                         },
@@ -8829,11 +8845,15 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "dayStart": {
+                              "type": "string"
                             }
                           },
                           "required": [
                             "weekly",
-                            "exceptions"
+                            "exceptions",
+                            "dayStart"
                           ],
                           "additionalProperties": false
                         },
@@ -25986,11 +26006,15 @@
                                   ],
                                   "additionalProperties": false
                                 }
+                              },
+                              "dayStart": {
+                                "type": "string"
                               }
                             },
                             "required": [
                               "weekly",
-                              "exceptions"
+                              "exceptions",
+                              "dayStart"
                             ],
                             "additionalProperties": false
                           },
@@ -26766,11 +26790,15 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "dayStart": {
+                              "type": "string"
                             }
                           },
                           "required": [
                             "weekly",
-                            "exceptions"
+                            "exceptions",
+                            "dayStart"
                           ],
                           "additionalProperties": false
                         },
@@ -27551,11 +27579,15 @@
                                 ],
                                 "additionalProperties": false
                               }
+                            },
+                            "dayStart": {
+                              "type": "string"
                             }
                           },
                           "required": [
                             "weekly",
-                            "exceptions"
+                            "exceptions",
+                            "dayStart"
                           ],
                           "additionalProperties": false
                         },

@@ -8,6 +8,7 @@ import { PageHeader } from "../../../components/PageHeader";
 import { Field, button, input } from "../../../components/ui";
 import { errorText, useT } from "../../../i18n";
 import { formatDay, formatMoney, operatingDayISO } from "../../../lib/format";
+import { usePanel } from "../PanelLayout";
 import type { ReportResponse } from "../../platform/businessTypes";
 
 type Range = { from: string; to: string };
@@ -70,7 +71,8 @@ function Rows({ rows, total }: { rows: { label: string; count?: number; cents: n
 export function ReportsPage() {
   const t = useT();
   const c = t.reports;
-  const today = operatingDayISO();
+  const { store } = usePanel();
+  const today = operatingDayISO(new Date(), store.hours.dayStart);
   const [preset, setPreset] = useState<Preset | null>("today");
   const [range, setRange] = useState<Range>(() => presetRange("today", today));
   const [form, setForm] = useState<Range>(range);

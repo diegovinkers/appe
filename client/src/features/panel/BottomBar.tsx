@@ -8,9 +8,9 @@ import { useOrders } from "./orders/useOrders";
 const item = "relative flex min-h-16 flex-1 flex-col items-center justify-center gap-0.5 text-xs";
 
 // Barra de abajo en el celular: lo de todos los días a un toque. "Mais" abre el menú completo.
-export function BottomBar({ role, onMore }: { role: Role; onMore: () => void }) {
+export function BottomBar({ role, dayStart, onMore }: { role: Role; dayStart: string; onMore: () => void }) {
   const t = useT();
-  const orders = useOrders(operatingDayISO(), true);
+  const orders = useOrders(operatingDayISO(new Date(), dayStart), true);
   const pending = orders.data?.orders.filter((order) => order.status === "new").length ?? 0;
 
   return (
