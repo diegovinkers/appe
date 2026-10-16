@@ -106,7 +106,7 @@ function Bubble({ message, storeSide, voice }: { message: ConversationMessage; s
   return (
     <li className={`flex flex-col ${right ? "items-end" : "items-start"}`}>
       <div
-        className={`max-w-[85%] rounded-2xl px-3.5 py-2 sm:max-w-[75%] ${right ? "rounded-br-sm bg-action text-white" : "rounded-bl-sm border border-line bg-surface"}`}
+        className={`max-w-[92%] rounded-2xl px-3 py-2 @md:max-w-[75%] @md:px-3.5 ${right ? "rounded-br-sm bg-action text-white" : "rounded-bl-sm border border-line bg-surface"}`}
       >
         <p className={`mb-0.5 flex items-center gap-1.5 text-xs font-bold ${right ? "text-white/80" : "text-ink-muted"}`}>
           {message.kind === "audio" && <Mic aria-label={t.assistant.audio} className="size-3.5" />}
@@ -144,14 +144,15 @@ export function Thread({
     if (box) box.scrollTop = box.scrollHeight;
   }, [messages.length, pending]);
   return (
-    <ol aria-live="polite" className="flex flex-col gap-3">
+    // `@container`: los globos se miden contra el ancho del chat, no el de la pantalla.
+    <ol aria-live="polite" className="@container flex flex-col gap-3">
       {messages.map((message) => (
         <Bubble key={message._id} message={message} storeSide={storeSide} voice={voice} />
       ))}
       {pending && (
         <>
           <li className={`flex flex-col ${storeSide ? "items-start" : "items-end"}`}>
-            <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-action px-3.5 py-2 break-words text-white opacity-70 sm:max-w-[75%]">
+            <p className="max-w-[92%] rounded-2xl rounded-br-sm bg-action px-3 py-2 break-words text-white opacity-70 @md:max-w-[75%] @md:px-3.5">
               {pending}
             </p>
           </li>

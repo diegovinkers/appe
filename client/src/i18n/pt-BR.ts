@@ -798,6 +798,7 @@ export const ptBR = {
       reply: "Responder ao cliente",
       replyPlaceholder: "Escreva a resposta…",
       replySend: "Enviar resposta",
+      moreOptions: "Mais opções da conversa",
       simulatorReply: "Conversa do simulador: a resposta fica só aqui.",
       order: (index: number) => `Ver pedido ${index}`,
       channels: { whatsapp: "WhatsApp", simulator: "Simulador" },

@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MoreHorizontal, SendHorizontal } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 import type { Conversation } from "../../../api/types";
@@ -43,11 +43,56 @@ function Detail({ id, onBack, canListen, compact, orderHref }: { id: string; onB
   const automationBlock = useConversationAutomationBlock();
   const reply = useStaffMessage();
   const [text, setText] = useState("");
+  const [moreOpen, setMoreOpen] = useState(false);
   const canAnswer = can(user.role, "orders:write");
 
   if (query.isPending) return <Spinner />;
   if (query.isError) return <p className="text-error">{errorText(query.error, t)}</p>;
   const { conversation, messages } = query.data;
+
+  const info = (
+    <>
+      {c.channels[conversation.channel]}
+      {conversation.customer.name && ` · ${formatPhone(conversation.customer.phone)}`} · {formatUsd(conversation.usage.costMicros)}
+    </>
+  );
+  const actions = (
+    <>
+      {conversation.channel === "whatsapp" && canAnswer && (
+        <button
+          type="button"
+          className={button.secondary}
+          disabled={automationBlock.isPending}
+          onClick={() => {
+            const blocked = !conversation.automationBlocked;
+            if (blocked && !window.confirm(c.blockConfirm)) return;
+            automationBlock.mutate({ id, blocked });
+          }}
+        >
+          {conversation.automationBlocked ? c.unblockNumber : c.blockNumber}
+        </button>
+      )}
+      {canAnswer &&
+        (conversation.status === "bot" ? (
+          <button type="button" className={button.secondary} disabled={action.isPending} onClick={() => action.mutate({ id, action: "takeover" })}>
+            {t.assistant.takeover}
+          </button>
+        ) : !conversation.automationBlocked ? (
+          <button type="button" className={button.secondary} disabled={action.isPending} onClick={() => action.mutate({ id, action: "release" })}>
+            {t.assistant.release}
+          </button>
+        ) : null)}
+    </>
+  );
+  const orderLinks = conversation.orders.length > 0 && (
+    <p className="flex flex-wrap gap-3 text-sm">
+      {conversation.orders.map((orderId, index) => (
+        <Link key={orderId} to={orderHref(orderId)} className="font-bold underline underline-offset-4">
+          {c.order(index + 1)}
+        </Link>
+      ))}
+    </p>
+  );
 
   function send(event: FormEvent) {
     event.preventDefault();
@@ -56,75 +101,53 @@ function Detail({ id, onBack, canListen, compact, orderHref }: { id: string; onB
   }
 
   return (
-    <section aria-label={who(conversation)} className="flex min-h-[28rem] flex-col overflow-hidden rounded-xl border border-line bg-paper">
-      <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-line bg-surface px-3 py-2">
+    // `@container`: la conversación se acomoda a su propio ancho (en Pedidos puede ser una columna
+    // angosta). Angosta: una línea con el nombre y "⋯"; lo demás se despliega debajo.
+    <section aria-label={who(conversation)} className="@container flex min-h-[28rem] flex-col overflow-hidden rounded-xl border border-line bg-paper">
+      <header className="flex items-center gap-2 border-b border-line bg-surface px-2 py-1.5 @md:flex-wrap @md:gap-x-3 @md:gap-y-2 @md:px-3 @md:py-2">
         <button type="button" onClick={onBack} className={`${button.quiet} ${compact ? "" : "lg:hidden"}`} aria-label={c.back}>
           <ArrowLeft aria-hidden className="size-5" />
         </button>
-        {/* En una columna angosta, los botones bajan a su propia línea y el nombre queda entero. */}
-        <div className="min-w-48 flex-1">
+        <div className="min-w-0 flex-1 @md:min-w-48">
           <p className="truncate font-bold">{who(conversation)}</p>
-          <p className="text-sm text-ink-muted">
-            {c.channels[conversation.channel]}
-            {conversation.customer.name && ` · ${formatPhone(conversation.customer.phone)}`} · {formatUsd(conversation.usage.costMicros)}
-          </p>
+          <p className="hidden text-sm text-ink-muted @md:block">{info}</p>
         </div>
-        <StatusLabel conversation={conversation} />
-        {conversation.channel === "whatsapp" && canAnswer && (
-          <button
-            type="button"
-            className={button.secondary}
-            disabled={automationBlock.isPending}
-            onClick={() => {
-              const blocked = !conversation.automationBlocked;
-              if (blocked && !window.confirm(c.blockConfirm)) return;
-              automationBlock.mutate({ id, blocked });
-            }}
-          >
-            {conversation.automationBlocked ? c.unblockNumber : c.blockNumber}
-          </button>
-        )}
-        {canAnswer &&
-          (conversation.status === "bot" ? (
-            <button
-              type="button"
-              className={button.secondary}
-              disabled={action.isPending}
-              onClick={() => action.mutate({ id, action: "takeover" })}
-            >
-              {t.assistant.takeover}
-            </button>
-          ) : !conversation.automationBlocked ? (
-            <button
-              type="button"
-              className={button.secondary}
-              disabled={action.isPending}
-              onClick={() => action.mutate({ id, action: "release" })}
-            >
-              {t.assistant.release}
-            </button>
-          ) : null)}
+        <div className="hidden @md:contents">
+          <StatusLabel conversation={conversation} />
+          {actions}
+        </div>
+        <button
+          type="button"
+          aria-expanded={moreOpen}
+          aria-controls="conversa-opcoes"
+          aria-label={c.moreOptions}
+          title={c.moreOptions}
+          onClick={() => setMoreOpen((open) => !open)}
+          className={`${button.quiet} @md:hidden ${moreOpen ? "bg-paper text-ink" : ""}`}
+        >
+          <MoreHorizontal aria-hidden className="size-5" />
+        </button>
       </header>
+      {moreOpen && (
+        <div id="conversa-opcoes" className="space-y-2 border-b border-line bg-surface px-3 py-3 @md:hidden">
+          <p className="text-sm text-ink-muted">{info}</p>
+          <StatusLabel conversation={conversation} />
+          <div className="flex flex-col gap-2 *:h-auto *:min-h-11 *:w-full *:py-2">{actions}</div>
+          {orderLinks}
+        </div>
+      )}
       {conversation.status === "human" && conversation.handoff && (
-        <p className="border-b border-line bg-surface px-4 py-2 text-sm">{t.assistant.handedOff(conversation.handoff.reason)}</p>
+        <p className="line-clamp-2 border-b border-line bg-surface px-3 py-1.5 text-sm @md:line-clamp-none @md:px-4 @md:py-2">{t.assistant.handedOff(conversation.handoff.reason)}</p>
       )}
-      {conversation.orders.length > 0 && (
-        <p className="flex flex-wrap gap-3 border-b border-line bg-surface px-4 py-2 text-sm">
-          {conversation.orders.map((orderId, index) => (
-            <Link key={orderId} to={orderHref(orderId)} className="font-bold underline underline-offset-4">
-              {c.order(index + 1)}
-            </Link>
-          ))}
-        </p>
-      )}
+      {orderLinks && <div className="hidden border-b border-line bg-surface px-4 py-2 @md:block">{orderLinks}</div>}
 
-      <div data-chat-scroll className="max-h-[60dvh] flex-1 overflow-y-auto p-4">
+      <div data-chat-scroll className="max-h-[60dvh] flex-1 overflow-y-auto p-2 @md:p-4">
         <Thread messages={messages} storeSide voice={canListen ? { locale: conversation.locale } : null} />
       </div>
 
       {canAnswer && (
-        <form onSubmit={send} className="border-t border-line bg-surface p-3">
-          <label htmlFor="resposta-loja" className="mb-1 block text-sm font-bold">
+        <form onSubmit={send} className="border-t border-line bg-surface p-2 @md:p-3">
+          <label htmlFor="resposta-loja" className="sr-only mb-1 block text-sm font-bold @md:not-sr-only">
             {c.reply}
           </label>
           {conversation.channel === "simulator" && <p className="mb-1 text-sm text-ink-muted">{c.simulatorReply}</p>}
@@ -138,8 +161,9 @@ function Detail({ id, onBack, canListen, compact, orderHref }: { id: string; onB
               value={text}
               onChange={(event) => setText(event.target.value)}
             />
-            <button type="submit" className={button.primary} disabled={!text.trim() || reply.isPending}>
-              {c.replySend}
+            <button type="submit" className={`${button.primary} px-3 @md:px-4`} disabled={!text.trim() || reply.isPending} aria-label={c.replySend} title={c.replySend}>
+              <SendHorizontal aria-hidden className="size-5 @md:hidden" />
+              <span className="hidden @md:inline">{c.replySend}</span>
             </button>
           </div>
           {reply.isError && (

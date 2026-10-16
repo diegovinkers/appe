@@ -798,6 +798,7 @@ export const es: Dictionary = {
       reply: "Responder al cliente",
       replyPlaceholder: "Escribí la respuesta…",
       replySend: "Enviar respuesta",
+      moreOptions: "Más opciones de la conversación",
       simulatorReply: "Conversación del simulador: la respuesta queda solo acá.",
       order: (index: number) => `Ver pedido ${index}`,
       channels: { whatsapp: "WhatsApp", simulator: "Simulador" },
