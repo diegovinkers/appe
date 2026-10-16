@@ -295,7 +295,8 @@ export function OrdersWorkspace() {
         </span>
       ),
       body: (
-        <div className="p-3">
+        // Con una conversación abierta, ocupa todo el alto: solo se mueven los mensajes.
+        <div className={selectedConversation ? "flex h-full min-h-0 flex-col p-2" : "p-3"}>
           {/* Si no se pudo (por ejemplo, el plan no incluye el asistente), el motivo queda acá. */}
           {toggleAssistant.isError && (
             <p role="alert" className="mb-3 rounded-lg bg-error-soft px-3 py-2 text-sm font-bold text-error ring-1 ring-error/30">
