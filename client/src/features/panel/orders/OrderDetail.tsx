@@ -14,7 +14,7 @@ import { usePanel } from "../PanelLayout";
 import { STATUS_TONE, fulfillmentLabel, isActive, nextLabel, nextStatus, orderSource, takenBy } from "./orderFlow";
 import { setDeviceSetting, useDeviceSettings } from "./deviceSettings";
 import { printTicket } from "./printTicket";
-import { useChangeStatus, useSaveNotes } from "./useOrders";
+import { useChangeStatus, useReviewRequest, useSaveNotes, useSendReviewRequest } from "./useOrders";
 
 // Pedido entregado: WhatsApp del cliente con el link del seguimiento, donde deja su reseña.
 // El mensaje va en el idioma en que el cliente hizo el pedido, no en el del panel.
@@ -23,6 +23,42 @@ export function reviewRequestLink(order: Pick<Order, "status" | "customer" | "tr
   const url = `${new URL(storeUrl).origin}/pedido/${order.trackingToken}`;
   const texts = order.locale === "es" ? es : ptBR;
   return `${whatsappLink(order.customer.phone)}?text=${encodeURIComponent(texts.reviews.askMessage(storeName, url))}`;
+}
+
+// Pedir la reseña de un pedido entregado. Si vino de una conversación de WhatsApp con la
+// ventana de 24 horas abierta, sale por el WhatsApp del local desde el panel; si no, el link de
+// siempre (abre WhatsApp en el aparato con el mensaje escrito).
+function AskReview({ order, fallback }: { order: Order; fallback: string | null }) {
+  const t = useT();
+  const { user } = usePanel();
+  const status = useReviewRequest(order._id, order.status === "delivered");
+  const send = useSendReviewRequest(order._id);
+  if (order.status !== "delivered" || !status.data) return null;
+  const { inApp, reason, requestedAt } = status.data;
+  if (reason === "REVIEWED") return <p className="basis-full text-sm text-ink-muted">{t.reviews.alreadyReviewed}</p>;
+  if (requestedAt) return <p className="basis-full text-sm text-ink-muted">{t.reviews.askedAt(formatTime(requestedAt))}</p>;
+  if (inApp && can(user.role, "orders:write")) {
+    return (
+      <>
+        <button type="button" className={button.secondary} disabled={send.isPending} onClick={() => send.mutate()} title={t.reviews.askInAppHint}>
+          <Star aria-hidden className="size-4" />
+          {send.isPending ? t.reviews.askSending : t.reviews.askInApp}
+        </button>
+        {send.isError && (
+          <p role="alert" className="basis-full text-sm font-bold text-error">
+            {errorText(send.error, t)}
+          </p>
+        )}
+      </>
+    );
+  }
+  if (!fallback || reason === "NOT_DELIVERED") return null;
+  return (
+    <a href={fallback} target="_blank" rel="noreferrer" className={button.secondary}>
+      <Star aria-hidden className="size-4" />
+      {t.reviews.askOnWhatsapp}
+    </a>
+  );
 }
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
@@ -185,12 +221,7 @@ export function OrderDetail({
               <Phone aria-hidden className="size-4" />
               {t.orders.detail.call}
             </a>
-            {askReview && (
-              <a href={askReview} target="_blank" rel="noreferrer" className={button.secondary}>
-                <Star aria-hidden className="size-4" />
-                {t.reviews.askOnWhatsapp}
-              </a>
-            )}
+            <AskReview order={order} fallback={askReview} />
           </div>
         )}
         {order.address && (

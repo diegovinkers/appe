@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { REVIEW_DELAY_OPTIONS } from "../models/assistant.model.js";
 import { CONVERSATION_CHANNELS, CONVERSATION_STATUSES } from "../models/conversation.model.js";
 import { ORDER_LOCALES } from "../models/order.model.js";
 import { objectId, optionalText, phone, requiredText } from "./common.schema.js";
@@ -13,6 +14,8 @@ export const updateAssistantSchema = z
     // Centavos de dólar: 1000 = US$ 10.
     monthlyBudgetUsdCents: z.number().int().min(0).max(1_000_000),
     voiceReplies: z.boolean(),
+    autoReviewRequest: z.boolean(),
+    reviewDelayMinutes: z.literal(REVIEW_DELAY_OPTIONS),
   })
   .partial()
   .refine((changes) => Object.keys(changes).length > 0, "Nada para atualizar");

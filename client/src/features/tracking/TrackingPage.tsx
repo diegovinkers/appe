@@ -150,7 +150,7 @@ export function TrackingPage() {
           </section>
         )}
 
-        <ReviewCard token={token} review={query.data.review} canReview={query.data.canReview} />
+        <ReviewCard token={token} review={query.data.review} canReview={query.data.canReview} googleReviewUrl={query.data.store.googleReviewUrl} />
 
         <section className="rounded-2xl bg-surface p-4 ring-1 ring-line">
           <h2 className="font-bold">{t.tracking.items}</h2>

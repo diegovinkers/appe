@@ -49,6 +49,13 @@ const zoneSchema = z
 // superadmin; los horarios y la apertura manual tienen sus propios endpoints.
 const paymentFulfillment = z.enum(PAYMENT_FULFILLMENTS);
 
+// Link de reseñas de Google: https y de un dominio de Google ("" lo borra).
+const GOOGLE_HOST = /^(?:[a-z0-9-]+\.)*(?:google\.com(?:\.br|\.uy)?|g\.page|goo\.gl)$/;
+const googleReviewUrl = z.union([
+  z.literal(""),
+  z.url({ protocol: /^https$/, hostname: GOOGLE_HOST, error: "Use o link de avaliações do seu Perfil da Empresa no Google" }).max(500),
+]);
+
 export const updateStoreSchema = z
   .object({
     name: requiredText(80),
@@ -58,6 +65,7 @@ export const updateStoreSchema = z
     logoUrl: imageUrl,
     coverUrl: imageUrl,
     instagram,
+    googleReviewUrl,
     primaryColor: hexColor,
     secondaryColor: hexColor,
     whatsapp: phone,

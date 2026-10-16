@@ -43,7 +43,7 @@ import { createReviewSchema, updateReviewSchema } from "../schemas/review.schema
 import { customerLoginSchema, deleteCustomerSchema, linkOrdersSchema, signupSchema, updateCustomerSchema } from "../schemas/customer.schema.js";
 import { conversationAutomationBlockSchema, conversationsQuery, simulatorAudioSchema, simulatorMessageSchema, speechSchema, staffMessageSchema, updateAssistantSchema } from "../schemas/assistant.schema.js";
 import { d360WebhookBody, d360WebhookParams, twilioWebhookBody, webhookBody, webhookVerifyQuery } from "../schemas/whatsapp.schema.js";
-import {
+import { reviewRequestResponse,
   auditEntry,
   availabilityResponse,
   table,
@@ -193,6 +193,8 @@ export const operations = [
   { method: "get", path: "/api/owner/orders", tag: "Panel: pedidos", summary: "Pedidos del día de operación, con los que quedaron abiertos (o cambios desde updatedSince)", auth: "orders:read", query: listOrdersQuery, responses: { 200: z.strictObject({ orders: z.array(order), day: z.iso.date(), serverTime: z.iso.datetime() }) } },
   { method: "post", path: "/api/owner/orders", tag: "Panel: pedidos", summary: "Cargar un pedido que llegó por teléfono, WhatsApp o en el mostrador", auth: "orders:manual", body: manualOrderSchema, responses: { 201: manualOrderResponse, 200: manualOrderResponse } },
   { method: "get", path: "/api/owner/orders/:id/ticket", tag: "Panel: pedidos", summary: "Comanda para imprimir (HTML o texto, 58 u 80 mm)", auth: "orders:read", params: idParams, query: ticketQuery, responses: { 200: binary("text/html", "text/plain") } },
+  { method: "get", path: "/api/owner/orders/:id/review-request", tag: "Panel: pedidos", summary: "Si se puede pedir la reseña por el WhatsApp del local y, si no, por qué", auth: "orders:read", params: idParams, responses: { 200: reviewRequestResponse } },
+  { method: "post", path: "/api/owner/orders/:id/review-request", tag: "Panel: pedidos", summary: "Pedir la reseña por el WhatsApp del local (pedido de una conversación, dentro de las 24 h)", auth: "orders:write", params: idParams, responses: { 200: reviewRequestResponse } },
   { method: "patch", path: "/api/owner/orders/:id/notes", tag: "Panel: pedidos", summary: "Notas internas del pedido", auth: "orders:write", params: idParams, body: orderNotesSchema, responses: { 200: wrap("order", order) } },
   { method: "get", path: "/api/owner/orders/:id", tag: "Panel: pedidos", summary: "Un pedido", auth: "orders:read", params: idParams, responses: { 200: wrap("order", order) } },
   { method: "patch", path: "/api/owner/orders/:id/status", tag: "Panel: pedidos", summary: "Cambiar el estado", auth: "orders:write", params: idParams, body: updateOrderStatusSchema, responses: { 200: wrap("order", order) } },

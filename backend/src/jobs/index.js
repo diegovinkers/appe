@@ -1,5 +1,6 @@
 import { logger } from "../lib/logger.js";
 import { cleanupOldConversations } from "../services/assistant/privacy.js";
+import { requestPendingReviews } from "../services/assistant/reviewRequest.js";
 import { cleanupStoreSchedules } from "./maintenance.js";
 import { scheduleJob, stopAllJobs } from "./scheduler.js";
 
@@ -10,6 +11,8 @@ export const JOBS = [
   { name: "cleanup-store-schedules", schedule: "30 3 * * *", lockMs: HOUR, run: cleanupStoreSchedules },
   // LGPD: las conversaciones del asistente no se guardan para siempre.
   { name: "cleanup-assistant-conversations", schedule: "45 3 * * *", lockMs: HOUR, run: cleanupOldConversations },
+  // Reseñas por WhatsApp un rato después de la entrega, en los locales que lo activaron.
+  { name: "request-reviews", schedule: "*/5 * * * *", lockMs: 4 * 60 * 1000, run: () => requestPendingReviews() },
 ];
 
 export function startJobs() {

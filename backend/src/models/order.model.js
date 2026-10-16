@@ -136,6 +136,8 @@ const orderSchema = new mongoose.Schema(
     cancelReason: { type: String, default: "" },
     // Notas del local sobre el pedido: nunca se muestran al cliente.
     internalNotes: { type: String, default: "" },
+    // Cuándo se le pidió la reseña por WhatsApp desde el sistema (a mano o automático).
+    reviewRequestedAt: { type: Date, default: null },
   },
   { timestamps: true, versionKey: false }
 );

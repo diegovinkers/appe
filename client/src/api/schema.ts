@@ -1417,6 +1417,7 @@ export interface paths {
                                 primaryColor: string;
                                 secondaryColor: string;
                                 pixKey: string;
+                                googleReviewUrl: string;
                             };
                             order: {
                                 number: number;
@@ -2509,6 +2510,7 @@ export interface paths {
                                 logoUrl: string;
                                 coverUrl: string;
                                 instagram: string;
+                                googleReviewUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -2690,6 +2692,7 @@ export interface paths {
                         logoUrl?: "" | string;
                         coverUrl?: "" | string;
                         instagram?: string;
+                        googleReviewUrl?: "" | string;
                         primaryColor?: string;
                         secondaryColor?: string;
                         whatsapp?: string;
@@ -2779,6 +2782,7 @@ export interface paths {
                                 logoUrl: string;
                                 coverUrl: string;
                                 instagram: string;
+                                googleReviewUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3032,6 +3036,7 @@ export interface paths {
                                 logoUrl: string;
                                 coverUrl: string;
                                 instagram: string;
+                                googleReviewUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3257,6 +3262,7 @@ export interface paths {
                                 logoUrl: string;
                                 coverUrl: string;
                                 instagram: string;
+                                googleReviewUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3467,6 +3473,7 @@ export interface paths {
                                 logoUrl: string;
                                 coverUrl: string;
                                 instagram: string;
+                                googleReviewUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -5712,6 +5719,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -5882,6 +5890,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -5996,6 +6005,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -7254,6 +7264,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -7436,6 +7447,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -7536,6 +7548,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -7701,6 +7714,116 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/owner/orders/{id}/review-request": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Si se puede pedir la reseña por el WhatsApp del local y, si no, por qué
+         * @description Con sesión y el permiso `orders:read`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            inApp: boolean;
+                            reason: ("NOT_DELIVERED" | "REVIEWED" | "NO_CONVERSATION" | "WINDOW_CLOSED" | "NOT_CONNECTED") | null;
+                            requestedAt: string | null;
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Pedir la reseña por el WhatsApp del local (pedido de una conversación, dentro de las 24 h)
+         * @description Con sesión y el permiso `orders:write`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            inApp: boolean;
+                            reason: ("NOT_DELIVERED" | "REVIEWED" | "NO_CONVERSATION" | "WINDOW_CLOSED" | "NOT_CONNECTED") | null;
+                            requestedAt: string | null;
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/owner/orders/{id}/notes": {
         parameters: {
             query?: never;
@@ -7759,6 +7882,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -7902,6 +8026,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -8069,6 +8194,7 @@ export interface paths {
                                 scheduledFor: string | null;
                                 cancelReason: string;
                                 internalNotes: string;
+                                reviewRequestedAt: string | null;
                                 customer: {
                                     name: string;
                                     phone: string;
@@ -8199,6 +8325,8 @@ export interface paths {
                                 phoneNumberId: string | null;
                                 monthlyBudgetUsdCents: number;
                                 voiceReplies: boolean;
+                                autoReviewRequest: boolean;
+                                reviewDelayMinutes: number;
                                 model: string;
                                 available: {
                                     ai: boolean;
@@ -8259,6 +8387,9 @@ export interface paths {
                         phoneNumberId?: "" | string;
                         monthlyBudgetUsdCents?: number;
                         voiceReplies?: boolean;
+                        autoReviewRequest?: boolean;
+                        /** @enum {number} */
+                        reviewDelayMinutes?: 30 | 60 | 120 | 180;
                     };
                 };
             };
@@ -8276,6 +8407,8 @@ export interface paths {
                                 phoneNumberId: string | null;
                                 monthlyBudgetUsdCents: number;
                                 voiceReplies: boolean;
+                                autoReviewRequest: boolean;
+                                reviewDelayMinutes: number;
                                 model: string;
                                 available: {
                                     ai: boolean;
@@ -9891,6 +10024,7 @@ export interface paths {
                                 logoUrl: string;
                                 coverUrl: string;
                                 instagram: string;
+                                googleReviewUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -10088,6 +10222,7 @@ export interface paths {
                                 logoUrl: string;
                                 coverUrl: string;
                                 instagram: string;
+                                googleReviewUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -10307,6 +10442,7 @@ export interface paths {
                                 logoUrl: string;
                                 coverUrl: string;
                                 instagram: string;
+                                googleReviewUrl: string;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;

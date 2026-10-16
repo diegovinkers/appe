@@ -1,4 +1,4 @@
-import Assistant from "../models/assistant.model.js";
+import Assistant, { DEFAULT_REVIEW_DELAY } from "../models/assistant.model.js";
 import Conversation from "../models/conversation.model.js";
 import ConversationMessage from "../models/conversationMessage.model.js";
 import Order from "../models/order.model.js";
@@ -69,6 +69,8 @@ async function settingsView(commerce) {
     phoneNumberId: settings?.phoneNumberId ?? null,
     monthlyBudgetUsdCents: settings?.monthlyBudgetUsdCents ?? DEFAULT_BUDGET_USD_CENTS,
     voiceReplies: settings?.voiceReplies ?? false,
+    autoReviewRequest: settings?.autoReviewRequest ?? false,
+    reviewDelayMinutes: settings?.reviewDelayMinutes ?? DEFAULT_REVIEW_DELAY,
     model: getAiProvider()?.model ?? config.AI_MODEL,
     // Qué está configurado en el servidor (las claves están en el .env, no en el panel).
     available: {

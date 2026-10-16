@@ -16,6 +16,7 @@ const copy = {
     identity: "Identidade da loja", contact: "Contato", name: "Nome", descriptionLabel: "Descrição curta", about: "Sobre a loja", notice: "Aviso no cardápio",
     logo: "Logo", cover: "Foto de capa", upload: "Escolher imagem", remove: "Remover imagem", imageHint: "JPG, PNG ou WebP, até 5 MB.", imageError: "Escolha uma imagem JPG, PNG ou WebP de até 5 MB.",
     primary: "Cor principal", secondary: "Cor secundária", address: "Endereço",
+    google: "Link de avaliações do Google (opcional)", googleHint: "No seu Perfil da Empresa no Google, toque em \u201cPedir avaliações\u201d e copie o link. Depois de avaliar aqui, o cliente vê um botão para avaliar também no Google.",
     translations: "Textos do cardápio em espanhol", translationHint: "Opcional. Quando vazio, será mostrado o texto em português.",
     save: "Salvar alterações", saving: "Salvando…", saved: "Configuração salva.", preview: "Ver cardápio", reset: "Descartar alterações", discard: "Descartar as alterações não salvas?", changed: "Há alterações não salvas.",
   },
@@ -23,6 +24,7 @@ const copy = {
     identity: "Identidad del comercio", contact: "Contacto", name: "Nombre", descriptionLabel: "Descripción corta", about: "Sobre el comercio", notice: "Aviso en el menú",
     logo: "Logo", cover: "Foto de portada", upload: "Elegir imagen", remove: "Quitar imagen", imageHint: "JPG, PNG o WebP, hasta 5 MB.", imageError: "Elegí una imagen JPG, PNG o WebP de hasta 5 MB.",
     primary: "Color principal", secondary: "Color secundario", address: "Dirección",
+    google: "Link de reseñas de Google (opcional)", googleHint: "En tu Perfil de Empresa de Google, tocá \u201cPedir reseñas\u201d y copiá el link. Después de opinar acá, el cliente ve un botón para dejar su reseña también en Google.",
     translations: "Textos del menú en español", translationHint: "Opcional. Si quedan vacíos, se muestra el texto en portugués.",
     save: "Guardar cambios", saving: "Guardando…", saved: "Configuración guardada.", preview: "Ver menú", reset: "Descartar cambios", discard: "¿Descartar los cambios sin guardar?", changed: "Hay cambios sin guardar.",
   },
@@ -31,7 +33,7 @@ const copy = {
 const fields = (store: OwnerStore) => ({
   name: store.name, description: store.description, about: store.about, notice: store.notice,
   logoUrl: store.logoUrl, coverUrl: store.coverUrl, primaryColor: store.primaryColor, secondaryColor: store.secondaryColor,
-  whatsapp: store.whatsapp, address: store.address, instagram: store.instagram,
+  whatsapp: store.whatsapp, address: store.address, instagram: store.instagram, googleReviewUrl: store.googleReviewUrl,
   translations: { es: { description: store.translations?.es?.description ?? "", about: store.translations?.es?.about ?? "", notice: store.translations?.es?.notice ?? "" } },
 });
 
@@ -120,6 +122,9 @@ export function StorePage() {
             {textField("instagram", "Instagram", 31)}
           </div>
           {textField("address", c.address, 200)}
+          <Field id="store-googleReviewUrl" label={c.google} hint={c.googleHint}>
+            <input id="store-googleReviewUrl" type="url" inputMode="url" className={input} placeholder="https://g.page/r/…/review" value={draft.googleReviewUrl} onChange={(e) => change("googleReviewUrl", e.target.value.trim())} maxLength={500} />
+          </Field>
         </SettingsSection>
         <SettingsSection title={c.translations}>
           <p className="text-sm text-ink-muted">{c.translationHint}</p>

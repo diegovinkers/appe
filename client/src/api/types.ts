@@ -34,6 +34,7 @@ export type PublicOptionGroup = PublicStoreResponse["optionGroups"][number];
 export type PaymentMethod = PublicStore["paymentMethods"][number];
 export type Fulfillment = keyof PublicStore["fulfillment"];
 
+export type ReviewRequestStatus = JsonResponse<"/api/owner/orders/{id}/review-request", "get">;
 export type SlotsResponse = JsonResponse<"/api/public/stores/{slug}/slots", "get">;
 export type PublicOrderInput = JsonBody<"/api/public/stores/{slug}/orders", "post">;
 export type OrderReceipt = JsonResponse<"/api/public/stores/{slug}/orders", "post", 201>;

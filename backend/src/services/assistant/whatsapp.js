@@ -76,7 +76,7 @@ async function deliver(conversation, message) {
 }
 
 // Guarda un mensaje del local y lo manda.
-async function sendFromStore(conversation, role, text) {
+export async function sendFromStore(conversation, role, text) {
   const message = await addMessage(conversation, { role, text, delivery: "pending" });
   await deliver(conversation, message);
   return message;

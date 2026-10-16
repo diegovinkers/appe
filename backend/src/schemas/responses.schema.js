@@ -91,6 +91,7 @@ export const store = z.strictObject({
   logoUrl: z.string(),
   coverUrl: z.string(),
   instagram: z.string(),
+  googleReviewUrl: z.string(),
   primaryColor: z.string(),
   secondaryColor: z.string(),
   whatsapp: z.string(),
@@ -245,6 +246,7 @@ export const order = z.strictObject({
   scheduledFor: date.nullable(),
   cancelReason: z.string(),
   internalNotes: z.string(),
+  reviewRequestedAt: date.nullable(),
   customer: z.strictObject({ name: z.string(), phone: z.string() }),
   fulfillment: z.enum(["delivery", "pickup", "table"]),
   // Pedidos de mesa: la mesa (copiada) y su cuenta.
@@ -410,6 +412,7 @@ export const trackingResponse = z.strictObject({
     primaryColor: z.string(),
     secondaryColor: z.string(),
     pixKey: z.string(),
+    googleReviewUrl: z.string(),
   }),
   order: z.strictObject({
     number: z.number().int(),
@@ -630,6 +633,8 @@ export const assistantSettingsResponse = z.strictObject({
     phoneNumberId: z.string().nullable(),
     monthlyBudgetUsdCents: z.number().int(),
     voiceReplies: z.boolean(),
+    autoReviewRequest: z.boolean(),
+    reviewDelayMinutes: z.number().int(),
     model: z.string(),
     available: z.strictObject({ ai: z.boolean(), whatsapp: z.boolean(), transcription: z.boolean(), voice: z.boolean() }),
     month: z.strictObject({ month: z.string(), costMicros: z.number().int(), conversations: z.number().int(), orders: z.number().int() }),
@@ -669,3 +674,10 @@ export const conversationMessage = z.strictObject({
 export const conversationThreadResponse = z.strictObject({ conversation, messages: z.array(conversationMessage) });
 export const staffMessageResponse = z.strictObject({ conversation, message: conversationMessage });
 export const conversationAutomationBlockResponse = z.strictObject({ blocked: z.boolean() });
+
+// Pedir la reseña por el WhatsApp del local: si se puede desde el panel y, si no, por qué.
+export const reviewRequestResponse = z.strictObject({
+  inApp: z.boolean(),
+  reason: z.enum(["NOT_DELIVERED", "REVIEWED", "NO_CONVERSATION", "WINDOW_CLOSED", "NOT_CONNECTED"]).nullable(),
+  requestedAt: date.nullable(),
+});

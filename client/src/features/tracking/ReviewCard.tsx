@@ -1,14 +1,15 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Star } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { type ApiError, api } from "../../api/client";
 import type { CreateReviewResponse, TrackingResponse } from "../../api/types";
 import { StarInput, Stars } from "../../components/Stars";
 import { errorText, useT } from "../../i18n";
 
-type Props = { token: string; review: TrackingResponse["review"]; canReview: boolean };
+type Props = { token: string; review: TrackingResponse["review"]; canReview: boolean; googleReviewUrl?: string };
 
 // Después de entregado: "Como foi seu pedido?". Si ya opinó, muestra su reseña.
-export function ReviewCard({ token, review, canReview }: Props) {
+export function ReviewCard({ token, review, canReview, googleReviewUrl }: Props) {
   const t = useT();
   const queryClient = useQueryClient();
   const [rating, setRating] = useState(0);
@@ -41,6 +42,21 @@ export function ReviewCard({ token, review, canReview }: Props) {
           </span>
         </p>
         {review.comment && <p className="mt-2 whitespace-pre-line">{review.comment}</p>}
+        {/* A todos, no solo a los que pusieron 5 estrellas: Google no deja pedir solo las buenas. */}
+        {googleReviewUrl && (
+          <div className="mt-4 border-t border-line pt-4">
+            <p>{t.reviews.googleAsk}</p>
+            <a
+              href={googleReviewUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface font-bold hover:bg-paper"
+            >
+              <Star aria-hidden className="size-5" />
+              {t.reviews.googleButton}
+            </a>
+          </div>
+        )}
       </section>
     );
   }

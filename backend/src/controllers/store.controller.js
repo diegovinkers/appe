@@ -16,6 +16,7 @@ const AUDITED_FIELDS = [
   "logoUrl",
   "coverUrl",
   "instagram",
+  "googleReviewUrl",
   "primaryColor",
   "secondaryColor",
   "whatsapp",

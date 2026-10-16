@@ -17,6 +17,7 @@ import Review from "../models/review.model.js";
 import { buildTicket, buildTicketHtml } from "../services/ticket.service.js";
 import { buildOrderMessage, buildWhatsappUrl } from "../services/whatsapp.service.js";
 import { findActiveStore } from "./public.controller.js";
+import { reviewRequestStatus, sendReviewRequest } from "../services/assistant/reviewRequest.js";
 
 const orderNotFound = () => notFound("Pedido não encontrado");
 
@@ -199,6 +200,33 @@ export const updateOrderNotes = async (req, res) => {
   res.json({ order });
 };
 
+// GET /api/owner/orders/:id/review-request — si se puede pedir la reseña desde el panel.
+export const getReviewRequest = async (req, res) => {
+  const order = await Order.findOne({ _id: req.valid.params.id, commerce: req.commerce._id });
+  if (!order) throw orderNotFound();
+  const { inApp, reason, requestedAt } = await reviewRequestStatus(order);
+  res.json({ inApp, reason, requestedAt });
+};
+
+const REVIEW_REQUEST_ERRORS = {
+  NOT_DELIVERED: "Só dá para pedir a avaliação de um pedido entregue (até 30 dias depois)",
+  REVIEWED: "O cliente já avaliou este pedido",
+  NO_CONVERSATION: "Este pedido não veio de uma conversa de WhatsApp com o assistente",
+  WINDOW_CLOSED: "Passaram mais de 24 horas desde a última mensagem do cliente: o WhatsApp só deixa escrever dentro desse prazo",
+  NOT_CONNECTED: "O WhatsApp do assistente não está conectado nesta loja",
+};
+
+// POST /api/owner/orders/:id/review-request — le pide la reseña por el WhatsApp del local.
+export const sendReviewRequestNow = async (req, res) => {
+  const order = await Order.findOne({ _id: req.valid.params.id, commerce: req.commerce._id });
+  if (!order) throw orderNotFound();
+  const status = await reviewRequestStatus(order);
+  if (!status.inApp) throw conflict(status.reason, REVIEW_REQUEST_ERRORS[status.reason]);
+  const message = await sendReviewRequest(order, status.conversation, req.commerce, "staff");
+  if (message.delivery !== "sent") throw new AppError(502, "WHATSAPP_SEND_FAILED", "O WhatsApp não aceitou a mensagem agora. Tente de novo em instantes.");
+  res.json({ inApp: true, reason: null, requestedAt: order.reviewRequestedAt });
+};
+
 // Comanda para la impresora térmica: texto plano o una página HTML lista para imprimir.
 export const getOrderTicket = async (req, res) => {
   const order = await Order.findOne({ _id: req.valid.params.id, commerce: req.commerce._id });
@@ -238,6 +266,8 @@ export const getOrderTracking = async (req, res) => {
       secondaryColor: store.secondaryColor,
       // Para pagar desde el seguimiento: solo si el pedido es con Pix.
       pixKey: order.paymentMethod === "pix" ? store.pixKey : "",
+      // Después de opinar, el cliente puede dejar la reseña también en Google.
+      googleReviewUrl: store.googleReviewUrl ?? "",
     },
     order: {
       number: order.number,

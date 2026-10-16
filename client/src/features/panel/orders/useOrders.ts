@@ -1,6 +1,6 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ApiError, api } from "../../../api/client";
-import type { Order, OrderResponse, OrdersResponse, OrderStatus } from "../../../api/types";
+import type { Order, OrderResponse, OrdersResponse, OrderStatus, ReviewRequestStatus } from "../../../api/types";
 import { getDeviceSettings } from "./deviceSettings";
 import { printTicket } from "./printTicket";
 
@@ -60,5 +60,21 @@ export function useSaveNotes() {
   return useMutation<OrderResponse, ApiError, { id: string; internalNotes: string }>({
     mutationFn: ({ id, internalNotes }) => api<OrderResponse>(`/owner/orders/${id}/notes`, { method: "PATCH", body: { internalNotes } }),
     onSuccess: ({ order }) => replaceOrder(queryClient, order),
+  });
+}
+
+// Pedir la reseña por el WhatsApp del local: si se puede desde el panel y, si no, por qué.
+const reviewRequestKey = (id: string) => ["review-request", id];
+
+export const useReviewRequest = (id: string, enabled: boolean) =>
+  useQuery({ queryKey: reviewRequestKey(id), queryFn: () => api<ReviewRequestStatus>(`/owner/orders/${id}/review-request`), enabled });
+
+export function useSendReviewRequest(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation<ReviewRequestStatus, ApiError>({
+    mutationFn: () => api<ReviewRequestStatus>(`/owner/orders/${id}/review-request`, { method: "POST" }),
+    onSuccess: (data) => queryClient.setQueryData(reviewRequestKey(id), data),
+    // Ya no se puede (pasaron las 24 horas, el cliente ya opinó…): se vuelve a preguntar.
+    onError: () => queryClient.invalidateQueries({ queryKey: reviewRequestKey(id) }),
   });
 }

@@ -80,6 +80,9 @@ const commerceSchema = new mongoose.Schema(
     logoUrl: { type: String, trim: true, maxlength: 500, default: "" },
     coverUrl: { type: String, trim: true, maxlength: 500, default: "" },
     instagram: { type: String, trim: true, maxlength: 30, default: "" },
+    // Link del Perfil de Empresa en Google para dejar una reseña: el cliente lo ve después de
+    // opinar en el seguimiento. Google no deja publicar reseñas por otro: la escribe el cliente.
+    googleReviewUrl: { type: String, trim: true, maxlength: 500, default: "" },
     primaryColor: { type: String, match: HEX_COLOR, default: "#D9480F" },
     secondaryColor: { type: String, match: HEX_COLOR, default: "#212529" },
     // E.164: +5555999998888

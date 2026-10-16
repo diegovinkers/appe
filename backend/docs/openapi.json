@@ -3207,6 +3207,9 @@
                         },
                         "pixKey": {
                           "type": "string"
+                        },
+                        "googleReviewUrl": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -3216,7 +3219,8 @@
                         "logoUrl",
                         "primaryColor",
                         "secondaryColor",
-                        "pixKey"
+                        "pixKey",
+                        "googleReviewUrl"
                       ],
                       "additionalProperties": false
                     },
@@ -5658,6 +5662,9 @@
                         "instagram": {
                           "type": "string"
                         },
+                        "googleReviewUrl": {
+                          "type": "string"
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -6265,6 +6272,7 @@
                         "logoUrl",
                         "coverUrl",
                         "instagram",
+                        "googleReviewUrl",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -6460,6 +6468,19 @@
                   },
                   "instagram": {
                     "type": "string"
+                  },
+                  "googleReviewUrl": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "const": ""
+                      },
+                      {
+                        "type": "string",
+                        "maxLength": 500,
+                        "format": "uri"
+                      }
+                    ]
                   },
                   "primaryColor": {
                     "type": "string",
@@ -6786,6 +6807,9 @@
                         "instagram": {
                           "type": "string"
                         },
+                        "googleReviewUrl": {
+                          "type": "string"
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -7393,6 +7417,7 @@
                         "logoUrl",
                         "coverUrl",
                         "instagram",
+                        "googleReviewUrl",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -7874,6 +7899,9 @@
                         "instagram": {
                           "type": "string"
                         },
+                        "googleReviewUrl": {
+                          "type": "string"
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -8481,6 +8509,7 @@
                         "logoUrl",
                         "coverUrl",
                         "instagram",
+                        "googleReviewUrl",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -8752,6 +8781,9 @@
                         "instagram": {
                           "type": "string"
                         },
+                        "googleReviewUrl": {
+                          "type": "string"
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -9359,6 +9391,7 @@
                         "logoUrl",
                         "coverUrl",
                         "instagram",
+                        "googleReviewUrl",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -9580,6 +9613,9 @@
                         "instagram": {
                           "type": "string"
                         },
+                        "googleReviewUrl": {
+                          "type": "string"
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -10187,6 +10223,7 @@
                         "logoUrl",
                         "coverUrl",
                         "instagram",
+                        "googleReviewUrl",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -15490,6 +15527,18 @@
                           "internalNotes": {
                             "type": "string"
                           },
+                          "reviewRequestedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "customer": {
                             "type": "object",
                             "properties": {
@@ -15847,6 +15896,7 @@
                           "scheduledFor",
                           "cancelReason",
                           "internalNotes",
+                          "reviewRequestedAt",
                           "customer",
                           "fulfillment",
                           "paymentMethod",
@@ -16095,6 +16145,18 @@
                         "internalNotes": {
                           "type": "string"
                         },
+                        "reviewRequestedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customer": {
                           "type": "object",
                           "properties": {
@@ -16452,6 +16514,7 @@
                         "scheduledFor",
                         "cancelReason",
                         "internalNotes",
+                        "reviewRequestedAt",
                         "customer",
                         "fulfillment",
                         "paymentMethod",
@@ -16679,6 +16742,18 @@
                         "internalNotes": {
                           "type": "string"
                         },
+                        "reviewRequestedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customer": {
                           "type": "object",
                           "properties": {
@@ -17036,6 +17111,7 @@
                         "scheduledFor",
                         "cancelReason",
                         "internalNotes",
+                        "reviewRequestedAt",
                         "customer",
                         "fulfillment",
                         "paymentMethod",
@@ -19339,6 +19415,18 @@
                           "internalNotes": {
                             "type": "string"
                           },
+                          "reviewRequestedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time",
+                                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "customer": {
                             "type": "object",
                             "properties": {
@@ -19696,6 +19784,7 @@
                           "scheduledFor",
                           "cancelReason",
                           "internalNotes",
+                          "reviewRequestedAt",
                           "customer",
                           "fulfillment",
                           "paymentMethod",
@@ -20034,6 +20123,18 @@
                         "internalNotes": {
                           "type": "string"
                         },
+                        "reviewRequestedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customer": {
                           "type": "object",
                           "properties": {
@@ -20391,6 +20492,7 @@
                         "scheduledFor",
                         "cancelReason",
                         "internalNotes",
+                        "reviewRequestedAt",
                         "customer",
                         "fulfillment",
                         "paymentMethod",
@@ -20518,6 +20620,18 @@
                         "internalNotes": {
                           "type": "string"
                         },
+                        "reviewRequestedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customer": {
                           "type": "object",
                           "properties": {
@@ -20875,6 +20989,7 @@
                         "scheduledFor",
                         "cancelReason",
                         "internalNotes",
+                        "reviewRequestedAt",
                         "customer",
                         "fulfillment",
                         "paymentMethod",
@@ -20991,6 +21106,198 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/owner/orders/{id}/review-request": {
+      "get": {
+        "tags": [
+          "Panel: pedidos"
+        ],
+        "summary": "Si se puede pedir la reseña por el WhatsApp del local y, si no, por qué",
+        "description": "Con sesión y el permiso `orders:read`.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f\\d]{24}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inApp": {
+                      "type": "boolean"
+                    },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "NOT_DELIVERED",
+                            "REVIEWED",
+                            "NO_CONVERSATION",
+                            "WINDOW_CLOSED",
+                            "NOT_CONNECTED"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "requestedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "inApp",
+                    "reason",
+                    "requestedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Panel: pedidos"
+        ],
+        "summary": "Pedir la reseña por el WhatsApp del local (pedido de una conversación, dentro de las 24 h)",
+        "description": "Con sesión y el permiso `orders:write`.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f\\d]{24}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inApp": {
+                      "type": "boolean"
+                    },
+                    "reason": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "NOT_DELIVERED",
+                            "REVIEWED",
+                            "NO_CONVERSATION",
+                            "WINDOW_CLOSED",
+                            "NOT_CONNECTED"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "requestedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "inApp",
+                    "reason",
+                    "requestedAt"
+                  ],
+                  "additionalProperties": false
                 }
               }
             }
@@ -21154,6 +21461,18 @@
                         "internalNotes": {
                           "type": "string"
                         },
+                        "reviewRequestedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customer": {
                           "type": "object",
                           "properties": {
@@ -21511,6 +21830,7 @@
                         "scheduledFor",
                         "cancelReason",
                         "internalNotes",
+                        "reviewRequestedAt",
                         "customer",
                         "fulfillment",
                         "paymentMethod",
@@ -21678,6 +21998,18 @@
                         "internalNotes": {
                           "type": "string"
                         },
+                        "reviewRequestedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customer": {
                           "type": "object",
                           "properties": {
@@ -22035,6 +22367,7 @@
                         "scheduledFor",
                         "cancelReason",
                         "internalNotes",
+                        "reviewRequestedAt",
                         "customer",
                         "fulfillment",
                         "paymentMethod",
@@ -22251,6 +22584,18 @@
                         "internalNotes": {
                           "type": "string"
                         },
+                        "reviewRequestedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "customer": {
                           "type": "object",
                           "properties": {
@@ -22608,6 +22953,7 @@
                         "scheduledFor",
                         "cancelReason",
                         "internalNotes",
+                        "reviewRequestedAt",
                         "customer",
                         "fulfillment",
                         "paymentMethod",
@@ -22701,6 +23047,14 @@
                         "voiceReplies": {
                           "type": "boolean"
                         },
+                        "autoReviewRequest": {
+                          "type": "boolean"
+                        },
+                        "reviewDelayMinutes": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "model": {
                           "type": "string"
                         },
@@ -22765,6 +23119,8 @@
                         "phoneNumberId",
                         "monthlyBudgetUsdCents",
                         "voiceReplies",
+                        "autoReviewRequest",
+                        "reviewDelayMinutes",
                         "model",
                         "available",
                         "month"
@@ -22842,6 +23198,18 @@
                   },
                   "voiceReplies": {
                     "type": "boolean"
+                  },
+                  "autoReviewRequest": {
+                    "type": "boolean"
+                  },
+                  "reviewDelayMinutes": {
+                    "type": "number",
+                    "enum": [
+                      30,
+                      60,
+                      120,
+                      180
+                    ]
                   }
                 }
               }
@@ -22878,6 +23246,14 @@
                         },
                         "voiceReplies": {
                           "type": "boolean"
+                        },
+                        "autoReviewRequest": {
+                          "type": "boolean"
+                        },
+                        "reviewDelayMinutes": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "model": {
                           "type": "string"
@@ -22943,6 +23319,8 @@
                         "phoneNumberId",
                         "monthlyBudgetUsdCents",
                         "voiceReplies",
+                        "autoReviewRequest",
+                        "reviewDelayMinutes",
                         "model",
                         "available",
                         "month"
@@ -26769,6 +27147,9 @@
                           "instagram": {
                             "type": "string"
                           },
+                          "googleReviewUrl": {
+                            "type": "string"
+                          },
                           "primaryColor": {
                             "type": "string"
                           },
@@ -27403,6 +27784,7 @@
                           "logoUrl",
                           "coverUrl",
                           "instagram",
+                          "googleReviewUrl",
                           "primaryColor",
                           "secondaryColor",
                           "whatsapp",
@@ -27579,6 +27961,9 @@
                           "type": "string"
                         },
                         "instagram": {
+                          "type": "string"
+                        },
+                        "googleReviewUrl": {
                           "type": "string"
                         },
                         "primaryColor": {
@@ -28188,6 +28573,7 @@
                         "logoUrl",
                         "coverUrl",
                         "instagram",
+                        "googleReviewUrl",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -28398,6 +28784,9 @@
                         "instagram": {
                           "type": "string"
                         },
+                        "googleReviewUrl": {
+                          "type": "string"
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -29005,6 +29394,7 @@
                         "logoUrl",
                         "coverUrl",
                         "instagram",
+                        "googleReviewUrl",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",

@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+// Cuánto después de la entrega se pide la reseña sola (minutos).
+export const REVIEW_DELAY_OPTIONS = [30, 60, 120, 180];
+export const DEFAULT_REVIEW_DELAY = 60;
+
 // Configuración del asistente con IA de un local (uno por local; se crea al configurarlo).
 const assistantSchema = new mongoose.Schema(
   {
@@ -15,6 +19,9 @@ const assistantSchema = new mongoose.Schema(
     monthlyBudgetUsdCents: { type: Number, default: 1000, min: 0, validate: Number.isInteger },
     // Contestar también con una nota de voz cuando el cliente manda audio.
     voiceReplies: { type: Boolean, default: false },
+    // Pedir la reseña sola por WhatsApp, `reviewDelayMinutes` después de entregado el pedido.
+    autoReviewRequest: { type: Boolean, default: false },
+    reviewDelayMinutes: { type: Number, enum: REVIEW_DELAY_OPTIONS, default: DEFAULT_REVIEW_DELAY },
   },
   { timestamps: true, versionKey: false }
 );

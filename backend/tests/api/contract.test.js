@@ -7,11 +7,15 @@ import { createApiRouters, createApp } from "../../src/app.js";
 import { config } from "../../src/config.js";
 import { buildOpenApi } from "../../src/docs/openapi.js";
 import { operations } from "../../src/docs/operations.js";
+import Assistant from "../../src/models/assistant.model.js";
 import Conversation from "../../src/models/conversation.model.js";
+import Order from "../../src/models/order.model.js";
+import Subscription from "../../src/models/subscription.model.js";
 import { errorResponse } from "../../src/schemas/responses.schema.js";
 import { setAiProvider } from "../../src/services/assistant/ai.js";
 import { setTranscriber } from "../../src/services/assistant/transcription.js";
 import { settleWebhooks } from "../../src/services/assistant/whatsapp.js";
+import { setWhatsappClient } from "../../src/services/assistant/whatsappCloud.js";
 import { setSpeaker } from "../../src/services/assistant/voice.js";
 import { PASSWORD, createCommerceWithOwner, createMenu, createSuperadmin, loginAs } from "../helpers.js";
 
@@ -255,10 +259,19 @@ describe("contrato de las respuestas", () => {
     check(await owner.get(`/api/owner/orders/${orderId}`), "get", "/api/owner/orders/:id");
     check(await owner.patch(`/api/owner/orders/${orderId}/status`).send({ status: "confirmed" }), "patch", "/api/owner/orders/:id/status");
     check(await owner.patch(`/api/owner/orders/${orderId}/notes`).send({ internalNotes: "Cliente antigo" }), "patch", "/api/owner/orders/:id/notes");
+    check(await owner.get(`/api/owner/orders/${orderId}/review-request`), "get", "/api/owner/orders/:id/review-request");
     check(await owner.get(`/api/owner/orders/${orderId}/ticket`), "get", "/api/owner/orders/:id/ticket");
 
     // Reseñas: el pedido llega a entregado y el cliente opina.
     for (const status of ["ready", "out_for_delivery", "delivered"]) await owner.patch(`/api/owner/orders/${orderId}/status`).send({ status });
+    // Pedir la reseña por el WhatsApp del local: un pedido de una conversación con la ventana abierta.
+    await Subscription.updateOne({ commerce: commerceId }, { $set: { plan: "Plus", status: "active" } }, { upsert: true });
+    await Assistant.updateOne({ commerce: commerceId }, { $set: { phoneNumberId: "109876543210" } }, { upsert: true });
+    const reviewChat = await Conversation.create({ commerce: commerceId, channel: "whatsapp", waId: "5555999991234", customer: { name: "Maria", phone: "+5555999991234" }, lastCustomerMessageAt: new Date() });
+    await Order.updateOne({ _id: orderId }, { $set: { conversation: reviewChat._id } });
+    setWhatsappClient({ sendText: async () => ["wamid.prueba"], markRead: async () => {} });
+    check(await owner.post(`/api/owner/orders/${orderId}/review-request`), "post", "/api/owner/orders/:id/review-request");
+    setWhatsappClient(undefined);
     check(await request(app).post(`/api/public/orders/${token}/review`).send({ rating: 5, comment: "Muito bom" }), "post", "/api/public/orders/:token/review");
     check(await request(app).get(`/api/public/orders/${token}`), "get", "/api/public/orders/:token");
     check(await request(app).get("/api/public/stores/contrato/reviews"), "get", "/api/public/stores/:slug/reviews");

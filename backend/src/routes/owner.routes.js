@@ -37,6 +37,8 @@ import {
   createManualOrder,
   getOrder,
   getOrderTicket,
+  getReviewRequest,
+  sendReviewRequestNow,
   listOrders,
   updateOrderNotes,
   updateOrderStatus,
@@ -171,6 +173,8 @@ router.post("/uploads/signature", can("menu:write"), validate({ body: uploadSign
 router.get("/orders", can("orders:read"), validate({ query: listOrdersQuery }), listOrders);
 router.post("/orders", can("orders:manual"), validate({ body: manualOrderSchema }), createManualOrder);
 router.get("/orders/:id", can("orders:read"), validate({ params: idParams }), getOrder);
+router.get("/orders/:id/review-request", can("orders:read"), validate({ params: idParams }), getReviewRequest);
+router.post("/orders/:id/review-request", can("orders:write"), validate({ params: idParams }), sendReviewRequestNow);
 router.get("/orders/:id/ticket", can("orders:read"), validate({ params: idParams, query: ticketQuery }), getOrderTicket);
 router.patch("/orders/:id/notes", can("orders:write"), validate({ params: idParams, body: orderNotesSchema }), updateOrderNotes);
 router.patch(

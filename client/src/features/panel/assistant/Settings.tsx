@@ -13,6 +13,8 @@ export function Settings({ settings }: { settings: AssistantSettings }) {
   const [phoneNumberId, setPhoneNumberId] = useState(settings.phoneNumberId ?? "");
   const [budget, setBudget] = useState(String(settings.monthlyBudgetUsdCents / 100));
   const [voiceReplies, setVoiceReplies] = useState(settings.voiceReplies);
+  const [autoReviewRequest, setAutoReviewRequest] = useState(settings.autoReviewRequest);
+  const [reviewDelayMinutes, setReviewDelayMinutes] = useState(settings.reviewDelayMinutes);
 
   const { month } = settings;
   const perConversation = average(month.costMicros, month.conversations);
@@ -23,7 +25,14 @@ export function Settings({ settings }: { settings: AssistantSettings }) {
   function save(event: FormEvent) {
     event.preventDefault();
     if (!validBudget) return;
-    update.mutate({ enabled, phoneNumberId: phoneNumberId.trim(), monthlyBudgetUsdCents: budgetCents, voiceReplies });
+    update.mutate({
+      enabled,
+      phoneNumberId: phoneNumberId.trim(),
+      monthlyBudgetUsdCents: budgetCents,
+      voiceReplies,
+      autoReviewRequest,
+      reviewDelayMinutes: reviewDelayMinutes as 30 | 60 | 120 | 180,
+    });
   }
 
   return (
@@ -61,6 +70,26 @@ export function Settings({ settings }: { settings: AssistantSettings }) {
             disabled={!settings.available.voice && !voiceReplies}
           />
           <p className="text-sm text-ink-muted">{settings.available.voice ? s.voiceHint : s.noVoice}</p>
+        </div>
+        <div className="space-y-2">
+          <Switch checked={autoReviewRequest} onChange={setAutoReviewRequest} label={s.autoReview} />
+          <p className="text-sm text-ink-muted">{s.autoReviewHint}</p>
+          {autoReviewRequest && (
+            <label className="flex flex-wrap items-center gap-3">
+              <span className="font-bold">{s.reviewDelay}</span>
+              <select
+                className="h-11 rounded-lg border border-line bg-surface px-3"
+                value={reviewDelayMinutes}
+                onChange={(event) => setReviewDelayMinutes(Number(event.target.value))}
+              >
+                {[30, 60, 120, 180].map((minutes) => (
+                  <option key={minutes} value={minutes}>
+                    {s.reviewDelayOption(minutes)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
         {update.isError && (
           <p role="alert" className="font-bold text-error">
