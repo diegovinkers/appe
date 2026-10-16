@@ -301,6 +301,7 @@ Las cuatro rutas que cambian el local devuelven lo mismo que `GET`: `{ "store", 
   - `{ "mode": "auto" }`: volver al horario.
   - Al vencer `until`, vuelve solo al horario. Error: `INVALID_UNTIL` (400) si `until` ya pasó o está a más de 7 días.
   - Para un local sin horarios cargados, el interruptor Aberto/Fechado del panel es `open`/`closed` sin `until`.
+- `PUT /api/owner/store/busy` (`store:open`, también para empleados). "Muito movimento": `{ "extraMinutes": 15 | 30 | 45 | 60, "forMinutes"?: 30..720 }` suma esos minutos a todos los tiempos estimados (menú, barrios, asistente y previsión de los pedidos nuevos) hasta el fin del día de trabajo, o por `forMinutes`. `{ "extraMinutes": 0 }` lo apaga. Queda en `store.busy` (`{ extraMinutes, until }` o `null`); el menú público recibe los tiempos ya sumados y `busy` para avisar.
 - `GET /api/owner/store/qr?format=png|svg&size=512` (`store:read`). Imagen del QR con el link del menú, para imprimir (`size` entre 128 y 2048 px; por defecto, PNG de 512).
 
 ### Categorías

@@ -113,6 +113,7 @@ export function StoreHero({ store, onMore, onReviews }: { store: PublicStore; on
         </button>
 
         {store.notice && <p className="mt-2 rounded-xl bg-surface px-4 py-3 ring-1 ring-line">{store.notice}</p>}
+        {store.isOpen && store.busy && <p role="status" className="mt-2 rounded-xl bg-surface px-4 py-3 ring-1 ring-line">{t.menu.busyNotice}</p>}
         {!store.isOpen && (
           <p role="status" className="mt-2 rounded-xl bg-surface px-4 py-3 ring-1 ring-line">
             {store.opening.status === "paused" ? store.opening.message || t.menu.pausedNotice : store.scheduling.enabled ? t.menu.closedScheduling : t.menu.closedNotice}

@@ -133,6 +133,7 @@ describe("contrato de las respuestas", () => {
       "/api/owner/store/hours"
     );
     check(await owner.put("/api/owner/store/status").send({ mode: "open" }), "put", "/api/owner/store/status");
+    check(await owner.put("/api/owner/store/busy").send({ extraMinutes: 30 }), "put", "/api/owner/store/busy");
     check(await owner.get("/api/owner/store/qr"), "get", "/api/owner/store/qr");
 
     const category = check(await owner.post("/api/owner/categories").send({ name: "Lanches" }), "post", "/api/owner/categories").body.category;

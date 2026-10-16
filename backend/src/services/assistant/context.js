@@ -12,6 +12,7 @@ import { formatBRL } from "../../lib/money.js";
 import { phoneVariants } from "../../lib/phone.js";
 import { localized } from "../../lib/translations.js";
 import { WEEKDAYS, getOpeningStatus, isCategoryAvailable } from "../opening.service.js";
+import { activeBusy } from "../busy.service.js";
 import { STATUS_LABELS } from "../orderStatus.js";
 import { activePromoPrice, effectivePrice, fromPrice } from "../pricing.service.js";
 import { paymentMethodsFor } from "../payments.service.js";
@@ -206,7 +207,12 @@ export async function momentInfo({ store, conversation, now = new Date() }) {
       : [],
   ]);
 
-  const lines = ["## Agora", `Data e hora: ${formatWhen(now)} (horário de Brasília)`, `Loja: ${openingText(store, now)}`, "", "## Cliente"];
+  const lines = ["## Agora", `Data e hora: ${formatWhen(now)} (horário de Brasília)`, `Loja: ${openingText(store, now)}`];
+  const busy = activeBusy(store, now);
+  if (busy) {
+    lines.push(`MUITO MOVIMENTO até ${formatWhen(busy.until)}: some ${busy.extraMinutes} min a todos os tempos estimados (a previsão do pedido já sai com eles). Avise o cliente com gentileza.`);
+  }
+  lines.push("", "## Cliente");
   lines.push(`WhatsApp: ${phone || "não informado"}`);
   const name = conversation.customer.name || account?.name;
   lines.push(`Nome: ${name || "ainda não informado (pergunte antes de cotar)"}`);

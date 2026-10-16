@@ -2164,6 +2164,33 @@
                           ],
                           "additionalProperties": false
                         },
+                        "busy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "extraMinutes": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "until": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "extraMinutes",
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "deliveryMode": {
                           "type": "string",
                           "enum": [
@@ -2429,6 +2456,7 @@
                         "whatsapp",
                         "fulfillment",
                         "estimates",
+                        "busy",
                         "deliveryMode",
                         "deliveryFeeCents",
                         "deliveryZones",
@@ -5888,6 +5916,33 @@
                             }
                           ]
                         },
+                        "busy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "extraMinutes": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "until": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "extraMinutes",
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "fulfillment": {
                           "type": "object",
                           "properties": {
@@ -6216,6 +6271,7 @@
                         "address",
                         "hours",
                         "override",
+                        "busy",
                         "fulfillment",
                         "estimates",
                         "deliveryMode",
@@ -6988,6 +7044,33 @@
                             }
                           ]
                         },
+                        "busy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "extraMinutes": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "until": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "extraMinutes",
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "fulfillment": {
                           "type": "object",
                           "properties": {
@@ -7316,6 +7399,7 @@
                         "address",
                         "hours",
                         "override",
+                        "busy",
                         "fulfillment",
                         "estimates",
                         "deliveryMode",
@@ -8048,6 +8132,33 @@
                             }
                           ]
                         },
+                        "busy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "extraMinutes": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "until": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "extraMinutes",
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "fulfillment": {
                           "type": "object",
                           "properties": {
@@ -8376,6 +8487,7 @@
                         "address",
                         "hours",
                         "override",
+                        "busy",
                         "fulfillment",
                         "estimates",
                         "deliveryMode",
@@ -8898,6 +9010,33 @@
                             }
                           ]
                         },
+                        "busy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "extraMinutes": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "until": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "extraMinutes",
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "fulfillment": {
                           "type": "object",
                           "properties": {
@@ -9226,6 +9365,835 @@
                         "address",
                         "hours",
                         "override",
+                        "busy",
+                        "fulfillment",
+                        "estimates",
+                        "deliveryMode",
+                        "deliveryFeeCents",
+                        "deliveryZones",
+                        "freeDeliveryFromCents",
+                        "minOrderCents",
+                        "paymentMethods",
+                        "pixKey",
+                        "paymentOptions",
+                        "scheduling",
+                        "translations",
+                        "createdAt",
+                        "updatedAt"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "opening": {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "open",
+                            "closed",
+                            "paused"
+                          ]
+                        },
+                        "acceptingOrders": {
+                          "type": "boolean"
+                        },
+                        "closesAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "nextOpenAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "pausedUntil": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "source": {
+                          "type": "string",
+                          "enum": [
+                            "schedule",
+                            "override"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "acceptingOrders",
+                        "closesAt",
+                        "nextOpenAt",
+                        "pausedUntil",
+                        "message",
+                        "source"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "storeUrl": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "store",
+                    "opening",
+                    "storeUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/owner/store/busy": {
+      "put": {
+        "tags": [
+          "Panel: local"
+        ],
+        "summary": "Muito movimento: sumar minutos a los tiempos estimados",
+        "description": "Con sesión y el permiso `store:open`.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "extraMinutes": {
+                    "type": "number",
+                    "enum": [
+                      0,
+                      15,
+                      30,
+                      45,
+                      60
+                    ]
+                  },
+                  "forMinutes": {
+                    "type": "integer",
+                    "minimum": 30,
+                    "maximum": 720
+                  }
+                },
+                "required": [
+                  "extraMinutes"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "store": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "pattern": "^[a-f\\d]{24}$"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "slug": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "suspended"
+                          ]
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "about": {
+                          "type": "string"
+                        },
+                        "notice": {
+                          "type": "string"
+                        },
+                        "logoUrl": {
+                          "type": "string"
+                        },
+                        "coverUrl": {
+                          "type": "string"
+                        },
+                        "instagram": {
+                          "type": "string"
+                        },
+                        "primaryColor": {
+                          "type": "string"
+                        },
+                        "secondaryColor": {
+                          "type": "string"
+                        },
+                        "whatsapp": {
+                          "type": "string"
+                        },
+                        "address": {
+                          "type": "string"
+                        },
+                        "hours": {
+                          "type": "object",
+                          "properties": {
+                            "weekly": {
+                              "type": "object",
+                              "properties": {
+                                "sun": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "open": {
+                                        "type": "string"
+                                      },
+                                      "close": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "open",
+                                      "close"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "mon": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "open": {
+                                        "type": "string"
+                                      },
+                                      "close": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "open",
+                                      "close"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "tue": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "open": {
+                                        "type": "string"
+                                      },
+                                      "close": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "open",
+                                      "close"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "wed": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "open": {
+                                        "type": "string"
+                                      },
+                                      "close": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "open",
+                                      "close"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "thu": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "open": {
+                                        "type": "string"
+                                      },
+                                      "close": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "open",
+                                      "close"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "fri": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "open": {
+                                        "type": "string"
+                                      },
+                                      "close": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "open",
+                                      "close"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "sat": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "open": {
+                                        "type": "string"
+                                      },
+                                      "close": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "open",
+                                      "close"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                }
+                              },
+                              "required": [
+                                "sun",
+                                "mon",
+                                "tue",
+                                "wed",
+                                "thu",
+                                "fri",
+                                "sat"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "exceptions": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "date": {
+                                    "type": "string"
+                                  },
+                                  "closed": {
+                                    "type": "boolean"
+                                  },
+                                  "intervals": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "open": {
+                                          "type": "string"
+                                        },
+                                        "close": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "open",
+                                        "close"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "note": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "date",
+                                  "closed",
+                                  "intervals",
+                                  "note"
+                                ],
+                                "additionalProperties": false
+                              }
+                            },
+                            "dayStart": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "weekly",
+                            "exceptions",
+                            "dayStart"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "override": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "mode": {
+                                  "type": "string",
+                                  "enum": [
+                                    "open",
+                                    "closed",
+                                    "paused"
+                                  ]
+                                },
+                                "until": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "format": "date-time",
+                                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "message": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "mode",
+                                "until",
+                                "message"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "busy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "extraMinutes": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "until": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "extraMinutes",
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "fulfillment": {
+                          "type": "object",
+                          "properties": {
+                            "delivery": {
+                              "type": "boolean"
+                            },
+                            "pickup": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "delivery",
+                            "pickup"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "estimates": {
+                          "type": "object",
+                          "properties": {
+                            "deliveryMin": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "deliveryMax": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "pickupMin": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "pickupMax": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "deliveryMin",
+                            "deliveryMax",
+                            "pickupMin",
+                            "pickupMax"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "deliveryMode": {
+                          "type": "string",
+                          "enum": [
+                            "fixed",
+                            "zones"
+                          ]
+                        },
+                        "deliveryFeeCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "deliveryZones": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "pattern": "^[a-f\\d]{24}$"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "feeCents": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "minOrderCents": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "estimateMin": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "estimateMax": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "active": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "_id",
+                              "name",
+                              "feeCents",
+                              "minOrderCents",
+                              "estimateMin",
+                              "estimateMax",
+                              "active"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "freeDeliveryFromCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "minOrderCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "paymentMethods": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "cash",
+                              "pix",
+                              "card"
+                            ]
+                          }
+                        },
+                        "pixKey": {
+                          "type": "string"
+                        },
+                        "paymentOptions": {
+                          "type": "object",
+                          "properties": {
+                            "cash": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                },
+                                "askChange": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note",
+                                "askChange"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "pix": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "card": {
+                              "type": "object",
+                              "properties": {
+                                "fulfillment": {
+                                  "type": "string",
+                                  "enum": [
+                                    "both",
+                                    "delivery",
+                                    "pickup"
+                                  ]
+                                },
+                                "note": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "fulfillment",
+                                "note"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "cash",
+                            "pix",
+                            "card"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "scheduling": {
+                          "type": "object",
+                          "properties": {
+                            "enabled": {
+                              "type": "boolean"
+                            },
+                            "minLeadMinutes": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "maxDaysAhead": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "slotMinutes": {
+                              "type": "number",
+                              "enum": [
+                                15,
+                                30,
+                                60
+                              ]
+                            }
+                          },
+                          "required": [
+                            "enabled",
+                            "minLeadMinutes",
+                            "maxDaysAhead",
+                            "slotMinutes"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "translations": {
+                          "type": "object",
+                          "properties": {
+                            "es": {
+                              "type": "object",
+                              "properties": {
+                                "description": {
+                                  "type": "string"
+                                },
+                                "about": {
+                                  "type": "string"
+                                },
+                                "notice": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "description",
+                                "about",
+                                "notice"
+                              ],
+                              "additionalProperties": false
+                            }
+                          },
+                          "required": [
+                            "es"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        }
+                      },
+                      "required": [
+                        "_id",
+                        "name",
+                        "slug",
+                        "status",
+                        "description",
+                        "about",
+                        "notice",
+                        "logoUrl",
+                        "coverUrl",
+                        "instagram",
+                        "primaryColor",
+                        "secondaryColor",
+                        "whatsapp",
+                        "address",
+                        "hours",
+                        "override",
+                        "busy",
                         "fulfillment",
                         "estimates",
                         "deliveryMode",
@@ -26059,6 +27027,33 @@
                               }
                             ]
                           },
+                          "busy": {
+                            "anyOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "extraMinutes": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "until": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                  }
+                                },
+                                "required": [
+                                  "extraMinutes",
+                                  "until"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "fulfillment": {
                             "type": "object",
                             "properties": {
@@ -26414,6 +27409,7 @@
                           "address",
                           "hours",
                           "override",
+                          "busy",
                           "fulfillment",
                           "estimates",
                           "deliveryMode",
@@ -26843,6 +27839,33 @@
                             }
                           ]
                         },
+                        "busy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "extraMinutes": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "until": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "extraMinutes",
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "fulfillment": {
                           "type": "object",
                           "properties": {
@@ -27171,6 +28194,7 @@
                         "address",
                         "hours",
                         "override",
+                        "busy",
                         "fulfillment",
                         "estimates",
                         "deliveryMode",
@@ -27632,6 +28656,33 @@
                             }
                           ]
                         },
+                        "busy": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "extraMinutes": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "until": {
+                                  "type": "string",
+                                  "format": "date-time",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                                }
+                              },
+                              "required": [
+                                "extraMinutes",
+                                "until"
+                              ],
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
                         "fulfillment": {
                           "type": "object",
                           "properties": {
@@ -27960,6 +29011,7 @@
                         "address",
                         "hours",
                         "override",
+                        "busy",
                         "fulfillment",
                         "estimates",
                         "deliveryMode",

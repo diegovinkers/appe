@@ -167,6 +167,49 @@ describe("apertura manual (PUT /api/owner/store/status)", () => {
   });
 });
 
+describe("muito movimento (PUT /api/owner/store/busy)", () => {
+  it("suma minutos al menú y a la previsión de los pedidos hasta el fin del día", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-26T01:00:00Z")); // viernes 22:00 en Brasil
+    const res = await owner.put("/api/owner/store/busy").send({ extraMinutes: 30 });
+    expect(res.status).toBe(200);
+    // Hasta el fin del día de trabajo: el sábado a las 05:00.
+    expect(res.body.store.busy).toEqual({ extraMinutes: 30, until: "2026-09-26T08:00:00.000Z" });
+
+    const menuRes = await request(app).get("/api/public/stores/loja-a");
+    expect(menuRes.body.store.estimates).toEqual({ deliveryMin: 70, deliveryMax: 90, pickupMin: 50, pickupMax: 60 });
+    expect(menuRes.body.store.busy).toEqual({ extraMinutes: 30, until: "2026-09-26T08:00:00.000Z" });
+    const order = await postOrder(orderBody());
+    expect(order.body.order.estimatedMinutes).toEqual({ min: 70, max: 90 });
+
+    // Pasado el plazo, vuelven los tiempos normales.
+    vi.setSystemTime(new Date("2026-09-26T08:00:00Z"));
+    const later = await request(app).get("/api/public/stores/loja-a");
+    expect(later.body.store).toMatchObject({ estimates: { deliveryMin: 40, deliveryMax: 60 }, busy: null });
+  });
+
+  it("los barrios con tiempo propio también suman, y 0 lo apaga", async () => {
+    await Commerce.updateOne({ _id: commerce._id }, { deliveryMode: "zones", deliveryZones: [{ name: "Centro", feeCents: 500, estimateMin: 20, estimateMax: 30 }, { name: "Vila", feeCents: 700 }] });
+    await owner.put("/api/owner/store/busy").send({ extraMinutes: 15, forMinutes: 60 });
+    const zones = (await request(app).get("/api/public/stores/loja-a")).body.store.deliveryZones;
+    expect(zones.map(({ estimateMin, estimateMax }) => [estimateMin, estimateMax])).toEqual([[35, 45], [null, null]]);
+
+    const off = await owner.put("/api/owner/store/busy").send({ extraMinutes: 0 });
+    expect(off.body.store.busy).toBeNull();
+    const audits = await AuditLog.find({ action: "store.busy_changed" });
+    expect(audits).toHaveLength(2);
+  });
+
+  it("el empleado lo puede usar; valores fuera de la lista dan 400", async () => {
+    await createStaff(commerce);
+    const staff = await loginAs(app, "staff-loja-a@test.local");
+    expect((await staff.put("/api/owner/store/busy").send({ extraMinutes: 45 })).status).toBe(200);
+    expect((await owner.put("/api/owner/store/busy").send({ extraMinutes: 20 })).status).toBe(400);
+    expect((await owner.put("/api/owner/store/busy").send({ extraMinutes: 15, forMinutes: 10 })).status).toBe(400);
+    expect((await request(app).put("/api/owner/store/busy").send({ extraMinutes: 15 })).status).toBe(401);
+  });
+});
+
 describe("entrega por barrio", () => {
   const zones = [
     { name: "Centro", feeCents: 400 },

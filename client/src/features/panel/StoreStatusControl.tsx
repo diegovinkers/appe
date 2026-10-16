@@ -5,7 +5,8 @@ import { type ApiError, api } from "../../api/client";
 import type { Opening, OwnerStore, OwnerStoreResponse } from "../../api/types";
 import { useDismiss } from "../../hooks/useDismiss";
 import { errorText, useT } from "../../i18n";
-import { type StatusChange, statusActions, statusView } from "./storeStatus";
+import { formatTime } from "../../lib/format";
+import { BUSY_OPTIONS, type BusyChange, type StatusChange, activeBusy, statusActions, statusView } from "./storeStatus";
 import { ownerStoreKey } from "./useOwnerStore";
 
 // El cartel de la puerta: el estado de la loja, siempre visible, y cambiarlo con un toque.
@@ -25,12 +26,24 @@ export function StoreStatusControl({ store, opening, canChange }: { store: Owner
     },
   });
 
+  const setBusy = useMutation<OwnerStoreResponse, ApiError, BusyChange>({
+    mutationFn: (body) => api<OwnerStoreResponse>("/owner/store/busy", { method: "PUT", body }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(ownerStoreKey, data);
+      setOpen(false);
+    },
+  });
+  const busy = activeBusy(store.busy);
+  const pending = change.isPending || setBusy.isPending;
+  const failed = change.error ?? setBusy.error;
+
   const view = statusView(opening);
   const sign = (
     <>
       <span aria-hidden className="size-2.5 shrink-0 rounded-full bg-white shadow-[0_0_0_3px_rgba(255,255,255,0.25)]" />
       <span className="font-bold">{view.label}</span>
       {view.detail && <span className="hidden text-sm text-white/85 sm:inline">{view.detail}</span>}
+      {busy && <span className="rounded-md bg-white/20 px-1.5 text-sm font-bold">{t.status.busyBadge(busy.extraMinutes)}</span>}
     </>
   );
   const signClass = `inline-flex h-11 items-center gap-2 rounded-lg px-3 text-white ring-1 ring-inset ring-white/20 ${view.tone}`;
@@ -43,7 +56,7 @@ export function StoreStatusControl({ store, opening, canChange }: { store: Owner
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`${view.label}${view.detail ? `, ${view.detail}` : ""}. ${t.status.change}`}
+        aria-label={`${view.label}${view.detail ? `, ${view.detail}` : ""}${busy ? `, ${t.status.busyTitle} ${t.status.busyBadge(busy.extraMinutes)}` : ""}. ${t.status.change}`}
         onClick={() => setOpen((value) => !value)}
         className={`${signClass} shadow-sm hover:brightness-110`}
       >
@@ -59,16 +72,33 @@ export function StoreStatusControl({ store, opening, canChange }: { store: Owner
               key={action.key}
               type="button"
               role="menuitem"
-              disabled={change.isPending}
+              disabled={pending}
               onClick={() => change.mutate(action.change)}
               className="flex h-11 w-full items-center rounded-lg px-3 text-left hover:bg-paper disabled:opacity-50"
             >
               {action.label}
             </button>
           ))}
-          {change.isError && (
+          {/* Muito movimento: con el local recibiendo pedidos (o en pausa), o si ya está puesto. */}
+          {(opening.status !== "closed" || busy) && (
+            <div className="mt-1 border-t border-line pt-1.5">
+              <p className="px-3 pt-1 font-bold">{t.status.busyTitle}</p>
+              <p className="px-3 pb-1 text-sm text-ink-muted">{busy ? t.status.busyActive(busy.extraMinutes, formatTime(busy.until)) : t.status.busyHint}</p>
+              {BUSY_OPTIONS.filter((minutes) => minutes !== busy?.extraMinutes).map((minutes) => (
+                <button key={minutes} type="button" role="menuitem" disabled={pending} onClick={() => setBusy.mutate({ extraMinutes: minutes })} className="flex h-11 w-full items-center rounded-lg px-3 text-left hover:bg-paper disabled:opacity-50">
+                  {t.status.busyAdd(minutes)}
+                </button>
+              ))}
+              {busy && (
+                <button type="button" role="menuitem" disabled={pending} onClick={() => setBusy.mutate({ extraMinutes: 0 })} className="flex h-11 w-full items-center rounded-lg px-3 text-left hover:bg-paper disabled:opacity-50">
+                  {t.status.busyOff}
+                </button>
+              )}
+            </div>
+          )}
+          {failed && (
             <p role="alert" className="px-3 py-2 text-sm text-error">
-              {errorText(change.error, t)}
+              {errorText(failed, t)}
             </p>
           )}
         </div>

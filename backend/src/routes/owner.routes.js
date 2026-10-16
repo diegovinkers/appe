@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getQrCode, getStore, setHours, setStatus, updateStore } from "../controllers/store.controller.js";
+import { getQrCode, getStore, setBusy, setHours, setStatus, updateStore } from "../controllers/store.controller.js";
 import {
   createCategory,
   deleteCategory,
@@ -65,7 +65,7 @@ import {
   updateProductSchema,
   uploadSignatureSchema,
 } from "../schemas/menu.schema.js";
-import { hoursSchema, qrQuery, storeStatusSchema, updateStoreSchema } from "../schemas/store.schema.js";
+import { busySchema, hoursSchema, qrQuery, storeStatusSchema, updateStoreSchema } from "../schemas/store.schema.js";
 import {
   listOrdersQuery,
   manualOrderSchema,
@@ -112,6 +112,7 @@ router.get("/reports", can("store:write"), validate({ query: reportsQuery }), ge
 router.patch("/store", can("store:write"), validate({ body: updateStoreSchema }), updateStore);
 router.put("/store/hours", can("store:write"), validate({ body: hoursSchema }), setHours);
 router.put("/store/status", can("store:open"), validate({ body: storeStatusSchema }), setStatus);
+router.put("/store/busy", can("store:open"), validate({ body: busySchema }), setBusy);
 router.get("/store/qr", can("store:read"), validate({ query: qrQuery }), getQrCode);
 
 router.get("/categories", can("menu:read"), listCategories);

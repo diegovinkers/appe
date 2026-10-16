@@ -4,6 +4,7 @@ import Coupon from "../models/coupon.model.js";
 import Order from "../models/order.model.js";
 import { checkCoupon } from "../services/coupon.service.js";
 import { availableSlots } from "../services/scheduling.service.js";
+import { activeBusy, currentEstimates, zoneEstimates } from "../services/busy.service.js";
 import OptionGroup from "../models/optionGroup.model.js";
 import Product from "../models/product.model.js";
 import { addDays, todayIn } from "../lib/dates.js";
@@ -58,12 +59,9 @@ function publicStore(commerce, lang, now) {
     address: commerce.address,
     whatsapp: commerce.whatsapp,
     fulfillment: { delivery: commerce.fulfillment.delivery, pickup: commerce.fulfillment.pickup },
-    estimates: {
-      deliveryMin: commerce.estimates.deliveryMin,
-      deliveryMax: commerce.estimates.deliveryMax,
-      pickupMin: commerce.estimates.pickupMin,
-      pickupMax: commerce.estimates.pickupMax,
-    },
+    // Con "muito movimento", ya llevan los minutos de más; `busy` dice cuántos y hasta cuándo.
+    estimates: currentEstimates(commerce, now),
+    busy: activeBusy(commerce, now),
     deliveryMode: commerce.deliveryMode,
     deliveryFeeCents: commerce.deliveryFeeCents,
     // Solo los barrios activos, para que el cliente elija el suyo.
@@ -74,8 +72,7 @@ function publicStore(commerce, lang, now) {
         name,
         feeCents,
         minOrderCents,
-        estimateMin,
-        estimateMax,
+        ...zoneEstimates({ estimateMin, estimateMax }, commerce, now),
       })),
     freeDeliveryFromCents: commerce.freeDeliveryFromCents,
     minOrderCents: commerce.minOrderCents,
@@ -206,12 +203,7 @@ export const listPublicStores = async (req, res) => {
         message: opening.message,
       },
       fulfillment: { delivery: commerce.fulfillment.delivery, pickup: commerce.fulfillment.pickup },
-      estimates: {
-        deliveryMin: commerce.estimates.deliveryMin,
-        deliveryMax: commerce.estimates.deliveryMax,
-        pickupMin: commerce.estimates.pickupMin,
-        pickupMax: commerce.estimates.pickupMax,
-      },
+      estimates: currentEstimates(commerce, now),
       rating: ratingOf(commerce._id),
     };
   });

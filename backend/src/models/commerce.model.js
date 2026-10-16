@@ -37,6 +37,15 @@ const overrideSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// "Muito movimento": minutos de más en todos los tiempos estimados, hasta `until`.
+const busySchema = new mongoose.Schema(
+  {
+    extraMinutes: { type: Number, required: true, min: 1, validate: Number.isInteger },
+    until: { type: Date, required: true },
+  },
+  { _id: false }
+);
+
 // Barrio con tarifa propia. minOrderCents y los tiempos vacíos = los generales del local.
 const deliveryZoneSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true, maxlength: 60 },
@@ -95,6 +104,7 @@ const commerceSchema = new mongoose.Schema(
       dayStart: { type: String, default: "05:00" },
     },
     override: { type: overrideSchema, default: null },
+    busy: { type: busySchema, default: null },
 
     fulfillment: {
       delivery: { type: Boolean, default: true },

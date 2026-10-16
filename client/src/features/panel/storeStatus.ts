@@ -3,6 +3,12 @@ import { getT } from "../../i18n";
 import { formatTime, formatWhen } from "../../lib/format";
 
 export type StatusChange = { mode: "open" | "closed" | "auto" } | { mode: "paused"; minutes: number };
+
+// "Muito movimento": minutos de más en los tiempos estimados (0 = tiempos normales).
+export const BUSY_OPTIONS = [15, 30, 45, 60] as const;
+export type BusyChange = { extraMinutes: 0 | (typeof BUSY_OPTIONS)[number] };
+// El modo vigente, o null si no hay o ya venció.
+export const activeBusy = (busy: OwnerStore["busy"], now = Date.now()) => (busy && Date.parse(busy.until) > now ? busy : null);
 export type StatusAction = { key: string; label: string; change: StatusChange };
 
 // Cómo se muestra el cartel: texto, detalle ("até 23:30") y color.

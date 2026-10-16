@@ -84,6 +84,12 @@ export const es: Dictionary = {
     resume: "Volver a recibir pedidos",
     backToSchedule: "Volver al horario automático",
     manual: "Cambiado a mano",
+    busyTitle: "Mucho movimiento",
+    busyHint: "Suma tiempo a la previsión del menú, del asistente y de los pedidos nuevos hasta el fin del día.",
+    busyAdd: (minutes: number) => `+${minutes} min en los tiempos`,
+    busyOff: "Volver a los tiempos normales",
+    busyBadge: (minutes: number) => `+${minutes} min`,
+    busyActive: (minutes: number, time: string) => `Tiempos con +${minutes} min hasta las ${time}`,
   },
 
   user: {
@@ -840,6 +846,7 @@ export const es: Dictionary = {
     closedNotice: "El local no está recibiendo pedidos ahora, pero podés mirar el menú.",
     closedScheduling: "El local está cerrado ahora, pero podés programar tu pedido para más tarde.",
     pausedNotice: "El local pausó los pedidos por unos minutos.",
+    busyNotice: "Tenemos mucho movimiento: la demora es un poco mayor que la habitual.",
     info: "Horarios y dirección",
     seeMore: "Ver más",
     search: "Buscá un producto",

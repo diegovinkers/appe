@@ -6,6 +6,7 @@ import { isCategoryAvailable } from "./opening.service.js";
 import { couponDiscount } from "./coupon.service.js";
 import { effectivePrice, groupCost } from "./pricing.service.js";
 import { paymentMethodsFor } from "./payments.service.js";
+import { currentEstimates, zoneEstimates } from "./busy.service.js";
 
 const byId = (docs) => new Map(docs.map((doc) => [String(doc._id), doc]));
 
@@ -79,9 +80,11 @@ export function priceOrder({
     : 0;
   const totalCents = subtotalCents - discountCents + deliveryFeeCents;
 
-  const { estimates } = store;
+  // Con "muito movimento", todos los tiempos llevan los minutos de más.
+  const estimates = currentEstimates(store, now);
+  const own = zone ? zoneEstimates(zone, store, now) : {};
   const estimatedMinutes = isDelivery
-    ? { min: zone?.estimateMin ?? estimates.deliveryMin, max: zone?.estimateMax ?? estimates.deliveryMax }
+    ? { min: own.estimateMin ?? estimates.deliveryMin, max: own.estimateMax ?? estimates.deliveryMax }
     : { min: estimates.pickupMin, max: estimates.pickupMax };
 
   let changeForCents = null;

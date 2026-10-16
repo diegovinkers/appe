@@ -3,6 +3,7 @@ import { PAYMENT_FULFILLMENTS } from "../services/payments.service.js";
 import { DELIVERY_MODES, PAYMENT_METHODS, SLOT_MINUTES } from "../models/commerce.model.js";
 import { isValidDay } from "../lib/dates.js";
 import { WEEKDAYS } from "../services/opening.service.js";
+import { BUSY_MINUTES } from "../services/busy.service.js";
 import {
   cents,
   closingTime,
@@ -151,6 +152,12 @@ export const storeStatusSchema = z.discriminatedUnion("mode", [
     message: optionalText(140).default(""),
   }),
 ]);
+
+// "Muito movimento": 0 lo apaga. Sin `forMinutes`, dura hasta el fin del día de trabajo.
+export const busySchema = z.object({
+  extraMinutes: z.literal([0, ...BUSY_MINUTES]),
+  forMinutes: z.number().int().min(30).max(720).optional(),
+});
 
 export const qrQuery = z.object({
   format: z.enum(["png", "svg"]).default("png"),

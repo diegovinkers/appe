@@ -54,6 +54,8 @@ export const sessionResponse = z.strictObject({
 
 const fulfillment = z.strictObject({ delivery: z.boolean(), pickup: z.boolean() });
 const interval = z.strictObject({ open: z.string(), close: z.string() });
+// "Muito movimento": minutos de más en los tiempos estimados, hasta `until`.
+const busy = z.strictObject({ extraMinutes: z.number().int(), until: date });
 const weekly = z.strictObject(Object.fromEntries(WEEKDAYS.map((day) => [day, z.array(interval)])));
 const hourException = z.strictObject({ date: z.string(), closed: z.boolean(), intervals: z.array(interval), note: z.string() });
 const estimates = z.strictObject({
@@ -95,6 +97,7 @@ export const store = z.strictObject({
   address: z.string(),
   hours: z.strictObject({ weekly, exceptions: z.array(hourException), dayStart: z.string() }),
   override: z.strictObject({ mode: z.enum(OVERRIDE_MODES), until: date.nullable(), message: z.string() }).nullable(),
+  busy: busy.nullable(),
   fulfillment,
   estimates,
   deliveryMode: z.enum(DELIVERY_MODES),
@@ -496,6 +499,7 @@ export const publicStoreResponse = z.strictObject({
     whatsapp: z.string(),
     fulfillment,
     estimates,
+    busy: busy.nullable(),
     deliveryMode: z.enum(DELIVERY_MODES),
     deliveryFeeCents: cents,
     deliveryZones: z.array(z.strictObject(deliveryZoneFields)),

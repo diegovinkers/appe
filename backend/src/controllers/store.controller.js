@@ -1,7 +1,7 @@
 import QRCode from "qrcode";
 import { audit, diffFields } from "../lib/audit.js";
 import { checkImageUrl } from "../lib/cloudinary.js";
-import { dayStartOf, todayIn } from "../lib/dates.js";
+import { dayStartOf, operatingDayIn, operatingDayRange, todayIn } from "../lib/dates.js";
 import { badRequest } from "../lib/errors.js";
 import { isValidPixKey } from "../lib/pix.js";
 import { paymentMethodsFor } from "../services/payments.service.js";
@@ -150,6 +150,28 @@ export const setStatus = async (req, res) => {
     action: "store.status_changed",
     entity: { type: "commerce", id: store._id },
     changes: { mode: input.mode, until: store.override?.until ?? null },
+  });
+  res.json(storeView(store));
+};
+
+// "Muito movimento": suma minutos a los tiempos estimados hasta el fin del día de trabajo (o
+// por `forMinutes`). Con 0 vuelve a los tiempos normales. Lo puede usar cualquiera que abra o
+// pause el local.
+export const setBusy = async (req, res) => {
+  const store = req.commerce;
+  const { extraMinutes, forMinutes } = req.valid.body;
+  const now = new Date();
+  if (!extraMinutes) store.busy = null;
+  else {
+    const dayStart = dayStartOf(store);
+    const until = forMinutes ? new Date(now.getTime() + forMinutes * 60_000) : operatingDayRange(operatingDayIn(dayStart, now), dayStart).end;
+    store.busy = { extraMinutes, until };
+  }
+  await store.save();
+  await audit(req, {
+    action: "store.busy_changed",
+    entity: { type: "commerce", id: store._id },
+    changes: { extraMinutes, until: store.busy?.until ?? null },
   });
   res.json(storeView(store));
 };

@@ -75,6 +75,15 @@ describe("asistente: tomar un pedido", () => {
     expect(response.body.error.code).toBe("MEMBER_PLUS_REQUIRED");
   });
 
+  it("con muito movimento, la IA sabe cuántos minutos más tarda", async () => {
+    const { commerce, send } = await setup();
+    await Commerce.updateOne({ _id: commerce._id }, { busy: { extraMinutes: 30, until: new Date(Date.now() + 60 * 60 * 1000) } });
+    const calls = fakeAi([say("Oi! Hoje estamos com muito movimento.")]);
+    await send({ text: "oi, quanto demora?" });
+    expect(calls[0].system[1].text).toContain("MUITO MOVIMENTO");
+    expect(calls[0].system[1].text).toContain("some 30 min");
+  });
+
   it("cotiza, espera la confirmación del cliente y crea el pedido", async () => {
     const { commerce, send } = await setup();
     const calls = fakeAi([use("cotar_pedido", pickupQuote), say("*Resumo* ... Total R$ 31,00. Confirma?")]);

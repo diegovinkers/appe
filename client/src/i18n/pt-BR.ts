@@ -82,6 +82,12 @@ export const ptBR = {
     resume: "Retomar pedidos",
     backToSchedule: "Voltar ao horário automático",
     manual: "Mudado à mão",
+    busyTitle: "Muito movimento",
+    busyHint: "Soma tempo à previsão do cardápio, do assistente e dos pedidos novos até o fim do dia.",
+    busyAdd: (minutes: number) => `+${minutes} min nos tempos`,
+    busyOff: "Voltar aos tempos normais",
+    busyBadge: (minutes: number) => `+${minutes} min`,
+    busyActive: (minutes: number, time: string) => `Tempos com +${minutes} min até ${time}`,
   },
 
   user: {
@@ -840,6 +846,7 @@ export const ptBR = {
     closedNotice: "A loja não está recebendo pedidos agora, mas você pode olhar o cardápio.",
     closedScheduling: "A loja está fechada agora, mas você pode agendar seu pedido para mais tarde.",
     pausedNotice: "A loja pausou os pedidos por alguns minutos.",
+    busyNotice: "Estamos com muito movimento: a previsão está um pouco maior que o normal.",
     info: "Horários e endereço",
     seeMore: "Ver mais",
     search: "Busque um produto",

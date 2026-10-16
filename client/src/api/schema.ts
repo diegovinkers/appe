@@ -978,6 +978,11 @@ export interface paths {
                                     pickupMin: number;
                                     pickupMax: number;
                                 };
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
+                                } | null;
                                 /** @enum {string} */
                                 deliveryMode: "fixed" | "zones";
                                 deliveryFeeCents: number;
@@ -2556,6 +2561,11 @@ export interface paths {
                                     until: string | null;
                                     message: string;
                                 } | null;
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
+                                } | null;
                                 fulfillment: {
                                     delivery: boolean;
                                     pickup: boolean;
@@ -2821,6 +2831,11 @@ export interface paths {
                                     until: string | null;
                                     message: string;
                                 } | null;
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
+                                } | null;
                                 fulfillment: {
                                     delivery: boolean;
                                     pickup: boolean;
@@ -3069,6 +3084,11 @@ export interface paths {
                                     until: string | null;
                                     message: string;
                                 } | null;
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
+                                } | null;
                                 fulfillment: {
                                     delivery: boolean;
                                     pickup: boolean;
@@ -3288,6 +3308,221 @@ export interface paths {
                                     mode: "open" | "closed" | "paused";
                                     until: string | null;
                                     message: string;
+                                } | null;
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
+                                } | null;
+                                fulfillment: {
+                                    delivery: boolean;
+                                    pickup: boolean;
+                                };
+                                estimates: {
+                                    deliveryMin: number;
+                                    deliveryMax: number;
+                                    pickupMin: number;
+                                    pickupMax: number;
+                                };
+                                /** @enum {string} */
+                                deliveryMode: "fixed" | "zones";
+                                deliveryFeeCents: number;
+                                deliveryZones: {
+                                    _id: string;
+                                    name: string;
+                                    feeCents: number;
+                                    minOrderCents: number | null;
+                                    estimateMin: number | null;
+                                    estimateMax: number | null;
+                                    active: boolean;
+                                }[];
+                                freeDeliveryFromCents: number | null;
+                                minOrderCents: number;
+                                paymentMethods: ("cash" | "pix" | "card")[];
+                                pixKey: string;
+                                paymentOptions: {
+                                    cash: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                        askChange: boolean;
+                                    };
+                                    pix: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                    card: {
+                                        /** @enum {string} */
+                                        fulfillment: "both" | "delivery" | "pickup";
+                                        note: string;
+                                    };
+                                };
+                                scheduling: {
+                                    enabled: boolean;
+                                    minLeadMinutes: number;
+                                    maxDaysAhead: number;
+                                    /** @enum {number} */
+                                    slotMinutes: 15 | 30 | 60;
+                                };
+                                translations: {
+                                    es: {
+                                        description: string;
+                                        about: string;
+                                        notice: string;
+                                    };
+                                };
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            opening: {
+                                /** @enum {string} */
+                                status: "open" | "closed" | "paused";
+                                acceptingOrders: boolean;
+                                closesAt: string | null;
+                                nextOpenAt: string | null;
+                                pausedUntil: string | null;
+                                message: string;
+                                /** @enum {string} */
+                                source: "schedule" | "override";
+                            };
+                            storeUrl: string;
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/store/busy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Muito movimento: sumar minutos a los tiempos estimados
+         * @description Con sesión y el permiso `store:open`.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {number} */
+                        extraMinutes: 0 | 15 | 30 | 45 | 60;
+                        forMinutes?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            store: {
+                                _id: string;
+                                name: string;
+                                slug: string;
+                                /** @enum {string} */
+                                status: "active" | "suspended";
+                                description: string;
+                                about: string;
+                                notice: string;
+                                logoUrl: string;
+                                coverUrl: string;
+                                instagram: string;
+                                primaryColor: string;
+                                secondaryColor: string;
+                                whatsapp: string;
+                                address: string;
+                                hours: {
+                                    weekly: {
+                                        sun: {
+                                            open: string;
+                                            close: string;
+                                        }[];
+                                        mon: {
+                                            open: string;
+                                            close: string;
+                                        }[];
+                                        tue: {
+                                            open: string;
+                                            close: string;
+                                        }[];
+                                        wed: {
+                                            open: string;
+                                            close: string;
+                                        }[];
+                                        thu: {
+                                            open: string;
+                                            close: string;
+                                        }[];
+                                        fri: {
+                                            open: string;
+                                            close: string;
+                                        }[];
+                                        sat: {
+                                            open: string;
+                                            close: string;
+                                        }[];
+                                    };
+                                    exceptions: {
+                                        date: string;
+                                        closed: boolean;
+                                        intervals: {
+                                            open: string;
+                                            close: string;
+                                        }[];
+                                        note: string;
+                                    }[];
+                                    dayStart: string;
+                                };
+                                override: {
+                                    /** @enum {string} */
+                                    mode: "open" | "closed" | "paused";
+                                    until: string | null;
+                                    message: string;
+                                } | null;
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
                                 } | null;
                                 fulfillment: {
                                     delivery: boolean;
@@ -9708,6 +9943,11 @@ export interface paths {
                                     until: string | null;
                                     message: string;
                                 } | null;
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
+                                } | null;
                                 fulfillment: {
                                     delivery: boolean;
                                     pickup: boolean;
@@ -9899,6 +10139,11 @@ export interface paths {
                                     mode: "open" | "closed" | "paused";
                                     until: string | null;
                                     message: string;
+                                } | null;
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
                                 } | null;
                                 fulfillment: {
                                     delivery: boolean;
@@ -10113,6 +10358,11 @@ export interface paths {
                                     mode: "open" | "closed" | "paused";
                                     until: string | null;
                                     message: string;
+                                } | null;
+                                busy: {
+                                    extraMinutes: number;
+                                    /** Format: date-time */
+                                    until: string;
                                 } | null;
                                 fulfillment: {
                                     delivery: boolean;

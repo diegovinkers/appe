@@ -26,7 +26,7 @@ import {
   updateProductSchema,
   uploadSignatureSchema,
 } from "../schemas/menu.schema.js";
-import { hoursSchema, qrQuery, storeStatusSchema, updateStoreSchema } from "../schemas/store.schema.js";
+import { busySchema, hoursSchema, qrQuery, storeStatusSchema, updateStoreSchema } from "../schemas/store.schema.js";
 import {
   createOrderSchema,
   listOrdersQuery,
@@ -142,6 +142,7 @@ export const operations = [
   { method: "patch", path: "/api/owner/store", tag: "Panel: local", summary: "Cambiar datos, entrega, barrios, pagos y tiempos", auth: "store:write", body: updateStoreSchema, responses: { 200: ownerStoreResponse } },
   { method: "put", path: "/api/owner/store/hours", tag: "Panel: local", summary: "Reemplazar horario semanal y excepciones", auth: "store:write", body: hoursSchema, responses: { 200: ownerStoreResponse } },
   { method: "put", path: "/api/owner/store/status", tag: "Panel: local", summary: "Abrir, cerrar o pausar a mano, o volver al horario", auth: "store:open", body: storeStatusSchema, responses: { 200: ownerStoreResponse } },
+  { method: "put", path: "/api/owner/store/busy", tag: "Panel: local", summary: "Muito movimento: sumar minutos a los tiempos estimados", auth: "store:open", body: busySchema, responses: { 200: ownerStoreResponse } },
   { method: "get", path: "/api/owner/store/qr", tag: "Panel: local", summary: "QR del link del menú (PNG o SVG)", auth: "store:read", query: qrQuery, responses: { 200: binary("image/png", "image/svg+xml") } },
 
   // Panel: menú

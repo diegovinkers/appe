@@ -7,7 +7,7 @@ import { byUrgency, matchesFilter, orderSource, orderTiming, takenBy } from "./o
 import { getDeviceSettings, setDeviceSetting } from "./orders/deviceSettings";
 import { bottomBarFor, menuTabsFor, navFor, settingsFor } from "./nav";
 import { settingsReadiness } from "./settings/readiness";
-import { statusActions, statusView } from "./storeStatus";
+import { activeBusy, statusActions, statusView } from "./storeStatus";
 
 // Estos tests miran los textos en portugués; los de español están en i18n.test.ts.
 beforeEach(() => setLanguage("pt-BR"));
@@ -152,6 +152,13 @@ describe("tiempos de la lista de pedidos", () => {
   it("el día de operación termina a las 5 de la mañana", () => {
     expect(operatingDayISO(new Date("2026-09-26T04:30:00Z"))).toBe("2026-09-25"); // sábado 01:30
     expect(operatingDayISO(new Date("2026-09-26T08:00:00Z"))).toBe("2026-09-26"); // sábado 05:00
+  });
+
+  it("muito movimento vale solo hasta su hora", () => {
+    const busy = { extraMinutes: 30, until: "2026-09-26T08:00:00.000Z" };
+    expect(activeBusy(busy, Date.parse("2026-09-26T07:59:00Z"))).toEqual(busy);
+    expect(activeBusy(busy, Date.parse("2026-09-26T08:00:00Z"))).toBeNull();
+    expect(activeBusy(null)).toBeNull();
   });
 
   it("cada local puede elegir la hora en que termina su día", () => {
