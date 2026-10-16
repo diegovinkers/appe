@@ -71,7 +71,7 @@ export function HoursPage() {
   function submit(event: FormEvent) { event.preventDefault(); if (save.isPending) return; const issues = validateHours(draft); setErrors(issues); if (Object.keys(issues).length) document.getElementById(Object.keys(issues)[0])?.focus(); else save.mutate({ hours: hoursDirty ? draft : undefined, scheduling: schedulingDirty ? scheduling : undefined }); }
   const status = statusView(opening);
   return <><PageHeader title={c.title} description={c.description} />
-    <div className="mb-5 rounded-xl border border-line bg-surface p-4"><h2 className="font-bold">{c.statusTitle}: {status.label}</h2><p className="mt-1 text-sm text-ink-muted">{store.override ? c.manual : c.automatic}</p>{status.detail && <p className="mt-1 text-sm">{status.detail}</p>}</div>
+    <div className="mb-5 rounded-xl border border-line bg-surface p-4 lg:flex lg:flex-wrap lg:items-baseline lg:gap-x-3 lg:px-5 lg:py-3"><h2 className="font-bold">{c.statusTitle}: {status.label}{status.detail && <span className="font-normal"> · {status.detail}</span>}</h2><p className="mt-1 text-sm text-ink-muted lg:mt-0">{store.override ? c.manual : c.automatic}</p></div>
     {/* Sin los globitos del navegador: los errores se muestran al lado de cada horario. */}
     <form onSubmit={submit} className="space-y-5" noValidate>
       <fieldset disabled={save.isPending} className="space-y-5 disabled:opacity-70">
@@ -86,7 +86,7 @@ export function HoursPage() {
           <ul className="divide-y divide-line">
             {HOUR_DAYS.map((day) => {
               const open = draft.weekly[day].length > 0;
-              return <li key={day} className="flex flex-wrap items-start gap-x-4 gap-y-2 py-3">
+              return <li key={day} className="flex flex-wrap items-start gap-x-4 gap-y-2 py-3 lg:py-2">
                 <div className="flex w-full items-center justify-between gap-3 sm:w-44">
                   <h3 className={`font-bold ${open ? "" : "text-ink-muted"}`}>{c.days[day]}</h3>
                   <Switch label={c.openOn(c.days[day])} showLabel={false} checked={open} onChange={(enabled) => setDay(day, enabled ? [{ open: "18:00", close: "23:00" }] : [])} />

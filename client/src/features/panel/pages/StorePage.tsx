@@ -35,8 +35,15 @@ const fields = (store: OwnerStore) => ({
   translations: { es: { description: store.translations?.es?.description ?? "", about: store.translations?.es?.about ?? "", notice: store.translations?.es?.notice ?? "" } },
 });
 
+// En la PC, el título a la izquierda y los campos a la derecha: una fila menos por sección y
+// campos de un ancho que se lee bien. En el celular, el título arriba.
 export function SettingsSection({ title, children }: { title: string; children: ReactNode }) {
-  return <section className="space-y-4 rounded-xl border border-line bg-surface p-4 sm:p-6"><h2 className="text-lg font-bold">{title}</h2>{children}</section>;
+  return (
+    <section className="rounded-xl border border-line bg-surface p-4 sm:p-6 lg:grid lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-6 lg:p-5">
+      <h2 className="mb-4 text-lg font-bold lg:mb-0 lg:text-base">{title}</h2>
+      <div className="min-w-0 space-y-4">{children}</div>
+    </section>
+  );
 }
 
 export function StorePage() {
@@ -108,9 +115,11 @@ export function StorePage() {
           </div>
         </SettingsSection>
         <SettingsSection title={c.contact}>
-          {textField("whatsapp", "WhatsApp", 30, true)}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {textField("whatsapp", "WhatsApp", 30, true)}
+            {textField("instagram", "Instagram", 31)}
+          </div>
           {textField("address", c.address, 200)}
-          {textField("instagram", "Instagram", 31)}
         </SettingsSection>
         <SettingsSection title={c.translations}>
           <p className="text-sm text-ink-muted">{c.translationHint}</p>

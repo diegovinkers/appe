@@ -49,29 +49,32 @@ export function DeliveryPage() {
           {errors.fulfillment && <p role="alert" className="text-error">{c.errors.fulfillment}</p>}
         </SettingsSection>
         <SettingsSection title={c.charges}>
-          <Field id="delivery-mode" label={c.mode}><select id="delivery-mode" className={input} value={draft.mode} onChange={(e) => update("mode", e.target.value as DeliveryDraft["mode"])}><option value="fixed">{c.fixed}</option><option value="zones">{c.byZone}</option></select></Field>
-          {draft.mode === "fixed" && amount("fee", c.fixedFee, c.moneyHint)}
-          {amount("minimum", c.minimum, c.minimumHint)}
+          <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <Field id="delivery-mode" label={c.mode}><select id="delivery-mode" className={input} value={draft.mode} onChange={(e) => update("mode", e.target.value as DeliveryDraft["mode"])}><option value="fixed">{c.fixed}</option><option value="zones">{c.byZone}</option></select></Field>
+            {draft.mode === "fixed" && amount("fee", c.fixedFee, c.moneyHint)}
+            {amount("minimum", c.minimum, c.minimumHint)}
+          </div>
           <Switch label={c.freeEnabled} checked={draft.freeEnabled} onChange={(v) => update("freeEnabled", v)} />
-          {draft.freeEnabled && amount("freeFrom", c.freeFrom, c.freeHint)}
+          {draft.freeEnabled && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"><div className="xl:col-span-2">{amount("freeFrom", c.freeFrom, c.freeHint)}</div></div>}
         </SettingsSection>
         <SettingsSection title={c.estimates}>
           <p className="text-sm text-ink-muted">{c.estimatesHint}</p>
-          <div className="grid gap-4 sm:grid-cols-2">{amount("deliveryMin", `${c.deliveryTime} — ${c.minMinutes}`)}{amount("deliveryMax", `${c.deliveryTime} — ${c.maxMinutes}`)}{amount("pickupMin", `${c.pickupTime} — ${c.minMinutes}`)}{amount("pickupMax", `${c.pickupTime} — ${c.maxMinutes}`)}</div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{amount("deliveryMin", `${c.deliveryTime} — ${c.minMinutes}`)}{amount("deliveryMax", `${c.deliveryTime} — ${c.maxMinutes}`)}{amount("pickupMin", `${c.pickupTime} — ${c.minMinutes}`)}{amount("pickupMax", `${c.pickupTime} — ${c.maxMinutes}`)}</div>
         </SettingsSection>
         <SettingsSection title={c.zones}>
-          <p className="text-sm text-ink-muted">{c.zonesHint}</p>
+          {/* Una sola ayuda para todos los barrios: no se repite en cada uno ni estira sus campos. */}
+          <p className="text-sm text-ink-muted">{c.zonesHint} {c.inherited} {c.zoneTimes}</p>
           {errors.zones && <p role="alert" className="text-error">{c.errors[errors.zones]}</p>}
           {!draft.zones.length && <p className="text-ink-muted">{c.noZones}</p>}
           {draft.zones.map((zone, index) => <div key={zone.key} className="space-y-3 rounded-xl border border-line p-4">
             <h3 className="font-bold">{zone.name || `${c.newZone} ${index + 1}`}</h3>
-            <div className="grid gap-4 sm:grid-cols-2">
+            {/* En la PC, los datos de un barrio en una fila: el nombre más ancho. */}
+            <div className="grid items-end gap-4 sm:grid-cols-2 xl:grid-cols-[2fr_1fr_1.5fr_1fr_1fr]">
               {([ ["name", c.name], ["fee", c.fee], ["minimum", c.zoneMinimum], ["estimateMin", c.minMinutes], ["estimateMax", c.maxMinutes] ] as const).map(([key, label]) => {
                 const id = `zone-${zone.key}-${key}`;
-                return <Field key={key} id={id} label={label} error={errors[id] && c.errors[errors[id]]} hint={key === "minimum" ? c.inherited : undefined}><input id={id} className={input} value={zone[key]} maxLength={key === "name" ? 60 : 12} aria-invalid={!!errors[id]} aria-describedby={errors[id] ? `${id}-erro` : undefined} inputMode={key === "name" ? "text" : key.startsWith("estimate") ? "numeric" : "decimal"} onChange={(e) => zoneUpdate(zone.key, { [key]: e.target.value })} /></Field>;
+                return <Field key={key} id={id} label={label} error={errors[id] && c.errors[errors[id]]}><input id={id} className={input} value={zone[key]} maxLength={key === "name" ? 60 : 12} aria-invalid={!!errors[id]} aria-describedby={errors[id] ? `${id}-erro` : undefined} inputMode={key === "name" ? "text" : key.startsWith("estimate") ? "numeric" : "decimal"} onChange={(e) => zoneUpdate(zone.key, { [key]: e.target.value })} /></Field>;
               })}
             </div>
-            <p className="text-sm text-ink-muted">{c.zoneTimes}</p>
             <div className="flex flex-wrap items-center justify-between gap-3"><Switch label={c.active} checked={zone.active} onChange={(active) => zoneUpdate(zone.key, { active })} /><button type="button" className={button.danger} onClick={() => { if (window.confirm(c.removeConfirm)) update("zones", draft.zones.filter((z) => z.key !== zone.key)); }}>{c.remove}</button></div>
           </div>)}
           <button type="button" className={button.secondary} disabled={draft.zones.length >= 100} onClick={() => update("zones", [...draft.zones, { key: newId(), name: "", fee: "0", minimum: "", estimateMin: "", estimateMax: "", active: true }])}>{c.addZone}</button>

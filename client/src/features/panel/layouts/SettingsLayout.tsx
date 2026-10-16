@@ -11,7 +11,7 @@ export function SettingsLayout() {
   return (
     <>
       {!home && (
-        <Link to="/painel/configuracoes" className="-ml-2 mb-3 inline-flex h-11 items-center gap-1 rounded-lg px-2 text-ink-muted hover:bg-paper hover:text-ink">
+        <Link to="/painel/configuracoes" className="-ml-2 mb-3 inline-flex h-11 lg:mb-1 lg:h-9 items-center gap-1 rounded-lg px-2 text-ink-muted hover:bg-paper hover:text-ink">
           <ChevronLeft aria-hidden className="size-5" />
           {t.nav.backToSettings}
         </Link>
