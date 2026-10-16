@@ -114,20 +114,23 @@ export function HomePage() {
     <>
       <PageHeader title={t.pages.home.title} description={t.pages.home.description} />
 
-      <section aria-labelledby="quadro" className="rounded-2xl bg-board p-5 text-chalk sm:p-7">
-        <p className="flex flex-wrap items-center gap-2 text-sm text-chalk-muted">
-          <span aria-hidden className={`size-2.5 rounded-full ${status.tone}`} />
-          <span className="font-bold text-chalk">{status.label}</span>
-          {status.detail && <span>{status.detail}</span>}
-        </p>
-        <h2 id="quadro" className="mt-3 text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl">
-          {orders.isPending ? "…" : headline}
-        </h2>
-        {!orders.isPending && <p className="mt-2 max-w-prose text-chalk">{detail}</p>}
+      {/* En la PC, el texto a la izquierda y el botón a la derecha: la mitad de alto. */}
+      <section aria-labelledby="quadro" className="rounded-2xl bg-board p-5 text-chalk sm:p-7 lg:flex lg:items-center lg:justify-between lg:gap-6 lg:px-7 lg:py-5">
+        <div className="min-w-0">
+          <p className="flex flex-wrap items-center gap-2 text-sm text-chalk-muted">
+            <span aria-hidden className={`size-2.5 rounded-full ${status.tone}`} />
+            <span className="font-bold text-chalk">{status.label}</span>
+            {status.detail && <span>{status.detail}</span>}
+          </p>
+          <h2 id="quadro" className="mt-3 text-3xl leading-tight font-bold tracking-tight text-white sm:text-4xl lg:mt-2 lg:text-3xl">
+            {orders.isPending ? "…" : headline}
+          </h2>
+          {!orders.isPending && <p className="mt-2 max-w-prose text-chalk">{detail}</p>}
+        </div>
         {can(user.role, "orders:read") && (
           <Link
             to={waiting.length ? "/painel/pedidos?filtro=new" : "/painel/pedidos"}
-            className={`mt-5 inline-flex h-12 items-center gap-2 rounded-xl px-5 font-bold ${urgent ? "bg-(--brand) text-(--on-brand)" : "bg-board-active text-white hover:bg-board-hover"}`}
+            className={`mt-5 inline-flex h-12 shrink-0 items-center gap-2 rounded-xl px-5 font-bold lg:mt-0 ${urgent ? "bg-(--brand) text-(--on-brand)" : "bg-board-active text-white hover:bg-board-hover"}`}
           >
             {h.seeOrders}
             <ChevronRight aria-hidden className="size-5" />
@@ -135,7 +138,7 @@ export function HomePage() {
         )}
       </section>
 
-      <div className={`mt-6 grid gap-6 ${isOwner ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]" : ""}`}>
+      <div className={`mt-6 grid gap-6 lg:mt-5 lg:gap-5 ${isOwner ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]" : ""}`}>
         <div className="min-w-0 space-y-6">
           <section aria-labelledby="agora">
             <h2 id="agora" className="mb-2 text-lg font-bold">
