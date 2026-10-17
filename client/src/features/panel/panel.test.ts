@@ -30,6 +30,13 @@ describe("menú por rol", () => {
   it("el empleado ve solo lo que necesita para atender", () => {
     expect(labels("staff")).toEqual([["", ["Início", "Pedidos", "Disponibilidade", "Assistente"]]]);
     expect(bottomBarFor("staff").map((item) => item.label)).toEqual(["Início", "Pedidos", "Novo pedido", "Esgotados"]);
+    // Con mesas, "Mesas" va directo al salón y Esgotados pasa a "Mais".
+    expect(bottomBarFor("staff", true).map((item) => [item.label, item.to])).toEqual([
+      ["Início", "/painel/inicio"],
+      ["Pedidos", "/painel/pedidos"],
+      ["Mesas", "/painel/pedidos?ver=salao"],
+      ["Novo pedido", "/painel/pedidos/novo"],
+    ]);
     expect(menuTabsFor("staff").map((tab) => tab.label)).toEqual(["Produtos", "Adicionais"]);
     expect(settingsFor("staff").map((card) => card.label)).toEqual(["Link e QR code"]);
   });

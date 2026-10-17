@@ -60,3 +60,10 @@ export function useTabAction<Vars, Result = unknown>(request: (vars: Vars) => Pr
 
 export const tabRequest = <T = unknown>(tabId: string, action: "bill" | "move" | "close", body: object = {}) =>
   api<T>(`/owner/tabs/${tabId}/${action}`, { method: "POST", body });
+
+// Si el local tiene mesas activas (para mostrar "Mesas" en la barra del celular). Usa la misma
+// lista que el salón, sin pedirla a cada rato.
+export function useHasTables() {
+  const query = useQuery({ queryKey: tablesKey, queryFn: () => api<TablesResponse>("/owner/tables"), staleTime: 60_000, retry: 1 });
+  return Boolean(query.data?.tables.some((table) => table.active));
+}

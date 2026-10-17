@@ -54,6 +54,7 @@ export const ptBR = {
     settings: "Configurações",
     availability: "Disponibilidade",
     soldOut: "Esgotados",
+    tables: "Mesas",
     // Barra de abajo en el celular: abre el menú completo.
     more: "Mais",
     menuTabs: "Seções do cardápio",

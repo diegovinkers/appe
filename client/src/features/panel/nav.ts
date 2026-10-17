@@ -83,12 +83,12 @@ const SETTINGS: (NavItemDef & { key: SettingsKey })[] = [
 ];
 
 // Barra de abajo en el celular: lo diario a un toque; "Mais" abre el menú completo.
-const BOTTOM_BAR: NavItemDef[] = [
-  { to: "/painel/inicio", label: "home", icon: House, permission: "orders:read" },
-  { to: "/painel/pedidos", label: "orders", icon: ClipboardList, permission: "orders:read" },
-  { to: "/painel/pedidos/novo", label: "newOrder", icon: CirclePlus, permission: "orders:manual" },
-  { to: "/painel/disponibilidade", label: "soldOut", icon: CircleSlash, permission: "menu:availability" },
-];
+// Con mesas, "Mesas" (el salón) ocupa el lugar de Esgotados, que sigue en "Mais".
+const BOTTOM_HOME: NavItemDef = { to: "/painel/inicio", label: "home", icon: House, permission: "orders:read" };
+const BOTTOM_ORDERS: NavItemDef = { to: "/painel/pedidos", label: "orders", icon: ClipboardList, permission: "orders:read" };
+const BOTTOM_TABLES: NavItemDef = { to: "/painel/pedidos?ver=salao", label: "tables", icon: Armchair, permission: "orders:read" };
+const BOTTOM_NEW: NavItemDef = { to: "/painel/pedidos/novo", label: "newOrder", icon: CirclePlus, permission: "orders:manual" };
+const BOTTOM_SOLD_OUT: NavItemDef = { to: "/painel/disponibilidade", label: "soldOut", icon: CircleSlash, permission: "menu:availability" };
 export const MORE_ICON = Menu;
 
 function translate(items: NavItemDef[], role: Role | undefined): NavItem[] {
@@ -112,4 +112,5 @@ export const settingsFor = (role: Role | undefined) => {
   return SETTINGS.filter((item) => allowed.has(item.to)).map((item) => ({ ...item, label: t.nav[item.label] }));
 };
 
-export const bottomBarFor = (role: Role | undefined) => translate(BOTTOM_BAR, role);
+export const bottomBarFor = (role: Role | undefined, hasTables = false) =>
+  translate(hasTables ? [BOTTOM_HOME, BOTTOM_ORDERS, BOTTOM_TABLES, BOTTOM_NEW] : [BOTTOM_HOME, BOTTOM_ORDERS, BOTTOM_NEW, BOTTOM_SOLD_OUT], role);

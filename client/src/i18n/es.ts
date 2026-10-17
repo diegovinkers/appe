@@ -56,6 +56,7 @@ export const es: Dictionary = {
     settings: "Configuración",
     availability: "Disponibilidad",
     soldOut: "Agotados",
+    tables: "Mesas",
     // Barra de abajo en el celular: abre el menú completo.
     more: "Más",
     menuTabs: "Secciones del menú",
