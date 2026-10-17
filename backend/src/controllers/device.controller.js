@@ -66,7 +66,11 @@ export const deviceInfo = async (req, res) => {
     throw notRegistered();
   }
   const { device, commerce } = found;
-  const people = await User.find({ commerce: commerce._id, active: true, role: "staff", pinHash: { $exists: true } }).select("name").sort({ name: 1 }).lean();
+  // El dueño también, si se puso un PIN (primero en la lista).
+  const people = await User.find({ commerce: commerce._id, active: true, role: { $in: ["owner", "staff"] }, pinHash: { $exists: true } })
+    .select("name role")
+    .sort({ role: 1, name: 1 })
+    .lean();
   res.json({
     device: { _id: device._id, name: device.name },
     commerce: { name: commerce.name, slug: commerce.slug, logoUrl: commerce.logoUrl, primaryColor: commerce.primaryColor },
@@ -75,12 +79,12 @@ export const deviceInfo = async (req, res) => {
 };
 
 // POST /api/auth/pin — entrar (o cambiar de persona) con el PIN. Solo desde un aparato del
-// equipo, solo empleados de ese local, y con bloqueo después de varios PIN equivocados.
+// equipo, solo el dueño y los empleados de ese local, y con bloqueo después de varios PIN equivocados.
 export const pinLogin = async (req, res) => {
   const found = await currentDevice(req);
   if (!found) throw notRegistered();
   const { userId, pin } = req.valid.body;
-  const user = await User.findOne({ _id: userId, commerce: found.commerce._id, role: "staff", active: true }).select("+pinHash +pinFailures +pinLockedUntil +tokenVersion");
+  const user = await User.findOne({ _id: userId, commerce: found.commerce._id, role: { $in: ["owner", "staff"] }, active: true }).select("+pinHash +pinFailures +pinLockedUntil +tokenVersion");
   if (user?.pinLockedUntil && user.pinLockedUntil > new Date()) {
     throw new AppError(429, "PIN_LOCKED", "Muitas tentativas com PIN errado. Tente de novo em alguns minutos ou peça ao dono para trocar o PIN.");
   }

@@ -1235,6 +1235,9 @@
                             "null"
                           ]
                         },
+                        "hasPin": {
+                          "type": "boolean"
+                        },
                         "role": {
                           "type": "string",
                           "enum": [
@@ -1284,6 +1287,7 @@
                         "_id",
                         "name",
                         "email",
+                        "hasPin",
                         "role",
                         "commerce"
                       ],
@@ -1520,6 +1524,9 @@
                             "null"
                           ]
                         },
+                        "hasPin": {
+                          "type": "boolean"
+                        },
                         "role": {
                           "type": "string",
                           "enum": [
@@ -1569,6 +1576,7 @@
                         "_id",
                         "name",
                         "email",
+                        "hasPin",
                         "role",
                         "commerce"
                       ],
@@ -1582,6 +1590,70 @@
                 }
               }
             }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Sesión"
+        ],
+        "summary": "Cambiar (o poner) el propio PIN: con PIN pide el actual; sin PIN, la contraseña",
+        "description": "Con sesión.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pin": {
+                    "type": "string",
+                    "pattern": "^\\d{4,6}$"
+                  },
+                  "currentPin": {
+                    "type": "string",
+                    "maxLength": 6
+                  },
+                  "currentPassword": {
+                    "type": "string",
+                    "maxLength": 72
+                  }
+                },
+                "required": [
+                  "pin"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Sin contenido"
           },
           "4XX": {
             "description": "Error",
@@ -1642,6 +1714,9 @@
                             "null"
                           ]
                         },
+                        "hasPin": {
+                          "type": "boolean"
+                        },
                         "role": {
                           "type": "string",
                           "enum": [
@@ -1691,6 +1766,7 @@
                         "_id",
                         "name",
                         "email",
+                        "hasPin",
                         "role",
                         "commerce"
                       ],

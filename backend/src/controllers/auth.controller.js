@@ -3,6 +3,7 @@ import Commerce from "../models/commerce.model.js";
 import { AppError, badRequest } from "../lib/errors.js";
 import { checkPassword, hashPassword } from "../lib/passwords.js";
 import { endSession, startSession } from "../lib/session.js";
+import { audit } from "../lib/audit.js";
 
 // Se compara contra este hash cuando el email no existe: así la respuesta tarda
 // lo mismo y no revela qué emails están registrados.
@@ -19,6 +20,8 @@ export async function sessionView(user) {
     _id: user._id,
     name: user.name,
     email: user.email ?? null,
+    // Si tiene PIN (para pedir el actual al cambiarlo en Mi cuenta).
+    hasPin: Boolean(user.pinHash),
     role: user.role,
     commerce: commerce && {
       _id: commerce._id,
@@ -31,7 +34,7 @@ export async function sessionView(user) {
 
 export const login = async (req, res) => {
   const { email, password } = req.valid.body;
-  const user = await User.findOne({ email }).select("+passwordHash +tokenVersion");
+  const user = await User.findOne({ email }).select("+passwordHash +tokenVersion +pinHash");
   const matches = await checkPassword(password, user?.passwordHash ?? (await dummyHash));
   if (!user || !matches || !user.active) throw invalidCredentials();
 
@@ -45,7 +48,7 @@ export const logout = (req, res) => {
 };
 
 export const me = async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).select("+pinHash");
   res.json({ user: await sessionView(user) });
 };
 
@@ -64,5 +67,21 @@ export const changePassword = async (req, res) => {
   await user.save();
 
   startSession(res, user);
+  res.status(204).end();
+};
+
+// Cambiar (o poner por primera vez) el propio PIN. Con PIN, se pide el actual; sin PIN todavía,
+// la contraseña. Solo dueño y empleados: el PIN es para los aparatos del local.
+export const changeOwnPin = async (req, res) => {
+  if (req.user.role === "superadmin") throw new AppError(403, "FORBIDDEN", "O PIN é para a equipe da loja");
+  const { pin, currentPin, currentPassword } = req.valid.body;
+  const user = await User.findById(req.user.id).select("+pinHash +passwordHash");
+  if (user.pinHash) {
+    if (!currentPin || !(await checkPassword(currentPin, user.pinHash))) throw badRequest("INVALID_CURRENT_PIN", "O PIN atual está incorreto");
+  } else if (!user.passwordHash || !currentPassword || !(await checkPassword(currentPassword, user.passwordHash))) {
+    throw badRequest("INVALID_PASSWORD", "A senha atual está incorreta");
+  }
+  await User.updateOne({ _id: user._id }, { $set: { pinHash: await hashPassword(pin), pinFailures: 0, pinLockedUntil: null } });
+  await audit(req, { action: "auth.pin_changed", commerce: user.commerce, entity: { type: "user", id: user._id } });
   res.status(204).end();
 };

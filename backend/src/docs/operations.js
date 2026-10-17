@@ -5,7 +5,7 @@
 import { z } from "zod";
 import { subscriptionInput, subscriptionPaymentInput, subscriptionResponse, reportsQuery, reportResponse } from "../schemas/business.schema.js";
 import { auditQuery, createCommerceSchema, resetPasswordSchema, updateCommerceSchema } from "../schemas/admin.schema.js";
-import { changePasswordSchema, loginSchema } from "../schemas/auth.schema.js";
+import { changePasswordSchema, changePinSchema, loginSchema } from "../schemas/auth.schema.js";
 import { createMemberSchema, memberPasswordSchema, memberPinSchema, updateMemberSchema } from "../schemas/team.schema.js";
 import { deviceSchema, pinLoginSchema } from "../schemas/device.schema.js";
 import { closeTabSchema, createTableSchema, moveTabSchema,
@@ -116,6 +116,7 @@ export const operations = [
   { method: "post", path: "/api/auth/pin", tag: "Sesión", summary: "Entrar o cambiar de persona con el PIN, desde un aparato del equipo", auth: "public", body: pinLoginSchema, responses: { 200: sessionResponse } },
   { method: "get", path: "/api/auth/me", tag: "Sesión", summary: "Usuario de la sesión actual", auth: "session", responses: { 200: sessionResponse } },
   { method: "patch", path: "/api/auth/password", tag: "Sesión", summary: "Cambiar la contraseña (cierra las otras sesiones)", auth: "session", body: changePasswordSchema, responses: { 204: NO_CONTENT } },
+  { method: "put", path: "/api/auth/pin", tag: "Sesión", summary: "Cambiar (o poner) el propio PIN: con PIN pide el actual; sin PIN, la contraseña", auth: "session", body: changePinSchema, responses: { 204: NO_CONTENT } },
 
   // Cliente final
   { method: "get", path: "/api/public/stores", tag: "Cliente", summary: "Locales activos para el directorio (primero los abiertos)", auth: "public", query: storeQuery, responses: { 200: publicStoresResponse } },

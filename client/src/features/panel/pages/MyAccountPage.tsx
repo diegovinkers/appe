@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
 import { type ApiError, api } from "../../../api/client";
 import { PageHeader } from "../../../components/PageHeader";
@@ -7,6 +7,7 @@ import { Field, button, input } from "../../../components/ui";
 import { errorText, useT } from "../../../i18n";
 import { SettingsSection } from "./StorePage";
 import { usePanel } from "../PanelLayout";
+import { sessionKey } from "../../../auth/session";
 
 const empty = { currentPassword: "", newPassword: "", confirm: "" };
 
@@ -51,7 +52,9 @@ export function MyAccountPage() {
             <dd className="font-bold">{t.user.roles[user.role]}</dd>
           </dl>
         </SettingsSection>
-        {/* Quien entra solo con PIN no tiene contraseña: el PIN se lo cambia el dueño. */}
+        {/* La plataforma no usa PIN: es para los aparatos del local. */}
+        {user.role !== "superadmin" && <MyPin />}
+        {/* Quien entra solo con PIN no tiene contraseña. */}
         {!user.email ? (
           <SettingsSection title={c.changePassword}>
             <p className="text-ink-muted">{c.pinOnly}</p>
@@ -86,5 +89,62 @@ export function MyAccountPage() {
         )}
       </div>
     </>
+  );
+}
+
+// Mi PIN: para entrar rápido en los aparatos del equipo. Con PIN se pide el actual; sin PIN
+// todavía, la contraseña.
+function MyPin() {
+  const t = useT();
+  const c = t.myAccount;
+  const { user } = usePanel();
+  const cache = useQueryClient();
+  const [form, setForm] = useState({ current: "", pin: "" });
+  const save = useMutation<unknown, ApiError, object>({
+    mutationFn: (body) => api("/auth/pin", { method: "PUT", body }),
+    onSuccess: () => {
+      setForm({ current: "", pin: "" });
+      void cache.invalidateQueries({ queryKey: sessionKey });
+    },
+  });
+  const digits = (value: string) => value.replace(/\D/g, "").slice(0, 6);
+  const pinInput = `${input} max-w-40 tracking-[0.3em] tabular-nums`;
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (save.isPending || form.pin.length < 4) return;
+        save.mutate(user.hasPin ? { pin: form.pin, currentPin: form.current } : { pin: form.pin, currentPassword: form.current });
+      }}
+    >
+      <SettingsSection title={user.hasPin ? c.changePin : c.createPin}>
+        <p className="text-sm text-ink-muted">{c.pinHint}</p>
+        {user.hasPin ? (
+          <Field id="current-pin" label={c.currentPin}>
+            <input id="current-pin" type="password" className={pinInput} required inputMode="numeric" autoComplete="off" value={form.current} onChange={(e) => setForm({ ...form, current: digits(e.target.value) })} />
+          </Field>
+        ) : (
+          <Field id="pin-password" label={c.currentPassword}>
+            <PasswordInput id="pin-password" className={input} required autoComplete="current-password" value={form.current} onChange={(e) => setForm({ ...form, current: e.target.value })} />
+          </Field>
+        )}
+        <Field id="new-pin" label={c.newPin}>
+          <input id="new-pin" type="password" className={pinInput} required inputMode="numeric" pattern="[0-9]{4,6}" autoComplete="off" value={form.pin} onChange={(e) => setForm({ ...form, pin: digits(e.target.value) })} />
+        </Field>
+        {save.isError && (
+          <p role="alert" className="font-bold text-error">
+            {errorText(save.error, t)}
+          </p>
+        )}
+        {save.isSuccess && (
+          <p role="status" className="text-success">
+            {c.pinSaved}
+          </p>
+        )}
+        <button className={button.primary} disabled={save.isPending || form.pin.length < 4 || !form.current}>
+          {save.isPending ? c.saving : c.savePin}
+        </button>
+      </SettingsSection>
+    </form>
   );
 }

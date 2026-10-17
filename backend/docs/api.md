@@ -67,8 +67,11 @@ Body: `{ "email": "ana@loja.com", "password": "..." }`. Rate limit: 10 intentos 
 ```
 `role` es `superadmin`, `owner` (dueño) o `staff` (empleado del local); para un superadmin, `commerce` es `null`. Errores: `INVALID_CREDENTIALS`, `TOO_MANY_REQUESTS`.
 
+### `PUT /api/auth/pin`
+Con sesión (dueño o empleado). Body: `{ "pin", "currentPin"? , "currentPassword"? }`. Cambia el propio PIN: si ya tiene, pide el actual (`400 INVALID_CURRENT_PIN`); si todavía no, la contraseña (`400 INVALID_PASSWORD`). `204`. La sesión (`/me`, `/login`) trae `hasPin`.
+
 ### `GET /api/auth/device` y `POST /api/auth/pin`
-Entrar con PIN, solo desde un aparato del equipo (cookie `aparelho`; sin ella o dada de baja, `401 DEVICE_NOT_REGISTERED`). `GET` devuelve `{ "device", "commerce", "people" }`: el local y los empleados activos con PIN. `POST` con `{ "userId", "pin" }` abre la sesión de esa persona (sirve también para cambiar de persona) y responde como `/login`. PIN equivocado: `401 INVALID_PIN`; después de 5 seguidos, esa persona queda bloqueada 15 minutos (`429 PIN_LOCKED`). Límite por IP: 60 cada 15 minutos. Queda en la auditoría (`auth.pin_login`, `auth.pin_locked`).
+Entrar con PIN, solo desde un aparato del equipo (cookie `aparelho`; sin ella o dada de baja, `401 DEVICE_NOT_REGISTERED`). `GET` devuelve `{ "device", "commerce", "people" }`: el local y quienes tienen PIN (el dueño primero, si se puso uno, y los empleados activos). `POST` con `{ "userId", "pin" }` abre la sesión de esa persona (sirve también para cambiar de persona) y responde como `/login`. PIN equivocado: `401 INVALID_PIN`; después de 5 seguidos, esa persona queda bloqueada 15 minutos (`429 PIN_LOCKED`). Límite por IP: 60 cada 15 minutos. Queda en la auditoría (`auth.pin_login`, `auth.pin_locked`).
 
 ### `POST /api/auth/logout`
 Borra la cookie. `204`.

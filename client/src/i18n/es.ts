@@ -343,7 +343,14 @@ export const es: Dictionary = {
     save: "Cambiar contraseña",
     saving: "Cambiando…",
     saved: "Contraseña cambiada. Los otros aparatos van a pedir que vuelvas a entrar.",
-    pinOnly: "Entrás con PIN, sin contraseña. Para cambiar el PIN, hablá con el dueño del local.",
+    pinOnly: "Entrás con PIN, sin contraseña.",
+    changePin: "Mi PIN",
+    createPin: "Crear mi PIN",
+    pinHint: "Con el PIN entrás rápido en los aparatos del equipo (la tablet del salón): tocás tu nombre y lo escribís. De 4 a 6 números.",
+    currentPin: "PIN actual",
+    newPin: "PIN nuevo",
+    savePin: "Guardar PIN",
+    pinSaved: "PIN guardado.",
   },
 
   // Configuración (la lista de tarjetas) y la página de Pagos.
@@ -1119,6 +1126,7 @@ export const es: Dictionary = {
     AUDIO_NOT_UNDERSTOOD: "No se entendió el audio. Intentá de nuevo o escribí.",
     WHATSAPP_WINDOW_CLOSED: "Pasaron más de 24 horas desde el último mensaje del cliente: WhatsApp solo deja responder dentro de ese plazo.",
     INVALID_PIN: "PIN incorrecto.",
+    INVALID_CURRENT_PIN: "El PIN actual no es correcto.",
     PIN_LOCKED: "Muchos intentos con el PIN equivocado. Probá de nuevo en unos minutos o pedile al dueño que te cambie el PIN.",
     DEVICE_NOT_REGISTERED: "Este aparato no está habilitado para entrar con PIN.",
     PAYMENTS_DONT_MATCH: "La suma de los pagos tiene que ser igual al total de la cuenta.",

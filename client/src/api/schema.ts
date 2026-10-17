@@ -555,6 +555,7 @@ export interface paths {
                                 _id: string;
                                 name: string;
                                 email: string | null;
+                                hasPin: boolean;
                                 /** @enum {string} */
                                 role: "superadmin" | "owner" | "staff";
                                 commerce: {
@@ -729,7 +730,54 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        /**
+         * Cambiar (o poner) el propio PIN: con PIN pide el actual; sin PIN, la contraseña
+         * @description Con sesión.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        pin: string;
+                        currentPin?: string;
+                        currentPassword?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Sin contenido */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         /**
          * Entrar o cambiar de persona con el PIN, desde un aparato del equipo
          * @description Sin sesión.
@@ -761,6 +809,7 @@ export interface paths {
                                 _id: string;
                                 name: string;
                                 email: string | null;
+                                hasPin: boolean;
                                 /** @enum {string} */
                                 role: "superadmin" | "owner" | "staff";
                                 commerce: {
@@ -831,6 +880,7 @@ export interface paths {
                                 _id: string;
                                 name: string;
                                 email: string | null;
+                                hasPin: boolean;
                                 /** @enum {string} */
                                 role: "superadmin" | "owner" | "staff";
                                 commerce: {

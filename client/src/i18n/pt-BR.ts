@@ -342,7 +342,14 @@ export const ptBR = {
     save: "Trocar senha",
     saving: "Trocando…",
     saved: "Senha trocada. Os outros aparelhos vão pedir login de novo.",
-    pinOnly: "Você entra com PIN, sem senha. Para trocar o PIN, fale com o dono da loja.",
+    pinOnly: "Você entra com PIN, sem senha.",
+    changePin: "Meu PIN",
+    createPin: "Criar meu PIN",
+    pinHint: "Com o PIN você entra rápido nos aparelhos da equipe (o tablet do salão): toca no seu nome e digita. De 4 a 6 números.",
+    currentPin: "PIN atual",
+    newPin: "PIN novo",
+    savePin: "Salvar PIN",
+    pinSaved: "PIN salvo.",
   },
 
   // Configurações (la lista de tarjetas) y la página de Pagamentos.

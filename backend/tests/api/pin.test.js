@@ -99,6 +99,28 @@ describe("mozos con PIN", () => {
     expect((await owner.get("/api/owner/devices")).body.devices).toEqual([]);
   });
 
+  it("cada uno cambia su PIN: con PIN pide el actual; sin PIN, la contraseña. El dueño con PIN entra en la tablet", async () => {
+    const ana = (await owner.post("/api/owner/team").send({ name: "Ana", pin: "1234" })).body.member;
+    const { cookie } = await registerTablet();
+    const session = (await pinLogin(cookie, ana._id, "1234")).headers["set-cookie"].find((c) => c.startsWith("token=")).split(";")[0];
+    const asAna = (method, path) => request(app)[method](path).set("Cookie", session);
+    expect((await asAna("get", "/api/auth/me")).body.user).toMatchObject({ hasPin: true, email: null });
+    expect((await asAna("put", "/api/auth/pin").send({ pin: "5555", currentPin: "0000" })).body.error.code).toBe("INVALID_CURRENT_PIN");
+    expect((await asAna("put", "/api/auth/pin").send({ pin: "5555", currentPin: "1234" })).status).toBe(204);
+    expect((await pinLogin(cookie, ana._id, "1234")).status).toBe(401);
+    expect((await pinLogin(cookie, ana._id, "5555")).status).toBe(200);
+
+    // El dueño no tenía PIN: lo pone con su contraseña y aparece primero en la tablet.
+    expect((await owner.get("/api/auth/me")).body.user.hasPin).toBe(false);
+    expect((await owner.put("/api/auth/pin").send({ pin: "9876", currentPassword: "mal" })).body.error.code).toBe("INVALID_PASSWORD");
+    expect((await owner.put("/api/auth/pin").send({ pin: "9876", currentPassword: "senha-de-teste-123" })).status).toBe(204);
+    const people = (await request(app).get("/api/auth/device").set("Cookie", cookie)).body.people.map((p) => p.name);
+    expect(people).toEqual(["Dono loja-pin", "Ana"]);
+    const ownerId = (await owner.get("/api/auth/me")).body.user._id;
+    expect((await pinLogin(cookie, ownerId, "9876")).body.user).toMatchObject({ role: "owner" });
+    expect(await AuditLog.countDocuments({ action: "auth.pin_changed" })).toBe(2);
+  });
+
   it("un empleado no registra aparatos ni maneja PINs", async () => {
     await createStaff(commerce);
     const staff = await loginAs(app, "staff-loja-pin@test.local");

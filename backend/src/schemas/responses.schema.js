@@ -45,6 +45,7 @@ export const sessionResponse = z.strictObject({
     _id: id,
     name: z.string(),
     email: z.string().nullable(),
+    hasPin: z.boolean(),
     role: z.enum(ROLES),
     commerce: z
       .strictObject({ _id: id, name: z.string(), slug: z.string(), status: z.enum(COMMERCE_STATUSES) })

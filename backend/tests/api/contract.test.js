@@ -377,6 +377,7 @@ describe("contrato de las respuestas", () => {
     check(await owner.get("/api/owner/subscription"), "get", "/api/owner/subscription");
     check(await owner.get("/api/owner/reports?from=2026-01-01&to=2026-01-31"), "get", "/api/owner/reports");
     check(await owner.patch("/api/auth/password").send({ currentPassword: "senha-da-ana-1", newPassword: "senha-nova-123" }), "patch", "/api/auth/password");
+    check(await owner.put("/api/auth/pin").send({ pin: "2468", currentPassword: "senha-nova-123" }), "put", "/api/auth/pin");
     check(await owner.post("/api/auth/logout"), "post", "/api/auth/logout");
     check(await root.patch(`/api/admin/users/${created.body.owner._id}/password`).send({ password: "outra-senha-123" }), "patch", "/api/admin/users/:id/password");
 
