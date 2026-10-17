@@ -31,5 +31,5 @@ export const reportResponse = z.strictObject({
   fulfillment: z.array(z.strictObject({ type: z.enum(["delivery", "pickup", "table"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
   days: z.array(z.strictObject({ day, count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
   products: z.array(z.strictObject({ productId: z.string(), name: z.string(), quantity: z.number().int().nonnegative(), totalCents: z.number().int().nonnegative() })),
-  sources: z.array(z.strictObject({ source: z.enum(["direct", "directory", "unknown"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
+  sources: z.array(z.strictObject({ source: z.enum(["direct", "directory", "whatsapp", "phone", "counter", "table", "unknown"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
 });

@@ -59,10 +59,10 @@ describe("cierre de caja", () => {
     await Order.collection.insertMany([
       // Viernes 2026-01-02 a la noche (y la 01:00 del sábado cuenta en el viernes).
       order(1, { paymentMethod: "cash", fulfillment: "delivery", subtotalCents: 3000, deliveryFeeCents: 500, totalCents: 3500, createdAt: new Date("2026-01-02T23:00:00Z") }),
-      order(2, { paymentMethod: "pix", fulfillment: "pickup", subtotalCents: 2000, discountCents: 200, totalCents: 1800, createdAt: new Date("2026-01-03T04:00:00Z") }),
+      order(2, { paymentMethod: "pix", fulfillment: "pickup", channel: "counter", acquisitionSource: "unknown", subtotalCents: 2000, discountCents: 200, totalCents: 1800, createdAt: new Date("2026-01-03T04:00:00Z") }),
       // Sábado.
-      order(3, { paymentMethod: "card", fulfillment: "delivery", subtotalCents: 4000, deliveryFeeCents: 500, totalCents: 4500, createdAt: new Date("2026-01-03T22:00:00Z") }),
-      order(4, { paymentMethod: "cash", fulfillment: "pickup", subtotalCents: 1000, totalCents: 1000, createdAt: new Date("2026-01-03T22:30:00Z") }),
+      order(3, { paymentMethod: "card", fulfillment: "delivery", channel: "online", acquisitionSource: "directory", subtotalCents: 4000, deliveryFeeCents: 500, totalCents: 4500, createdAt: new Date("2026-01-03T22:00:00Z") }),
+      order(4, { paymentMethod: "cash", fulfillment: "pickup", channel: "whatsapp", subtotalCents: 1000, totalCents: 1000, createdAt: new Date("2026-01-03T22:30:00Z") }),
       // Abierto y cancelado: no son ventas.
       order(5, { status: "confirmed", paymentMethod: "cash", fulfillment: "pickup", totalCents: 2500, createdAt: new Date("2026-01-03T23:00:00Z") }),
       order(6, { status: "cancelled", paymentMethod: "pix", fulfillment: "pickup", totalCents: 9999, createdAt: new Date("2026-01-03T23:10:00Z") }),
@@ -84,6 +84,13 @@ describe("cierre de caja", () => {
     expect(body.days).toEqual([
       { day: "2026-01-02", count: 2, salesCents: 5300 },
       { day: "2026-01-03", count: 2, salesCents: 5500 },
+    ]);
+    // Por dónde entró: el canal manda; el link solo cuenta para el menú (sin dato, el viejo "unknown").
+    expect(body.sources).toEqual([
+      { source: "counter", count: 1, salesCents: 1800 },
+      { source: "directory", count: 1, salesCents: 4500 },
+      { source: "unknown", count: 1, salesCents: 3500 },
+      { source: "whatsapp", count: 1, salesCents: 1000 },
     ]);
   });
 });

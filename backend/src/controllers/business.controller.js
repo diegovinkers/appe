@@ -43,6 +43,17 @@ export const recordSubscriptionPayment = async (req, res) => {
 const operatingDayOf = (dayStart) => ({
   $dateToString: { format: "%Y-%m-%d", date: { $subtract: ["$createdAt", minutesOf(dayStart) * 60 * 1000] }, timezone: TIME_ZONE },
 });
+// Por dónde entró: la mesa, el canal (WhatsApp, teléfono, mostrador) o, si pidió por el menú,
+// de qué link vino.
+const orderSource = {
+  $switch: {
+    branches: [
+      { case: { $eq: ["$fulfillment", "table"] }, then: "table" },
+      { case: { $in: ["$channel", ["whatsapp", "phone", "counter"]] }, then: "$channel" },
+    ],
+    default: { $ifNull: ["$acquisitionSource", "unknown"] },
+  },
+};
 const byKey = (key) => [{ $match: { status: "delivered" } }, { $group: { _id: key, count: { $sum: 1 }, salesCents: { $sum: "$totalCents" } } }, { $sort: { _id: 1 } }];
 
 // Por día de operación (desde la hora de corte del local): la venta de la madrugada cuenta en la noche anterior.
@@ -61,7 +72,7 @@ export const getReports = async (req, res) => {
       payments: [{ $match: { fulfillment: { $ne: "table" } } }, ...byKey("$paymentMethod")],
       fulfillment: byKey("$fulfillment"),
       days: byKey(operatingDayOf(dayStart)),
-      sources: byKey({ $ifNull: ["$acquisitionSource", "unknown"] }),
+      sources: byKey(orderSource),
       products: [{ $match: { status: "delivered" } }, { $unwind: "$items" }, { $group: { _id: "$items.product", name: { $last: "$items.name" }, quantity: { $sum: "$items.quantity" }, totalCents: { $sum: "$items.totalCents" } } }, { $sort: { quantity: -1, _id: 1 } }, { $limit: 20 }],
     } },
   ]);

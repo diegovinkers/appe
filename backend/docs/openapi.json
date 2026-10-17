@@ -1041,6 +1041,10 @@
                             "enum": [
                               "direct",
                               "directory",
+                              "whatsapp",
+                              "phone",
+                              "counter",
+                              "table",
                               "unknown"
                             ]
                           },

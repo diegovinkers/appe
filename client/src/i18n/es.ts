@@ -278,7 +278,7 @@ export const es: Dictionary = {
     topHint: "Importe antes de los cupones.",
     units: (quantity: number) => `${quantity} u.`,
     sourcesTitle: "De dónde vinieron los pedidos",
-    sources: { direct: "Link directo", directory: "Directorio", unknown: "Sin identificar" },
+    sources: { direct: "Menú, link directo", directory: "Menú, directorio", whatsapp: "WhatsApp", phone: "Teléfono", counter: "Mostrador", table: "Salón", unknown: "Sin identificar" },
     empty: "No hay pedidos entregados en este período.",
   },
 

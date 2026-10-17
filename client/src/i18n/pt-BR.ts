@@ -277,7 +277,7 @@ export const ptBR = {
     topHint: "Valor antes dos cupons.",
     units: (quantity: number) => `${quantity} un.`,
     sourcesTitle: "De onde vieram os pedidos",
-    sources: { direct: "Link direto", directory: "Diretório", unknown: "Sem identificação" },
+    sources: { direct: "Cardápio, link direto", directory: "Cardápio, diretório", whatsapp: "WhatsApp", phone: "Telefone", counter: "Balcão", table: "Salão", unknown: "Sem identificação" },
     empty: "Nenhum pedido entregue neste período.",
   },
 

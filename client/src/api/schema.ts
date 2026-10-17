@@ -410,7 +410,7 @@ export interface paths {
                             }[];
                             sources: {
                                 /** @enum {string} */
-                                source: "direct" | "directory" | "unknown";
+                                source: "direct" | "directory" | "whatsapp" | "phone" | "counter" | "table" | "unknown";
                                 count: number;
                                 salesCents: number;
                             }[];
