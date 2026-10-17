@@ -256,6 +256,7 @@ describe("contrato de las respuestas", () => {
     // Pedidos en el panel
     const orderId = receipt.body.order._id;
     check(await owner.get("/api/owner/orders"), "get", "/api/owner/orders");
+    check(await owner.get("/api/owner/orders/top-products"), "get", "/api/owner/orders/top-products");
     check(await owner.get(`/api/owner/orders/${orderId}`), "get", "/api/owner/orders/:id");
     check(await owner.patch(`/api/owner/orders/${orderId}/status`).send({ status: "confirmed" }), "patch", "/api/owner/orders/:id/status");
     check(await owner.patch(`/api/owner/orders/${orderId}/notes`).send({ internalNotes: "Cliente antigo" }), "patch", "/api/owner/orders/:id/notes");

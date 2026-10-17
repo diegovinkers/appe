@@ -191,6 +191,7 @@ export const operations = [
 
   // Panel: pedidos
   { method: "get", path: "/api/owner/orders", tag: "Panel: pedidos", summary: "Pedidos del día de operación, con los que quedaron abiertos (o cambios desde updatedSince)", auth: "orders:read", query: listOrdersQuery, responses: { 200: z.strictObject({ orders: z.array(order), day: z.iso.date(), serverTime: z.iso.datetime() }) } },
+  { method: "get", path: "/api/owner/orders/top-products", tag: "Panel: pedidos", summary: "Lo más pedido en los últimos 30 días (hasta 8), para cargar pedidos más rápido", auth: "orders:read", responses: { 200: z.strictObject({ products: z.array(z.strictObject({ productId: z.string(), quantity: z.number().int() })) }) } },
   { method: "post", path: "/api/owner/orders", tag: "Panel: pedidos", summary: "Cargar un pedido que llegó por teléfono, WhatsApp o en el mostrador", auth: "orders:manual", body: manualOrderSchema, responses: { 201: manualOrderResponse, 200: manualOrderResponse } },
   { method: "get", path: "/api/owner/orders/:id/ticket", tag: "Panel: pedidos", summary: "Comanda para imprimir (HTML o texto, 58 u 80 mm)", auth: "orders:read", params: idParams, query: ticketQuery, responses: { 200: binary("text/html", "text/plain") } },
   { method: "get", path: "/api/owner/orders/:id/review-request", tag: "Panel: pedidos", summary: "Si se puede pedir la reseña por el WhatsApp del local y, si no, por qué", auth: "orders:read", params: idParams, responses: { 200: reviewRequestResponse } },

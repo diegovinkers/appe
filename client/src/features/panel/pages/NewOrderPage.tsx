@@ -3,7 +3,7 @@ import { MessageSquarePlus, Trash2 } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { type ApiError, api } from "../../../api/client";
-import type {
+import type { TopProductsResponse,
   ManualOrderInput,
   ManualOrderResponse,
   OrderChannel,
@@ -130,6 +130,18 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
   // En la mesa no hay envío: el total es lo que suman los productos.
   const shownTotal = table ? totals.subtotalCents : totals.totalCents;
 
+  // Lo más pedido, arriba de la carta (sin búsqueda escrita): lo frecuente a un toque.
+  const topQuery = useQuery({
+    queryKey: ["top-products"],
+    queryFn: () => api<TopProductsResponse>("/owner/orders/top-products"),
+    staleTime: 5 * 60_000,
+  });
+  const byId = new Map(categories.flatMap((category) => category.products.map((product) => [product._id, { product, category }] as const)));
+  const top = search.trim()
+    ? []
+    : (topQuery.data?.products ?? []).map(({ productId }) => byId.get(productId)).filter((entry) => entry !== undefined);
+  const pick = (product: PublicProduct) => (product.optionGroups.length === 0 ? cart.add(product._id, 1, [], "") : setPicking(product));
+
   const visibleCategories = categories
     .map((category) => ({ category, products: category.products.filter((p) => matchesSearch(`${p.name} ${p.description}`, search)) }))
     .filter((entry) => entry.products.length > 0);
@@ -200,6 +212,27 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
         </h2>
         <SearchBox value={search} onChange={setSearch} />
         <p className="mt-2 text-sm text-ink-muted">{t.manualOrder.pickProducts}</p>
+        {top.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-sm font-bold text-ink-muted">{t.manualOrder.top}</h3>
+            <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
+              {top.map(({ product, category }) => (
+                <button
+                  key={product._id}
+                  type="button"
+                  disabled={!product.available || !category.availableNow}
+                  onClick={() => pick(product)}
+                  className="flex min-h-14 items-center gap-2 rounded-xl border border-line px-3 py-2 text-left hover:bg-paper active:bg-paper disabled:opacity-50"
+                >
+                  {inCart(product._id) > 0 && (
+                    <span className="inline-grid min-w-6 shrink-0 place-items-center rounded-full bg-action px-1.5 text-sm font-bold text-white tabular-nums">{inCart(product._id)}</span>
+                  )}
+                  <span className="min-w-0 flex-1 text-sm leading-tight font-bold">{product.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {visibleCategories.map(({ category, products }) => (
           <div key={category._id} className="mt-4">
             <h3 className="text-sm font-bold text-ink-muted">{category.name}</h3>
@@ -213,7 +246,7 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
                     <button
                       type="button"
                       disabled={off}
-                      onClick={() => (simple ? cart.add(product._id, 1, [], "") : setPicking(product))}
+                      onClick={() => pick(product)}
                       className="flex min-h-12 min-w-0 flex-1 items-center justify-between gap-3 py-2 text-left hover:bg-paper active:bg-paper disabled:text-ink-muted"
                     >
                       <span className="font-bold">

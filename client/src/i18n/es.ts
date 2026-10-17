@@ -493,6 +493,7 @@ export const es: Dictionary = {
     products: "Productos",
     pickProducts: "Tocá un producto para agregarlo al pedido. El botón del costado sirve para ponerle una aclaración.",
     details: (name: string) => `Aclaración o cantidad de ${name}`,
+    top: "Más pedidos",
     itemsCount: (count: number) => (count === 1 ? "1 producto" : `${count} productos`),
     review: "Ver pedido",
     order: "Pedido",

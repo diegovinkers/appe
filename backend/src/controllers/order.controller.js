@@ -121,6 +121,23 @@ export const listOrders = async (req, res) => {
   res.json({ orders, day: date, serverTime: serverTime.toISOString() });
 };
 
+// Lo más pedido del local en los últimos 30 días (sin cancelados), para tenerlo a mano al cargar
+// un pedido en el panel. Solo los ids y las cantidades: el nombre y el precio salen del menú.
+const TOP_PRODUCTS_DAYS = 30;
+const TOP_PRODUCTS_LIMIT = 8;
+
+export const getTopProducts = async (req, res) => {
+  const since = new Date(Date.now() - TOP_PRODUCTS_DAYS * 24 * 60 * 60 * 1000);
+  const top = await Order.aggregate([
+    { $match: { commerce: req.commerce._id, status: { $ne: "cancelled" }, createdAt: { $gte: since } } },
+    { $unwind: "$items" },
+    { $group: { _id: "$items.product", quantity: { $sum: "$items.quantity" } } },
+    { $sort: { quantity: -1, _id: 1 } },
+    { $limit: TOP_PRODUCTS_LIMIT },
+  ]);
+  res.json({ products: top.map(({ _id, quantity }) => ({ productId: String(_id), quantity })) });
+};
+
 export const getOrder = async (req, res) => {
   const order = await Order.findOne({ _id: req.valid.params.id, commerce: req.commerce._id });
   if (!order) throw orderNotFound();

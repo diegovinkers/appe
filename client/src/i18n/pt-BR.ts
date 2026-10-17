@@ -492,6 +492,7 @@ export const ptBR = {
     products: "Produtos",
     pickProducts: "Toque num produto para adicionar ao pedido. O botão ao lado serve para pôr uma observação.",
     details: (name: string) => `Observação ou quantidade de ${name}`,
+    top: "Mais pedidos",
     itemsCount: (count: number) => (count === 1 ? "1 produto" : `${count} produtos`),
     review: "Ver pedido",
     order: "Pedido",
