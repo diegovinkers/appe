@@ -646,7 +646,7 @@ export const es: Dictionary = {
 
   spreadsheet: {
     downloadTitle: "Descargar el menú",
-    downloadText: "Una planilla con todos los productos. Ábrela en Excel o Google Sheets, edítala y súbela de nuevo.",
+    downloadText: "Una planilla con todos los productos. Abrila en Excel o Google Sheets, editala y subila de nuevo.",
     download: "Descargar planilla",
     uploadTitle: "Subir la planilla editada",
     uploadText: "Primero mostramos qué va a cambiar. Nada cambia hasta que confirmes.",
@@ -659,7 +659,7 @@ export const es: Dictionary = {
     productsUpdated: (n: number) => (n === 1 ? "1 producto actualizado" : `${n} productos actualizados`),
     errorsTitle: (n: number) => (n === 1 ? "1 línea con error" : `${n} líneas con error`),
     line: (n: number) => `Línea ${n}`,
-    fixAndRetry: "Corrígelo en la planilla y súbela de nuevo. No se cambió nada en el menú.",
+    fixAndRetry: "Corregilo en la planilla y subila de nuevo. No se cambió nada en el menú.",
     apply: "Aplicar cambios",
     applying: "Aplicando…",
     applied: "¡Listo! El menú se actualizó.",
@@ -1175,6 +1175,6 @@ export const es: Dictionary = {
     INVALID_OPTION_GROUP: "Un grupo de adicionales no existe.",
     CATEGORY_NOT_EMPTY: "Mueve o borra los productos de esta categoría antes de borrarla.",
     INVALID_LIMITS: "Revisá el mínimo y el máximo: el mínimo no puede pasar al máximo ni el máximo a la cantidad de opciones.",
-    IMPORT_HAS_ERRORS: "La planilla tiene errores. Corrígelos y súbela de nuevo.",
+    IMPORT_HAS_ERRORS: "La planilla tiene errores. Corregilos y subila de nuevo.",
   },
 };
