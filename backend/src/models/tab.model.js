@@ -39,8 +39,11 @@ const tabSchema = new mongoose.Schema(
       ],
       default: [],
     },
-    // Lo cobrado al cerrar (suma de los pedidos no cancelados).
+    // Lo cobrado al cerrar: los pedidos no cancelados más la tasa de servicio.
     totalCents: { type: Number, default: 0, min: 0, validate: Number.isInteger },
+    // La tasa de servicio: el mozo la puede sacar en esta cuenta; al cerrar queda lo cobrado.
+    serviceFeeWaived: { type: Boolean, default: false },
+    serviceFeeCents: { type: Number, default: 0, min: 0, validate: Number.isInteger },
   },
   { timestamps: true, versionKey: false }
 );

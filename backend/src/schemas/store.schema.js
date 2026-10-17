@@ -67,6 +67,7 @@ export const updateStoreSchema = z
     instagram,
     googleReviewUrl,
     quickNotes: z.array(requiredText(30)).max(12).refine(unique, "Nota repetida"),
+    serviceFeePercent: z.number().int().min(0).max(30),
     primaryColor: hexColor,
     secondaryColor: hexColor,
     whatsapp: phone,

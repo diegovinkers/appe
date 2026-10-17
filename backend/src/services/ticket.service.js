@@ -113,7 +113,7 @@ export function buildTicket(order, store, { paperWidth = 80 } = {}) {
 }
 
 // Precuenta de una mesa: todos sus pedidos (sin los cancelados) y el total a cobrar.
-export function buildBill(tab, orders, store, { paperWidth = 80, now = new Date() } = {}) {
+export function buildBill(tab, orders, store, { paperWidth = 80, now = new Date(), amounts = null } = {}) {
   const width = TICKET_COLUMNS[paperWidth];
   const rule = "-".repeat(width);
   const lines = [center(store.name.toUpperCase(), width), center("CONTA", width), rule];
@@ -128,6 +128,11 @@ export function buildBill(tab, orders, store, { paperWidth = 80, now = new Date(
     }
     if (order.discountCents > 0) lines.push(...row("Desconto", `-${money(order.discountCents)}`, width));
     total += order.totalCents;
+  }
+  if (amounts?.serviceFeeCents > 0) {
+    const percent = Math.round((amounts.serviceFeeCents / amounts.subtotalCents) * 100);
+    lines.push(rule, ...row("Subtotal", money(amounts.subtotalCents), width), ...row(`Taxa de servico (${percent}%)`, money(amounts.serviceFeeCents), width));
+    total = amounts.totalCents;
   }
   lines.push(rule, ...row("TOTAL", money(total), width), rule);
   if (tab.payments?.length > 1) {

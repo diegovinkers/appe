@@ -883,6 +883,11 @@
                       "minimum": 0,
                       "maximum": 9007199254740991
                     },
+                    "serviceFeeCents": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
                     "open": {
                       "type": "object",
                       "properties": {
@@ -1070,6 +1075,7 @@
                     "subtotalCents",
                     "deliveryFeeCents",
                     "discountCents",
+                    "serviceFeeCents",
                     "open",
                     "payments",
                     "fulfillment",
@@ -5671,6 +5677,11 @@
                             "type": "string"
                           }
                         },
+                        "serviceFeePercent": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -6280,6 +6291,7 @@
                         "instagram",
                         "googleReviewUrl",
                         "quickNotes",
+                        "serviceFeePercent",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -6497,6 +6509,11 @@
                       "minLength": 1,
                       "maxLength": 30
                     }
+                  },
+                  "serviceFeePercent": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 30
                   },
                   "primaryColor": {
                     "type": "string",
@@ -6832,6 +6849,11 @@
                             "type": "string"
                           }
                         },
+                        "serviceFeePercent": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -7441,6 +7463,7 @@
                         "instagram",
                         "googleReviewUrl",
                         "quickNotes",
+                        "serviceFeePercent",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -7931,6 +7954,11 @@
                             "type": "string"
                           }
                         },
+                        "serviceFeePercent": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -8540,6 +8568,7 @@
                         "instagram",
                         "googleReviewUrl",
                         "quickNotes",
+                        "serviceFeePercent",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -8820,6 +8849,11 @@
                             "type": "string"
                           }
                         },
+                        "serviceFeePercent": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -9429,6 +9463,7 @@
                         "instagram",
                         "googleReviewUrl",
                         "quickNotes",
+                        "serviceFeePercent",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -9659,6 +9694,11 @@
                             "type": "string"
                           }
                         },
+                        "serviceFeePercent": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -10268,6 +10308,7 @@
                         "instagram",
                         "googleReviewUrl",
                         "quickNotes",
+                        "serviceFeePercent",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -14761,6 +14802,19 @@
                                       "additionalProperties": false
                                     }
                                   },
+                                  "subtotalCents": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "serviceFeeCents": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "serviceFeeWaived": {
+                                    "type": "boolean"
+                                  },
                                   "totalCents": {
                                     "type": "integer",
                                     "minimum": 0,
@@ -14804,6 +14858,9 @@
                                   "paymentMethod",
                                   "changeForCents",
                                   "payments",
+                                  "subtotalCents",
+                                  "serviceFeeCents",
+                                  "serviceFeeWaived",
                                   "totalCents",
                                   "ordersCount",
                                   "lastItems"
@@ -15531,6 +15588,19 @@
                                 "additionalProperties": false
                               }
                             },
+                            "subtotalCents": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "serviceFeeCents": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            "serviceFeeWaived": {
+                              "type": "boolean"
+                            },
                             "totalCents": {
                               "type": "integer",
                               "minimum": 0,
@@ -15553,6 +15623,9 @@
                             "paymentMethod",
                             "changeForCents",
                             "payments",
+                            "subtotalCents",
+                            "serviceFeeCents",
+                            "serviceFeeWaived",
                             "totalCents",
                             "ordersCount"
                           ],
@@ -16776,6 +16849,19 @@
                             "additionalProperties": false
                           }
                         },
+                        "subtotalCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeWaived": {
+                          "type": "boolean"
+                        },
                         "totalCents": {
                           "type": "integer",
                           "minimum": 0,
@@ -16798,6 +16884,9 @@
                         "paymentMethod",
                         "changeForCents",
                         "payments",
+                        "subtotalCents",
+                        "serviceFeeCents",
+                        "serviceFeeWaived",
                         "totalCents",
                         "ordersCount"
                       ],
@@ -17413,6 +17502,19 @@
                             "additionalProperties": false
                           }
                         },
+                        "subtotalCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeWaived": {
+                          "type": "boolean"
+                        },
                         "totalCents": {
                           "type": "integer",
                           "minimum": 0,
@@ -17435,6 +17537,9 @@
                         "paymentMethod",
                         "changeForCents",
                         "payments",
+                        "subtotalCents",
+                        "serviceFeeCents",
+                        "serviceFeeWaived",
                         "totalCents",
                         "ordersCount"
                       ],
@@ -17623,6 +17728,19 @@
                             "additionalProperties": false
                           }
                         },
+                        "subtotalCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeWaived": {
+                          "type": "boolean"
+                        },
                         "totalCents": {
                           "type": "integer",
                           "minimum": 0,
@@ -17645,6 +17763,9 @@
                         "paymentMethod",
                         "changeForCents",
                         "payments",
+                        "subtotalCents",
+                        "serviceFeeCents",
+                        "serviceFeeWaived",
                         "totalCents",
                         "ordersCount"
                       ],
@@ -17935,6 +18056,19 @@
                             "additionalProperties": false
                           }
                         },
+                        "subtotalCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeWaived": {
+                          "type": "boolean"
+                        },
                         "totalCents": {
                           "type": "integer",
                           "minimum": 0,
@@ -17957,6 +18091,252 @@
                         "paymentMethod",
                         "changeForCents",
                         "payments",
+                        "subtotalCents",
+                        "serviceFeeCents",
+                        "serviceFeeWaived",
+                        "totalCents",
+                        "ordersCount"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "tab"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "4XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "5XX": {
+            "description": "Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/owner/tabs/{id}/service-fee": {
+      "post": {
+        "tags": [
+          "Panel: salón"
+        ],
+        "summary": "Sacar o volver a poner la tasa de servicio de una cuenta abierta",
+        "description": "Con sesión y el permiso `orders:write`.",
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-f\\d]{24}$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "waived": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "waived"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "tab": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "pattern": "^[a-f\\d]{24}$"
+                        },
+                        "table": {
+                          "type": "string",
+                          "pattern": "^[a-f\\d]{24}$"
+                        },
+                        "tableNumber": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "open",
+                            "bill_requested",
+                            "closed"
+                          ]
+                        },
+                        "openedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                        },
+                        "billRequestedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "closedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time",
+                              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "paymentMethod": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                "cash",
+                                "pix",
+                                "card"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "changeForCents": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "payments": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "paymentMethod": {
+                                "type": "string",
+                                "enum": [
+                                  "cash",
+                                  "pix",
+                                  "card"
+                                ]
+                              },
+                              "amountCents": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "changeForCents": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "paymentMethod",
+                              "amountCents",
+                              "changeForCents"
+                            ],
+                            "additionalProperties": false
+                          }
+                        },
+                        "subtotalCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeWaived": {
+                          "type": "boolean"
+                        },
+                        "totalCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "ordersCount": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "_id",
+                        "table",
+                        "tableNumber",
+                        "status",
+                        "openedAt",
+                        "billRequestedAt",
+                        "closedAt",
+                        "paymentMethod",
+                        "changeForCents",
+                        "payments",
+                        "subtotalCents",
+                        "serviceFeeCents",
+                        "serviceFeeWaived",
                         "totalCents",
                         "ordersCount"
                       ],
@@ -18201,6 +18581,19 @@
                             "additionalProperties": false
                           }
                         },
+                        "subtotalCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeCents": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "serviceFeeWaived": {
+                          "type": "boolean"
+                        },
                         "totalCents": {
                           "type": "integer",
                           "minimum": 0,
@@ -18223,6 +18616,9 @@
                         "paymentMethod",
                         "changeForCents",
                         "payments",
+                        "subtotalCents",
+                        "serviceFeeCents",
+                        "serviceFeeWaived",
                         "totalCents",
                         "ordersCount"
                       ],
@@ -27613,6 +28009,11 @@
                               "type": "string"
                             }
                           },
+                          "serviceFeePercent": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
                           "primaryColor": {
                             "type": "string"
                           },
@@ -28249,6 +28650,7 @@
                           "instagram",
                           "googleReviewUrl",
                           "quickNotes",
+                          "serviceFeePercent",
                           "primaryColor",
                           "secondaryColor",
                           "whatsapp",
@@ -28435,6 +28837,11 @@
                           "items": {
                             "type": "string"
                           }
+                        },
+                        "serviceFeePercent": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
                         },
                         "primaryColor": {
                           "type": "string"
@@ -29045,6 +29452,7 @@
                         "instagram",
                         "googleReviewUrl",
                         "quickNotes",
+                        "serviceFeePercent",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -29264,6 +29672,11 @@
                             "type": "string"
                           }
                         },
+                        "serviceFeePercent": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -29873,6 +30286,7 @@
                         "instagram",
                         "googleReviewUrl",
                         "quickNotes",
+                        "serviceFeePercent",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",

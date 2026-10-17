@@ -86,6 +86,8 @@ const commerceSchema = new mongoose.Schema(
     googleReviewUrl: { type: String, trim: true, maxlength: 500, default: "" },
     // Notas rápidas para los productos de un pedido cargado en el panel ("Sem cebola"…): un toque
     // las agrega. El local las cambia; estas son las de un local nuevo.
+    // Tasa de servicio de las mesas, en porcentaje entero (0 = no se cobra). Ej.: 10.
+    serviceFeePercent: { type: Number, default: 0, min: 0, max: 30, validate: Number.isInteger },
     quickNotes: { type: [{ type: String, trim: true, maxlength: 30 }], default: () => [...DEFAULT_QUICK_NOTES] },
     primaryColor: { type: String, match: HEX_COLOR, default: "#D9480F" },
     secondaryColor: { type: String, match: HEX_COLOR, default: "#212529" },

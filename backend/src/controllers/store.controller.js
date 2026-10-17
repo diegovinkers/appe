@@ -18,6 +18,7 @@ const AUDITED_FIELDS = [
   "instagram",
   "googleReviewUrl",
   "quickNotes",
+  "serviceFeePercent",
   "primaryColor",
   "secondaryColor",
   "whatsapp",

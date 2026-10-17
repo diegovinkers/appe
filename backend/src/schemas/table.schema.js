@@ -35,6 +35,7 @@ export const tableOrderSchema = z.object({
 });
 
 export const moveTabSchema = z.object({ tableId: objectId });
+export const serviceFeeSchema = z.object({ waived: z.boolean() });
 
 // Cerrar la cuenta cobrando. Sin pedidos (la mesa se fue sin consumir) no hace falta forma de pago.
 // Dividida: `payments`, una parte por persona (cada una con su forma de pago); tienen que sumar

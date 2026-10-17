@@ -67,6 +67,11 @@ export const getReports = async (req, res) => {
   ]);
   // Los pagos de las cuentas de mesa cerradas en el período. Las cerradas antes de que se
   // guardaran los pagos tienen solo la forma de pago: cuentan como un pago por el total.
+  const [fees] = await Tab.aggregate([
+    { $match: { commerce: req.commerce._id, status: "closed", closedAt: filter.createdAt } },
+    { $group: { _id: null, serviceFeeCents: { $sum: { $ifNull: ["$serviceFeeCents", 0] } } } },
+  ]);
+  const serviceFeeCents = fees?.serviceFeeCents ?? 0;
   const tabPayments = await Tab.aggregate([
     { $match: { commerce: req.commerce._id, status: "closed", closedAt: filter.createdAt } },
     {
@@ -91,8 +96,9 @@ export const getReports = async (req, res) => {
   const payments = [...byMethod].sort(([a], [b]) => String(a).localeCompare(String(b))).map(([method, item]) => ({ method, ...item }));
   const total = totals?.completed[0];
   const open = totals?.open[0];
-  res.json({ from, to, timeZone: TIME_ZONE, completed: total?.count ?? 0, cancelled: totals?.cancelled[0]?.count ?? 0, salesCents: total?.sales ?? 0,
-    averageCents: total?.count ? Math.round(total.sales / total.count) : 0,
+  res.json({ from, to, timeZone: TIME_ZONE, completed: total?.count ?? 0, cancelled: totals?.cancelled[0]?.count ?? 0, salesCents: (total?.sales ?? 0) + serviceFeeCents,
+    averageCents: total?.count ? Math.round(((total.sales ?? 0) + serviceFeeCents) / total.count) : 0,
+    serviceFeeCents,
     subtotalCents: total?.subtotal ?? 0, deliveryFeeCents: total?.deliveryFees ?? 0, discountCents: total?.discounts ?? 0,
     open: { count: open?.count ?? 0, salesCents: open?.salesCents ?? 0 },
     payments,

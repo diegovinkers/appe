@@ -7,7 +7,8 @@ import { subscriptionInput, subscriptionPaymentInput, subscriptionResponse, repo
 import { auditQuery, createCommerceSchema, resetPasswordSchema, updateCommerceSchema } from "../schemas/admin.schema.js";
 import { changePasswordSchema, loginSchema } from "../schemas/auth.schema.js";
 import { createMemberSchema, memberPasswordSchema, updateMemberSchema } from "../schemas/team.schema.js";
-import { closeTabSchema, createTableSchema, moveTabSchema, tableLayoutSchema, tableOrderSchema, updateTableSchema } from "../schemas/table.schema.js";
+import { closeTabSchema, createTableSchema, moveTabSchema,
+  serviceFeeSchema, tableLayoutSchema, tableOrderSchema, updateTableSchema } from "../schemas/table.schema.js";
 import { idParams } from "../schemas/common.schema.js";
 import {
   availabilitySchema,
@@ -175,6 +176,7 @@ export const operations = [
   { method: "post", path: "/api/owner/tabs/:id/bill", tag: "Panel: salón", summary: "La mesa pidió la cuenta", auth: "orders:write", params: idParams, responses: { 200: z.strictObject({ tab: tabResponse }) } },
   { method: "get", path: "/api/owner/tabs/:id/bill", tag: "Panel: salón", summary: "Precuenta para imprimir (HTML o texto, 58 u 80 mm)", auth: "orders:read", params: idParams, query: ticketQuery, responses: { 200: binary("text/html", "text/plain") } },
   { method: "post", path: "/api/owner/tabs/:id/move", tag: "Panel: salón", summary: "Pasar la cuenta a otra mesa libre", auth: "orders:write", params: idParams, body: moveTabSchema, responses: { 200: z.strictObject({ tab: tabResponse }) } },
+  { method: "post", path: "/api/owner/tabs/:id/service-fee", tag: "Panel: salón", summary: "Sacar o volver a poner la tasa de servicio de una cuenta abierta", auth: "orders:write", params: idParams, body: serviceFeeSchema, responses: { 200: z.strictObject({ tab: tabResponse }) } },
   { method: "post", path: "/api/owner/tabs/:id/close", tag: "Panel: salón", summary: "Cerrar la cuenta cobrando (la forma de pago queda en cada pedido)", auth: "orders:write", params: idParams, body: closeTabSchema, responses: { 200: z.strictObject({ tab: tabResponse }) } },
   { method: "get", path: "/api/owner/team", tag: "Panel: local", summary: "Equipe: el dueño y los empleados del local", auth: "team:manage", responses: { 200: z.strictObject({ members: z.array(teamMember) }) } },
   { method: "post", path: "/api/owner/team", tag: "Panel: local", summary: "Dar de alta un empleado (409 si el e-mail ya existe)", auth: "team:manage", body: createMemberSchema, responses: { 201: z.strictObject({ member: teamMember }) } },

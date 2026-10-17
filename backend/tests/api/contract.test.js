@@ -216,6 +216,7 @@ describe("contrato de las respuestas", () => {
     check(await owner.post(`/api/owner/tabs/${tableOrder.tab._id}/bill`), "post", "/api/owner/tabs/:id/bill");
     check(await owner.get(`/api/owner/tabs/${tableOrder.tab._id}/bill`), "get", "/api/owner/tabs/:id/bill");
     check(await owner.post(`/api/owner/tabs/${tableOrder.tab._id}/move`).send({ tableId: spareTable._id }), "post", "/api/owner/tabs/:id/move");
+    check(await owner.post(`/api/owner/tabs/${tableOrder.tab._id}/service-fee`).send({ waived: true }), "post", "/api/owner/tabs/:id/service-fee");
     await owner.patch(`/api/owner/orders/${tableOrder.order._id}/status`).send({ status: "ready" });
     check(await owner.post(`/api/owner/tabs/${tableOrder.tab._id}/close`).send({ paymentMethod: "cash" }), "post", "/api/owner/tabs/:id/close");
     check(await owner.delete(`/api/owner/tables/${salonTable._id}`), "delete", "/api/owner/tables/:id");

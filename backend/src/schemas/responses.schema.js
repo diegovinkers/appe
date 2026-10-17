@@ -93,6 +93,7 @@ export const store = z.strictObject({
   instagram: z.string(),
   googleReviewUrl: z.string(),
   quickNotes: z.array(z.string()),
+  serviceFeePercent: z.number().int(),
   primaryColor: z.string(),
   secondaryColor: z.string(),
   whatsapp: z.string(),
@@ -298,6 +299,9 @@ export const tab = z.strictObject({
   paymentMethod: z.enum(PAYMENT_METHODS).nullable(),
   changeForCents: cents.nullable(),
   payments: z.array(z.strictObject({ paymentMethod: z.enum(PAYMENT_METHODS), amountCents: cents, changeForCents: cents.nullable() })),
+  subtotalCents: cents,
+  serviceFeeCents: cents,
+  serviceFeeWaived: z.boolean(),
   totalCents: cents,
   ordersCount: z.number().int(),
 });

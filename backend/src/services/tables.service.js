@@ -16,6 +16,19 @@ export function tableState(tab, orders = []) {
 // Lo que se cobra: los pedidos no cancelados de la cuenta.
 export const tabTotal = (orders) => orders.filter((order) => order.status !== "cancelled").reduce((sum, order) => sum + order.totalCents, 0);
 
+// Subtotal (pedidos), tasa de servicio (el porcentaje del local, salvo que se haya sacado en esta
+// cuenta; redondeada al centavo) y total. Una cuenta cerrada devuelve lo que se cobró.
+export function tabAmounts(tab, orders, store) {
+  if (tab.status === "closed") {
+    const serviceFeeCents = tab.serviceFeeCents ?? 0;
+    return { subtotalCents: tab.totalCents - serviceFeeCents, serviceFeeCents, totalCents: tab.totalCents };
+  }
+  const subtotalCents = tabTotal(orders);
+  const percent = tab.serviceFeeWaived ? 0 : (store.serviceFeePercent ?? 0);
+  const serviceFeeCents = Math.round((subtotalCents * percent) / 100);
+  return { subtotalCents, serviceFeeCents, totalCents: subtotalCents + serviceFeeCents };
+}
+
 // Primera celda libre, de izquierda a derecha y de arriba abajo, dejando una celda de aire
 // entre mesas: así las mesas nuevas quedan ordenadas sin que nadie las acomode.
 export function freeCell(tables, columns = 6) {

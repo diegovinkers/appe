@@ -168,6 +168,28 @@ describe("salón: la cuenta de la mesa", () => {
     expect(bill.text).toContain("Pagamentos:");
   });
 
+  it("tasa de servicio: el local la prende, la cuenta la suma, el mozo la puede sacar y el reporte la muestra", async () => {
+    await owner.patch("/api/owner/store").send({ serviceFeePercent: 10 });
+    const table = (await newTable({})).body.table;
+    const first = await owner.post(`/api/owner/tables/${table._id}/orders`).send({ items: items() });
+    const tabId = first.body.tab._id;
+    expect(first.body.tab).toMatchObject({ subtotalCents: 5600, serviceFeeCents: 560, totalCents: 6160, serviceFeeWaived: false });
+    expect((await owner.get(`/api/owner/tabs/${tabId}/bill?format=text`)).text).toContain("Taxa de servico (10%)");
+
+    const waived = await owner.post(`/api/owner/tabs/${tabId}/service-fee`).send({ waived: true });
+    expect(waived.body.tab).toMatchObject({ serviceFeeCents: 0, totalCents: 5600, serviceFeeWaived: true });
+    await owner.post(`/api/owner/tabs/${tabId}/service-fee`).send({ waived: false });
+
+    await owner.patch(`/api/owner/orders/${first.body.order._id}/status`).send({ status: "ready" });
+    expect((await owner.post(`/api/owner/tabs/${tabId}/close`).send({ paymentMethod: "pix" })).body.tab).toMatchObject({ totalCents: 6160, serviceFeeCents: 560 });
+    // Cerrada, ya no cambia aunque el local cambie el porcentaje.
+    await owner.patch("/api/owner/store").send({ serviceFeePercent: 0 });
+    const day = new Date(Date.now() - 5 * 60 * 60 * 1000).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+    const report = await owner.get(`/api/owner/reports?from=${day}&to=${day}`);
+    expect(report.body).toMatchObject({ salesCents: 6160, serviceFeeCents: 560, payments: [{ method: "pix", count: 1, salesCents: 6160 }] });
+    expect((await owner.patch("/api/owner/store").send({ serviceFeePercent: 31 })).status).toBe(400);
+  });
+
   it("una mesa que se fue sin consumir se cierra sin forma de pago", async () => {
     const table = (await newTable({})).body.table;
     const first = await owner.post(`/api/owner/tables/${table._id}/orders`).send({ items: items() });

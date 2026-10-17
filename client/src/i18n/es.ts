@@ -254,6 +254,7 @@ export const es: Dictionary = {
     products: "Productos",
     deliveryFees: "Envíos",
     discounts: "Descuentos (cupones)",
+    serviceFee: "Tasa de servicio (mesas)",
     fulfillmentTitle: "Envío y retiro",
     fulfillment: { delivery: "Envío", pickup: "Retiro", table: "Mesa" },
     daysTitle: "Por día",
@@ -357,6 +358,12 @@ export const es: Dictionary = {
 
   // Configuración → Salón: armar el plano con las mesas.
   salon: {
+    serviceFee: "Tasa de servicio",
+    serviceFeeHint: "Suma un porcentaje a la cuenta de las mesas (en la precuenta y al cobrar). En cada mesa se puede sacar si el cliente no la quiere pagar.",
+    serviceFeeSwitch: "Cobrar tasa de servicio",
+    serviceFeePercent: "Porcentaje",
+    serviceFeeSave: "Guardar",
+    serviceFeeSaved: "Guardado.",
     add: "Agregar mesa",
     planLabel: "Plano del salón",
     hint: "Arrastrá cada mesa a su lugar. Con el teclado, elegí una mesa y usá las flechas.",
@@ -408,6 +415,9 @@ export const es: Dictionary = {
     closeTitle: "¿Cómo pagó la mesa?",
     closeConfirm: (total: string) => `Confirmar ${total}`,
     closeBack: "Volver",
+    subtotal: "Consumo",
+    serviceFee: (percent: number) => `Tasa de servicio (${percent}%)`,
+    chargeServiceFee: "Cobrar la tasa",
     payOnce: "Un pago",
     paySplit: "Dividir",
     parts: "¿En cuántas partes?",

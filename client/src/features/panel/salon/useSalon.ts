@@ -58,7 +58,7 @@ export function useTabAction<Vars, Result = unknown>(request: (vars: Vars) => Pr
   });
 }
 
-export const tabRequest = <T = unknown>(tabId: string, action: "bill" | "move" | "close", body: object = {}) =>
+export const tabRequest = <T = unknown>(tabId: string, action: "bill" | "move" | "close" | "service-fee", body: object = {}) =>
   api<T>(`/owner/tabs/${tabId}/${action}`, { method: "POST", body });
 
 // Si el local tiene mesas activas (para mostrar "Mesas" en la barra del celular). Usa la misma

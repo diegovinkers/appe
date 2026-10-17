@@ -196,6 +196,7 @@ export function ReportsPage() {
                       { label: c.products, cents: data.subtotalCents },
                       { label: c.deliveryFees, cents: data.deliveryFeeCents },
                       { label: c.discounts, cents: data.discountCents, sign: "-" },
+                      ...(data.serviceFeeCents > 0 ? [{ label: c.serviceFee, cents: data.serviceFeeCents }] : []),
                     ]}
                   />
                 </div>

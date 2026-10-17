@@ -253,6 +253,7 @@ export const ptBR = {
     products: "Produtos",
     deliveryFees: "Taxas de entrega",
     discounts: "Descontos (cupons)",
+    serviceFee: "Taxa de serviço (mesas)",
     fulfillmentTitle: "Entrega e retirada",
     fulfillment: { delivery: "Entrega", pickup: "Retirada", table: "Mesa" },
     daysTitle: "Por dia",
@@ -356,6 +357,12 @@ export const ptBR = {
 
   // Configurações → Salão: montar o plano com as mesas.
   salon: {
+    serviceFee: "Taxa de serviço",
+    serviceFeeHint: "Soma uma porcentagem na conta das mesas (na pré-conta e ao cobrar). Em cada mesa dá para tirar se o cliente não quiser pagar.",
+    serviceFeeSwitch: "Cobrar taxa de serviço",
+    serviceFeePercent: "Porcentagem",
+    serviceFeeSave: "Salvar",
+    serviceFeeSaved: "Salvo.",
     add: "Adicionar mesa",
     planLabel: "Plano do salão",
     hint: "Arraste cada mesa para o lugar dela. No teclado, escolha uma mesa e use as setas.",
@@ -407,6 +414,9 @@ export const ptBR = {
     closeTitle: "Como a mesa pagou?",
     closeConfirm: (total: string) => `Confirmar ${total}`,
     closeBack: "Voltar",
+    subtotal: "Consumo",
+    serviceFee: (percent: number) => `Taxa de serviço (${percent}%)`,
+    chargeServiceFee: "Cobrar a taxa",
     payOnce: "Um pagamento",
     paySplit: "Dividir",
     parts: "Em quantas partes?",

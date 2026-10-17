@@ -6,7 +6,7 @@ import Table from "../models/table.model.js";
 import { audit, diffFields } from "../lib/audit.js";
 import { badRequest, conflict, notFound } from "../lib/errors.js";
 import { placeOrder } from "../services/orderPlacement.service.js";
-import { freeCell, tabTotal, tableState } from "../services/tables.service.js";
+import { freeCell, tabAmounts, tableState } from "../services/tables.service.js";
 import { buildBill, buildTicketHtml } from "../services/ticket.service.js";
 
 const tableNotFound = () => notFound("Mesa não encontrada");
@@ -16,7 +16,7 @@ const OPEN = ["open", "bill_requested"];
 const IN_PROGRESS = ["new", "confirmed", "ready"];
 
 const tableView = ({ _id, number, name, seats, x, y, active }) => ({ _id, number, name, seats, x, y, active });
-const tabView = (tab, orders) => ({
+const tabView = (tab, orders, store) => ({
   _id: tab._id,
   table: tab.table,
   tableNumber: tab.tableNumber,
@@ -27,7 +27,8 @@ const tabView = (tab, orders) => ({
   paymentMethod: tab.paymentMethod,
   changeForCents: tab.changeForCents,
   payments: (tab.payments ?? []).map(({ paymentMethod, amountCents, changeForCents }) => ({ paymentMethod, amountCents, changeForCents: changeForCents ?? null })),
-  totalCents: tab.status === "closed" ? tab.totalCents : tabTotal(orders),
+  ...tabAmounts(tab, orders, store),
+  serviceFeeWaived: tab.serviceFeeWaived ?? false,
   ordersCount: orders.filter((order) => order.status !== "cancelled").length,
 });
 
@@ -77,7 +78,7 @@ export const listTables = async (req, res) => {
         ...tableView(table),
         state: tableState(tab, tabOrders),
         tab: tab && {
-          ...tabView(tab, tabOrders),
+          ...tabView(tab, tabOrders, req.commerce),
           // Lo último que pidió la mesa, para verlo sin abrirla.
           lastItems: live.flatMap((order) => order.items.map(({ name, quantity }) => ({ name, quantity }))).slice(-4),
         },
@@ -165,7 +166,7 @@ export const getTableTab = async (req, res) => {
   const tab = await Tab.findOne({ commerce: req.commerce._id, table: table._id, status: { $in: OPEN } });
   if (!tab) return res.json({ table: tableView(table), tab: null, orders: [] });
   const orders = await ordersOf(req, tab._id);
-  res.json({ table: tableView(table), tab: tabView(tab, orders), orders });
+  res.json({ table: tableView(table), tab: tabView(tab, orders, req.commerce), orders });
 };
 
 // Un pedido para la mesa: abre la cuenta si no hay una y entra a cocina confirmado.
@@ -177,7 +178,7 @@ export const createTableOrder = async (req, res) => {
   const repeated = await Order.findOne({ commerce: req.commerce._id, clientOrderId });
   if (repeated?.tab) {
     const repeatedTab = await Tab.findOne({ _id: repeated.tab, commerce: req.commerce._id });
-    return res.json({ order: repeated, tab: tabView(repeatedTab, await ordersOf(req, repeated.tab)) });
+    return res.json({ order: repeated, tab: tabView(repeatedTab, await ordersOf(req, repeated.tab), req.commerce) });
   }
 
   let tab = await Tab.findOne({ commerce: req.commerce._id, table: table._id, status: { $in: OPEN } });
@@ -211,7 +212,7 @@ export const createTableOrder = async (req, res) => {
     tab.billRequestedAt = null;
     await tab.save();
   }
-  res.status(201).json({ order, tab: tabView(tab, await ordersOf(req, tab._id)) });
+  res.status(201).json({ order, tab: tabView(tab, await ordersOf(req, tab._id), req.commerce) });
 };
 
 export const requestBill = async (req, res) => {
@@ -221,7 +222,19 @@ export const requestBill = async (req, res) => {
     tab.billRequestedAt = new Date();
     await tab.save();
   }
-  res.json({ tab: tabView(tab, await ordersOf(req, tab._id)) });
+  res.json({ tab: tabView(tab, await ordersOf(req, tab._id), req.commerce) });
+};
+
+// Sacar (o volver a poner) la tasa de servicio de una cuenta abierta: el cliente no la quiere pagar.
+export const setServiceFee = async (req, res) => {
+  const tab = await findOpenTab(req);
+  const { waived } = req.valid.body;
+  if (tab.serviceFeeWaived !== waived) {
+    tab.serviceFeeWaived = waived;
+    await tab.save();
+    await audit(req, { action: waived ? "tab.service_fee_waived" : "tab.service_fee_restored", entity: { type: "tab", id: tab._id }, changes: { table: tab.tableNumber } });
+  }
+  res.json({ tab: tabView(tab, await ordersOf(req, tab._id), req.commerce) });
 };
 
 // Pasar la cuenta a otra mesa libre (la gente se cambió de lugar).
@@ -229,7 +242,7 @@ export const moveTab = async (req, res) => {
   const tab = await findOpenTab(req);
   const target = await findTable(req, req.valid.body.tableId);
   if (!target.active) throw conflict("TABLE_INACTIVE", "Esta mesa está desativada");
-  if (String(target._id) === String(tab.table)) return res.json({ tab: tabView(tab, await ordersOf(req, tab._id)) });
+  if (String(target._id) === String(tab.table)) return res.json({ tab: tabView(tab, await ordersOf(req, tab._id), req.commerce) });
   const from = tab.tableNumber;
   try {
     await mongoose.connection.transaction(async (session) => {
@@ -248,7 +261,7 @@ export const moveTab = async (req, res) => {
     throw error;
   }
   await audit(req, { action: "tab.moved", entity: { type: "tab", id: tab._id }, changes: { from, to: target.number } });
-  res.json({ tab: tabView(tab, await ordersOf(req, tab._id)) });
+  res.json({ tab: tabView(tab, await ordersOf(req, tab._id), req.commerce) });
 };
 
 // Cerrar la cuenta cobrando. Lo que esté listo se da por servido; si algo sigue en cocina,
@@ -264,7 +277,7 @@ export const closeTab = async (req, res) => {
       orders: pending.map((order) => order.number),
     });
   }
-  const total = tabTotal(orders);
+  const { serviceFeeCents, totalCents: total } = tabAmounts(tab, orders, req.commerce);
   // Un pago con el total, o las partes de una cuenta dividida.
   const payments = parts ?? (paymentMethod && total > 0 ? [{ paymentMethod, amountCents: total, changeForCents }] : []);
   if (total > 0 && !payments.length) throw badRequest("PAYMENT_METHOD_REQUIRED", "Escolha a forma de pagamento");
@@ -304,10 +317,11 @@ export const closeTab = async (req, res) => {
     tab.changeForCents = single?.paymentMethod === "cash" ? (single.changeForCents ?? null) : null;
     tab.payments = payments.map((part) => ({ ...part, changeForCents: part.paymentMethod === "cash" ? (part.changeForCents ?? null) : null }));
     tab.totalCents = total;
+    tab.serviceFeeCents = serviceFeeCents;
     await tab.save({ session });
   });
-  await audit(req, { action: "tab.closed", entity: { type: "tab", id: tab._id }, changes: { table: tab.tableNumber, totalCents: total, payments: payments.map((part) => [part.paymentMethod, part.amountCents]) } });
-  res.json({ tab: tabView(tab, await ordersOf(req, tab._id)) });
+  await audit(req, { action: "tab.closed", entity: { type: "tab", id: tab._id }, changes: { table: tab.tableNumber, totalCents: total, serviceFeeCents, payments: payments.map((part) => [part.paymentMethod, part.amountCents]) } });
+  res.json({ tab: tabView(tab, await ordersOf(req, tab._id), req.commerce) });
 };
 
 // Precuenta para imprimir (la misma impresora y papel que la comanda).
@@ -316,7 +330,7 @@ export const getTabBill = async (req, res) => {
   if (!tab) throw tabNotFound();
   const orders = await ordersOf(req, tab._id);
   const { format, width } = req.valid.query;
-  const text = buildBill(tab, orders, req.commerce, { paperWidth: width });
+  const text = buildBill(tab, orders, req.commerce, { paperWidth: width, amounts: tabAmounts(tab, orders, req.commerce) });
   if (format === "text") return res.type("text/plain; charset=utf-8").send(text);
   res.type("text/html; charset=utf-8").send(buildTicketHtml(text, { paperWidth: width, title: `Conta — Mesa ${tab.tableNumber}` }));
 };

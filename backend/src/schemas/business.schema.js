@@ -24,6 +24,8 @@ export const reportResponse = z.strictObject({
   salesCents: z.number().int().nonnegative(), averageCents: z.number().int().nonnegative(),
   // Cierre de caja: lo vendido separado en productos, envíos y descuentos, y lo que sigue abierto.
   subtotalCents: z.number().int().nonnegative(), deliveryFeeCents: z.number().int().nonnegative(), discountCents: z.number().int().nonnegative(),
+  // La tasa de servicio de las mesas cerradas en el período (ya sumada en salesCents).
+  serviceFeeCents: z.number().int().nonnegative(),
   open: z.strictObject({ count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() }),
   payments: z.array(z.strictObject({ method: z.enum(PAYMENT_METHODS), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),
   fulfillment: z.array(z.strictObject({ type: z.enum(["delivery", "pickup", "table"]), count: z.number().int().nonnegative(), salesCents: z.number().int().nonnegative() })),

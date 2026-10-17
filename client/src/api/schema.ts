@@ -380,6 +380,7 @@ export interface paths {
                             subtotalCents: number;
                             deliveryFeeCents: number;
                             discountCents: number;
+                            serviceFeeCents: number;
                             open: {
                                 count: number;
                                 salesCents: number;
@@ -2512,6 +2513,7 @@ export interface paths {
                                 instagram: string;
                                 googleReviewUrl: string;
                                 quickNotes: string[];
+                                serviceFeePercent: number;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -2695,6 +2697,7 @@ export interface paths {
                         instagram?: string;
                         googleReviewUrl?: "" | string;
                         quickNotes?: string[];
+                        serviceFeePercent?: number;
                         primaryColor?: string;
                         secondaryColor?: string;
                         whatsapp?: string;
@@ -2786,6 +2789,7 @@ export interface paths {
                                 instagram: string;
                                 googleReviewUrl: string;
                                 quickNotes: string[];
+                                serviceFeePercent: number;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3041,6 +3045,7 @@ export interface paths {
                                 instagram: string;
                                 googleReviewUrl: string;
                                 quickNotes: string[];
+                                serviceFeePercent: number;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3268,6 +3273,7 @@ export interface paths {
                                 instagram: string;
                                 googleReviewUrl: string;
                                 quickNotes: string[];
+                                serviceFeePercent: number;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3480,6 +3486,7 @@ export interface paths {
                                 instagram: string;
                                 googleReviewUrl: string;
                                 quickNotes: string[];
+                                serviceFeePercent: number;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -5361,6 +5368,9 @@ export interface paths {
                                         amountCents: number;
                                         changeForCents: number | null;
                                     }[];
+                                    subtotalCents: number;
+                                    serviceFeeCents: number;
+                                    serviceFeeWaived: boolean;
                                     totalCents: number;
                                     ordersCount: number;
                                     lastItems: {
@@ -5717,6 +5727,9 @@ export interface paths {
                                     amountCents: number;
                                     changeForCents: number | null;
                                 }[];
+                                subtotalCents: number;
+                                serviceFeeCents: number;
+                                serviceFeeWaived: boolean;
                                 totalCents: number;
                                 ordersCount: number;
                             } | null;
@@ -5999,6 +6012,9 @@ export interface paths {
                                     amountCents: number;
                                     changeForCents: number | null;
                                 }[];
+                                subtotalCents: number;
+                                serviceFeeCents: number;
+                                serviceFeeWaived: boolean;
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -6120,6 +6136,9 @@ export interface paths {
                                     amountCents: number;
                                     changeForCents: number | null;
                                 }[];
+                                subtotalCents: number;
+                                serviceFeeCents: number;
+                                serviceFeeWaived: boolean;
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -6248,6 +6267,9 @@ export interface paths {
                                     amountCents: number;
                                     changeForCents: number | null;
                                 }[];
+                                subtotalCents: number;
+                                serviceFeeCents: number;
+                                serviceFeeWaived: boolean;
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -6335,6 +6357,99 @@ export interface paths {
                                     amountCents: number;
                                     changeForCents: number | null;
                                 }[];
+                                subtotalCents: number;
+                                serviceFeeCents: number;
+                                serviceFeeWaived: boolean;
+                                totalCents: number;
+                                ordersCount: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/tabs/{id}/service-fee": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sacar o volver a poner la tasa de servicio de una cuenta abierta
+         * @description Con sesión y el permiso `orders:write`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        waived: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            tab: {
+                                _id: string;
+                                table: string;
+                                tableNumber: number;
+                                /** @enum {string} */
+                                status: "open" | "bill_requested" | "closed";
+                                /** Format: date-time */
+                                openedAt: string;
+                                billRequestedAt: string | null;
+                                closedAt: string | null;
+                                paymentMethod: ("cash" | "pix" | "card") | null;
+                                changeForCents: number | null;
+                                payments: {
+                                    /** @enum {string} */
+                                    paymentMethod: "cash" | "pix" | "card";
+                                    amountCents: number;
+                                    changeForCents: number | null;
+                                }[];
+                                subtotalCents: number;
+                                serviceFeeCents: number;
+                                serviceFeeWaived: boolean;
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -6430,6 +6545,9 @@ export interface paths {
                                     amountCents: number;
                                     changeForCents: number | null;
                                 }[];
+                                subtotalCents: number;
+                                serviceFeeCents: number;
+                                serviceFeeWaived: boolean;
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -10149,6 +10267,7 @@ export interface paths {
                                 instagram: string;
                                 googleReviewUrl: string;
                                 quickNotes: string[];
+                                serviceFeePercent: number;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -10348,6 +10467,7 @@ export interface paths {
                                 instagram: string;
                                 googleReviewUrl: string;
                                 quickNotes: string[];
+                                serviceFeePercent: number;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -10569,6 +10689,7 @@ export interface paths {
                                 instagram: string;
                                 googleReviewUrl: string;
                                 quickNotes: string[];
+                                serviceFeePercent: number;
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;

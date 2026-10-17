@@ -6,7 +6,7 @@ import { can } from "../../../auth/permissions";
 import { Spinner } from "../../../components/FullScreenMessage";
 import { Notice } from "../../../components/Notice";
 import { Sheet } from "../../../components/Sheet";
-import { Field, button, input } from "../../../components/ui";
+import { Field, Switch, button, input } from "../../../components/ui";
 import { errorText, useT } from "../../../i18n";
 import { formatMinutes, formatMoney, formatTime } from "../../../lib/format";
 import { parseMoney } from "../../../lib/money";
@@ -242,7 +242,7 @@ export function TableTab({
 }) {
   const t = useT();
   const c = t.tables;
-  const { user } = usePanel();
+  const { user, store } = usePanel();
   const { paper } = useDeviceSettings();
   const query = useTableTab(tableId);
   const salon = useSalonTables();
@@ -250,6 +250,7 @@ export function TableTab({
   const [closed, setClosed] = useState<Closed | null>(null);
   const requestBill = useTabAction((tabId: string) => tabRequest(tabId, "bill"));
   const move = useTabAction(({ tabId, to }: { tabId: string; to: string }) => tabRequest(tabId, "move", { tableId: to }));
+  const fee = useTabAction(({ tabId, waived }: { tabId: string; waived: boolean }) => tabRequest(tabId, "service-fee", { waived }));
   const canWrite = can(user.role, "orders:write");
   const canOrder = can(user.role, "orders:manual");
 
@@ -344,6 +345,32 @@ export function TableTab({
                 <span className="text-2xl font-bold tabular-nums">{formatMoney(tab.totalCents)}</span>
               </p>
             </div>
+
+            {/* Con tasa de servicio: el consumo, la tasa (que el mozo puede sacar) y el total de arriba. */}
+            {(store.serviceFeePercent ?? 0) > 0 && (
+              <dl className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-ink-muted">{c.subtotal}</dt>
+                  <dd className="tabular-nums">{formatMoney(tab.subtotalCents)}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className={tab.serviceFeeWaived ? "text-ink-muted line-through" : "text-ink-muted"}>{c.serviceFee(store.serviceFeePercent)}</dt>
+                  <dd className="flex items-center gap-3">
+                    <span className="tabular-nums">{formatMoney(tab.serviceFeeCents)}</span>
+                    {canWrite && (
+                      <Switch
+                        label={c.chargeServiceFee}
+                        showLabel={false}
+                        checked={!tab.serviceFeeWaived}
+                        disabled={fee.isPending}
+                        onChange={(charge) => fee.mutate({ tabId: tab._id, waived: !charge })}
+                      />
+                    )}
+                  </dd>
+                </div>
+                {fee.isError && <p className="font-bold text-error">{errorText(fee.error, t)}</p>}
+              </dl>
+            )}
 
             {canWrite && (
               <div className="flex flex-wrap gap-2">
