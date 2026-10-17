@@ -1,6 +1,7 @@
 import Commerce from "../models/commerce.model.js";
 import Subscription, { planName } from "../models/subscription.model.js";
 import Order from "../models/order.model.js";
+import Tab from "../models/tab.model.js";
 import { ACTIVE_STATUSES } from "../services/orderStatus.js";
 import { notFound, badRequest } from "../lib/errors.js";
 import { audit } from "../lib/audit.js";
@@ -56,20 +57,45 @@ export const getReports = async (req, res) => {
       completed: [{ $match: { status: "delivered" } }, { $group: { _id: null, count: { $sum: 1 }, sales: { $sum: "$totalCents" }, subtotal: { $sum: "$subtotalCents" }, deliveryFees: { $sum: "$deliveryFeeCents" }, discounts: { $sum: { $ifNull: ["$discountCents", 0] } } } }],
       cancelled: [{ $match: { status: "cancelled" } }, { $count: "count" }],
       open: [{ $match: { status: { $in: ACTIVE_STATUSES } } }, { $group: { _id: null, count: { $sum: 1 }, salesCents: { $sum: "$totalCents" } } }],
-      payments: byKey("$paymentMethod"),
+      // Las mesas se cobran por cuenta (a veces dividida): sus pagos salen de las cuentas, abajo.
+      payments: [{ $match: { fulfillment: { $ne: "table" } } }, ...byKey("$paymentMethod")],
       fulfillment: byKey("$fulfillment"),
       days: byKey(operatingDayOf(dayStart)),
       sources: byKey({ $ifNull: ["$acquisitionSource", "unknown"] }),
       products: [{ $match: { status: "delivered" } }, { $unwind: "$items" }, { $group: { _id: "$items.product", name: { $last: "$items.name" }, quantity: { $sum: "$items.quantity" }, totalCents: { $sum: "$items.totalCents" } } }, { $sort: { quantity: -1, _id: 1 } }, { $limit: 20 }],
     } },
   ]);
+  // Los pagos de las cuentas de mesa cerradas en el período. Las cerradas antes de que se
+  // guardaran los pagos tienen solo la forma de pago: cuentan como un pago por el total.
+  const tabPayments = await Tab.aggregate([
+    { $match: { commerce: req.commerce._id, status: "closed", closedAt: filter.createdAt } },
+    {
+      $project: {
+        payments: {
+          $cond: [
+            { $gt: [{ $size: { $ifNull: ["$payments", []] } }, 0] },
+            "$payments",
+            { $cond: [{ $and: [{ $ne: ["$paymentMethod", null] }, { $gt: ["$totalCents", 0] }] }, [{ paymentMethod: "$paymentMethod", amountCents: "$totalCents" }], []] },
+          ],
+        },
+      },
+    },
+    { $unwind: "$payments" },
+    { $group: { _id: "$payments.paymentMethod", count: { $sum: 1 }, salesCents: { $sum: "$payments.amountCents" } } },
+  ]);
+  const byMethod = new Map();
+  for (const { _id, count, salesCents } of [...(totals?.payments ?? []), ...tabPayments]) {
+    const current = byMethod.get(_id) ?? { count: 0, salesCents: 0 };
+    byMethod.set(_id, { count: current.count + count, salesCents: current.salesCents + salesCents });
+  }
+  const payments = [...byMethod].sort(([a], [b]) => String(a).localeCompare(String(b))).map(([method, item]) => ({ method, ...item }));
   const total = totals?.completed[0];
   const open = totals?.open[0];
   res.json({ from, to, timeZone: TIME_ZONE, completed: total?.count ?? 0, cancelled: totals?.cancelled[0]?.count ?? 0, salesCents: total?.sales ?? 0,
     averageCents: total?.count ? Math.round(total.sales / total.count) : 0,
     subtotalCents: total?.subtotal ?? 0, deliveryFeeCents: total?.deliveryFees ?? 0, discountCents: total?.discounts ?? 0,
     open: { count: open?.count ?? 0, salesCents: open?.salesCents ?? 0 },
-    payments: (totals?.payments ?? []).map(({ _id, ...item }) => ({ method: _id, ...item })),
+    payments,
     fulfillment: (totals?.fulfillment ?? []).map(({ _id, ...item }) => ({ type: _id, ...item })),
     days: (totals?.days ?? []).map(({ _id, ...item }) => ({ day: _id, ...item })),
     products: (totals?.products ?? []).map(({ _id, ...item }) => ({ productId: String(_id), ...item })),

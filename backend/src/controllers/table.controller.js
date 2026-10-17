@@ -26,6 +26,7 @@ const tabView = (tab, orders) => ({
   closedAt: tab.closedAt,
   paymentMethod: tab.paymentMethod,
   changeForCents: tab.changeForCents,
+  payments: (tab.payments ?? []).map(({ paymentMethod, amountCents, changeForCents }) => ({ paymentMethod, amountCents, changeForCents: changeForCents ?? null })),
   totalCents: tab.status === "closed" ? tab.totalCents : tabTotal(orders),
   ordersCount: orders.filter((order) => order.status !== "cancelled").length,
 });
@@ -255,7 +256,7 @@ export const moveTab = async (req, res) => {
 // cada pedido: así el cierre de caja los cuenta como a los demás.
 export const closeTab = async (req, res) => {
   const tab = await findOpenTab(req);
-  const { paymentMethod, changeForCents } = req.valid.body;
+  const { paymentMethod, changeForCents, payments: parts } = req.valid.body;
   const orders = await ordersOf(req, tab._id);
   const pending = orders.filter((order) => order.status === "new" || order.status === "confirmed");
   if (pending.length) {
@@ -264,13 +265,22 @@ export const closeTab = async (req, res) => {
     });
   }
   const total = tabTotal(orders);
-  if (total > 0 && !paymentMethod) throw badRequest("PAYMENT_METHOD_REQUIRED", "Escolha a forma de pagamento");
-  if (paymentMethod && !req.commerce.paymentMethods.includes(paymentMethod)) {
-    throw badRequest("PAYMENT_METHOD_NOT_AVAILABLE", "Forma de pagamento não aceita neste estabelecimento");
+  // Un pago con el total, o las partes de una cuenta dividida.
+  const payments = parts ?? (paymentMethod && total > 0 ? [{ paymentMethod, amountCents: total, changeForCents }] : []);
+  if (total > 0 && !payments.length) throw badRequest("PAYMENT_METHOD_REQUIRED", "Escolha a forma de pagamento");
+  for (const part of payments) {
+    if (!req.commerce.paymentMethods.includes(part.paymentMethod)) {
+      throw badRequest("PAYMENT_METHOD_NOT_AVAILABLE", "Forma de pagamento não aceita neste estabelecimento");
+    }
+    if (part.paymentMethod === "cash" && part.changeForCents != null && part.changeForCents < part.amountCents) {
+      throw badRequest("INVALID_CHANGE", "O troco precisa ser para um valor maior ou igual ao total");
+    }
   }
-  if (paymentMethod === "cash" && changeForCents != null && changeForCents < total) {
-    throw badRequest("INVALID_CHANGE", "O troco precisa ser para um valor maior ou igual ao total");
+  const paid = payments.reduce((sum, part) => sum + part.amountCents, 0);
+  if (paid !== total) {
+    throw badRequest("PAYMENTS_DONT_MATCH", "A soma dos pagamentos precisa ser igual ao total da conta", { totalCents: total, paidCents: paid });
   }
+  const single = payments.length === 1 ? payments[0] : null;
 
   const now = new Date();
   await mongoose.connection.transaction(async (session) => {
@@ -281,19 +291,22 @@ export const closeTab = async (req, res) => {
         { session }
       );
     }
-    if (paymentMethod) {
-      await Order.updateMany({ commerce: req.commerce._id, tab: tab._id, status: { $ne: "cancelled" } }, { $set: { paymentMethod } }, { session });
+    // Con un solo pago, cada pedido queda con esa forma (como un pedido cualquiera). Dividida, la
+    // forma de cada parte está en la cuenta y el cierre de caja la cuenta desde ahí.
+    if (single) {
+      await Order.updateMany({ commerce: req.commerce._id, tab: tab._id, status: { $ne: "cancelled" } }, { $set: { paymentMethod: single.paymentMethod } }, { session });
     }
     tab.status = "closed";
     tab.openTable = undefined;
     tab.closedAt = now;
     tab.closedBy = req.user.id;
-    tab.paymentMethod = paymentMethod ?? null;
-    tab.changeForCents = paymentMethod === "cash" ? (changeForCents ?? null) : null;
+    tab.paymentMethod = single?.paymentMethod ?? null;
+    tab.changeForCents = single?.paymentMethod === "cash" ? (single.changeForCents ?? null) : null;
+    tab.payments = payments.map((part) => ({ ...part, changeForCents: part.paymentMethod === "cash" ? (part.changeForCents ?? null) : null }));
     tab.totalCents = total;
     await tab.save({ session });
   });
-  await audit(req, { action: "tab.closed", entity: { type: "tab", id: tab._id }, changes: { table: tab.tableNumber, totalCents: total, paymentMethod: paymentMethod ?? null } });
+  await audit(req, { action: "tab.closed", entity: { type: "tab", id: tab._id }, changes: { table: tab.tableNumber, totalCents: total, payments: payments.map((part) => [part.paymentMethod, part.amountCents]) } });
   res.json({ tab: tabView(tab, await ordersOf(req, tab._id)) });
 };
 

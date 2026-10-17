@@ -22,8 +22,23 @@ const tabSchema = new mongoose.Schema(
     billRequestedAt: { type: Date, default: null },
     closedAt: { type: Date, default: null },
     closedBy: { type: ObjectId, ref: "User", default: null },
+    // Con un solo pago, su forma (como antes); dividida, null y el detalle en `payments`.
     paymentMethod: { type: String, enum: PAYMENT_METHODS, default: null },
     changeForCents: { type: Number, default: null },
+    // Lo cobrado, pago por pago (uno, o una parte por persona si se dividió). Suman el total.
+    payments: {
+      type: [
+        new mongoose.Schema(
+          {
+            paymentMethod: { type: String, enum: PAYMENT_METHODS, required: true },
+            amountCents: { type: Number, required: true, min: 1, validate: Number.isInteger },
+            changeForCents: { type: Number, default: null },
+          },
+          { _id: false }
+        ),
+      ],
+      default: [],
+    },
     // Lo cobrado al cerrar (suma de los pedidos no cancelados).
     totalCents: { type: Number, default: 0, min: 0, validate: Number.isInteger },
   },

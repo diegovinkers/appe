@@ -5355,6 +5355,12 @@ export interface paths {
                                     closedAt: string | null;
                                     paymentMethod: ("cash" | "pix" | "card") | null;
                                     changeForCents: number | null;
+                                    payments: {
+                                        /** @enum {string} */
+                                        paymentMethod: "cash" | "pix" | "card";
+                                        amountCents: number;
+                                        changeForCents: number | null;
+                                    }[];
                                     totalCents: number;
                                     ordersCount: number;
                                     lastItems: {
@@ -5705,6 +5711,12 @@ export interface paths {
                                 closedAt: string | null;
                                 paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
+                                payments: {
+                                    /** @enum {string} */
+                                    paymentMethod: "cash" | "pix" | "card";
+                                    amountCents: number;
+                                    changeForCents: number | null;
+                                }[];
                                 totalCents: number;
                                 ordersCount: number;
                             } | null;
@@ -5981,6 +5993,12 @@ export interface paths {
                                 closedAt: string | null;
                                 paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
+                                payments: {
+                                    /** @enum {string} */
+                                    paymentMethod: "cash" | "pix" | "card";
+                                    amountCents: number;
+                                    changeForCents: number | null;
+                                }[];
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -6096,6 +6114,12 @@ export interface paths {
                                 closedAt: string | null;
                                 paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
+                                payments: {
+                                    /** @enum {string} */
+                                    paymentMethod: "cash" | "pix" | "card";
+                                    amountCents: number;
+                                    changeForCents: number | null;
+                                }[];
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -6218,6 +6242,12 @@ export interface paths {
                                 closedAt: string | null;
                                 paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
+                                payments: {
+                                    /** @enum {string} */
+                                    paymentMethod: "cash" | "pix" | "card";
+                                    amountCents: number;
+                                    changeForCents: number | null;
+                                }[];
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -6299,6 +6329,12 @@ export interface paths {
                                 closedAt: string | null;
                                 paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
+                                payments: {
+                                    /** @enum {string} */
+                                    paymentMethod: "cash" | "pix" | "card";
+                                    amountCents: number;
+                                    changeForCents: number | null;
+                                }[];
                                 totalCents: number;
                                 ordersCount: number;
                             };
@@ -6359,6 +6395,12 @@ export interface paths {
                         /** @enum {string} */
                         paymentMethod?: "cash" | "pix" | "card";
                         changeForCents?: number;
+                        payments?: {
+                            /** @enum {string} */
+                            paymentMethod: "cash" | "pix" | "card";
+                            amountCents: number;
+                            changeForCents?: number;
+                        }[];
                     };
                 };
             };
@@ -6382,6 +6424,12 @@ export interface paths {
                                 closedAt: string | null;
                                 paymentMethod: ("cash" | "pix" | "card") | null;
                                 changeForCents: number | null;
+                                payments: {
+                                    /** @enum {string} */
+                                    paymentMethod: "cash" | "pix" | "card";
+                                    amountCents: number;
+                                    changeForCents: number | null;
+                                }[];
                                 totalCents: number;
                                 ordersCount: number;
                             };

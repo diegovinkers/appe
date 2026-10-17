@@ -15,6 +15,8 @@ import { useDeviceSettings } from "../orders/deviceSettings";
 import { printBill } from "../orders/printTicket";
 import { nextLabel, nextStatus } from "../orders/orderFlow";
 import { useChangeStatus } from "../orders/useOrders";
+import { Stepper } from "../../menu/ProductSheet";
+import { splitEqually } from "./split";
 import { usePanel } from "../PanelLayout";
 import { STATE_TONE, tabRequest, useSalonTables, useTabAction, useTableTab } from "./useSalon";
 
@@ -69,58 +71,151 @@ function TabOrder({ order, canWrite, onOpen }: { order: Order; canWrite: boolean
   );
 }
 
-// Cobrar: la forma de pago (las que acepta el local) y, en efectivo, para cuánto el cambio.
+// Cobrar: un pago (forma de pago y, en efectivo, para cuánto el cambio) o la cuenta dividida en
+// partes, cada una con su forma de pago. Las partes empiezan iguales y se pueden cambiar; se
+// confirma cuando suman justo el total.
+type Part = { amount: string; method: PaymentMethod | null; changeFor: string };
+
+const toMoneyText = (cents: number) => (cents / 100).toFixed(2).replace(".", ",");
+const equalParts = (total: number, count: number, methods: PaymentMethod[]): Part[] =>
+  splitEqually(total, count).map((cents) => ({ amount: toMoneyText(cents), method: methods.length === 1 ? methods[0] : null, changeFor: "" }));
+
+function MethodChips({ methods, value, onChange, label }: { methods: PaymentMethod[]; value: PaymentMethod | null; onChange: (method: PaymentMethod) => void; label: string }) {
+  const t = useT();
+  return (
+    <div role="group" aria-label={label} className="flex flex-wrap gap-2">
+      {methods.map((method) => (
+        <button key={method} type="button" aria-pressed={value === method} onClick={() => onChange(method)} className={chip(value === method)}>
+          {t.checkout.methods[method]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function CloseForm({ tab, onBack, onClosed }: { tab: Tab; onBack: () => void; onClosed: (closed: Closed) => void }) {
   const t = useT();
+  const c = t.tables;
   const { store } = usePanel();
   const methods = store.paymentMethods;
+  const [split, setSplit] = useState(false);
   const [method, setMethod] = useState<PaymentMethod | null>(methods.length === 1 ? methods[0] : null);
   const [changeFor, setChangeFor] = useState("");
+  const [count, setCount] = useState(2);
+  const [parts, setParts] = useState<Part[]>(() => equalParts(tab.totalCents, 2, methods));
   const close = useTabAction((body: object) => tabRequest<Closed>(tab._id, "close", body));
   const total = formatMoney(tab.totalCents);
   const change = parseMoney(changeFor);
   const changeTooLow = method === "cash" && change != null && change < tab.totalCents;
-  const needsMethod = tab.totalCents > 0 && !method;
+
+  const amounts = parts.map((part) => parseMoney(part.amount) ?? 0);
+  const paid = amounts.reduce((sum, value) => sum + value, 0);
+  const diff = tab.totalCents - paid;
+  const partProblem = (part: Part, index: number) => {
+    const partChange = parseMoney(part.changeFor);
+    return !part.method || amounts[index] <= 0 || (part.method === "cash" && partChange != null && partChange < amounts[index]);
+  };
+  const splitReady = diff === 0 && parts.every((part, index) => !partProblem(part, index));
+  const canConfirm = tab.totalCents === 0 || (split ? splitReady : Boolean(method) && !changeTooLow);
+  const setPart = (index: number, patch: Partial<Part>) => setParts((current) => current.map((part, i) => (i === index ? { ...part, ...patch } : part)));
 
   return (
     <form
       className="space-y-3"
       onSubmit={(event) => {
         event.preventDefault();
-        if (needsMethod || changeTooLow) return;
-        close.mutate(
-          {
-            ...(method && { paymentMethod: method }),
-            ...(method === "cash" && change != null && { changeForCents: change }),
-          },
-          { onSuccess: onClosed },
-        );
+        if (!canConfirm) return;
+        const body = split
+          ? {
+              payments: parts.map((part, index) => {
+                const partChange = parseMoney(part.changeFor);
+                return { paymentMethod: part.method, amountCents: amounts[index], ...(part.method === "cash" && partChange != null && { changeForCents: partChange }) };
+              }),
+            }
+          : { ...(method && { paymentMethod: method }), ...(method === "cash" && change != null && { changeForCents: change }) };
+        close.mutate(body, { onSuccess: onClosed });
       }}
     >
       {tab.totalCents > 0 && (
-        <fieldset>
-          <legend className="mb-2 font-bold">{t.tables.closeTitle}</legend>
-          <div className="flex flex-wrap gap-2">
-            {methods.map((value) => (
-              <button key={value} type="button" aria-pressed={method === value} onClick={() => setMethod(value)} className={chip(method === value)}>
-                {t.checkout.methods[value]}
-              </button>
-            ))}
+        <div role="group" aria-label={c.closeTitle} className="grid grid-cols-2 gap-2">
+          <button type="button" aria-pressed={!split} onClick={() => setSplit(false)} className={chip(!split)}>
+            {c.payOnce}
+          </button>
+          <button type="button" aria-pressed={split} onClick={() => setSplit(true)} className={chip(split)}>
+            {c.paySplit}
+          </button>
+        </div>
+      )}
+
+      {tab.totalCents > 0 && !split && (
+        <>
+          <fieldset>
+            <legend className="mb-2 font-bold">{c.closeTitle}</legend>
+            <MethodChips methods={methods} value={method} onChange={setMethod} label={c.closeTitle} />
+          </fieldset>
+          {method === "cash" && (
+            <Field id="conta-troco" label={t.checkout.changeFor} hint={t.checkout.changeHint} error={changeTooLow ? t.checkout.changeTooLow : undefined}>
+              <input id="conta-troco" inputMode="decimal" value={changeFor} onChange={(event) => setChangeFor(event.target.value)} className={input} />
+            </Field>
+          )}
+        </>
+      )}
+
+      {tab.totalCents > 0 && split && (
+        <div className="max-h-[45dvh] space-y-3 overflow-y-auto">
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-bold">{c.parts}</span>
+            <Stepper
+              label={c.parts}
+              value={count}
+              min={2}
+              max={20}
+              onChange={(next) => {
+                setCount(next);
+                setParts(equalParts(tab.totalCents, next, methods));
+              }}
+            />
           </div>
-        </fieldset>
+          <ol className="space-y-3">
+            {parts.map((part, index) => (
+              <li key={index} className="space-y-2 rounded-xl border border-line p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-bold">{c.part(index + 1)}</span>
+                  <input
+                    aria-label={c.partAmount(index + 1)}
+                    inputMode="decimal"
+                    value={part.amount}
+                    onChange={(event) => setPart(index, { amount: event.target.value })}
+                    className="h-11 w-28 rounded-lg border border-line bg-surface px-3 text-right tabular-nums"
+                  />
+                </div>
+                <MethodChips methods={methods} value={part.method} onChange={(value) => setPart(index, { method: value })} label={c.part(index + 1)} />
+                {part.method === "cash" && (
+                  <input
+                    aria-label={c.partChange(index + 1)}
+                    placeholder={t.checkout.changeFor}
+                    inputMode="decimal"
+                    value={part.changeFor}
+                    onChange={(event) => setPart(index, { changeFor: event.target.value })}
+                    className={input}
+                  />
+                )}
+              </li>
+            ))}
+          </ol>
+          <p role="status" className={`font-bold ${diff === 0 ? "text-success" : "text-error"}`}>
+            {diff === 0 ? c.exact : diff > 0 ? c.missing(formatMoney(diff)) : c.over(formatMoney(-diff))}
+          </p>
+        </div>
       )}
-      {method === "cash" && (
-        <Field id="conta-troco" label={t.checkout.changeFor} hint={t.checkout.changeHint} error={changeTooLow ? t.checkout.changeTooLow : undefined}>
-          <input id="conta-troco" inputMode="decimal" value={changeFor} onChange={(event) => setChangeFor(event.target.value)} className={input} />
-        </Field>
-      )}
+
       {close.isError && <Notice tone="error">{errorText(close.error, t)}</Notice>}
       <div className="flex gap-2">
         <button type="button" onClick={onBack} className={`${button.secondary} flex-1`}>
-          {t.tables.closeBack}
+          {c.closeBack}
         </button>
-        <button disabled={needsMethod || changeTooLow || close.isPending} className={`${button.primary} flex-1`}>
-          {t.tables.closeConfirm(total)}
+        <button disabled={!canConfirm || close.isPending} className={`${button.primary} flex-1`}>
+          {c.closeConfirm(total)}
         </button>
       </div>
     </form>
@@ -230,7 +325,11 @@ export function TableTab({
 
         {closed && (
           <Notice tone="success">
-            {closed.tab.paymentMethod ? c.closed(formatMoney(closed.tab.totalCents), t.checkout.methods[closed.tab.paymentMethod]) : c.closedFree}
+            {closed.tab.payments.length > 1
+              ? c.closedSplit(formatMoney(closed.tab.totalCents), closed.tab.payments.length)
+              : closed.tab.paymentMethod
+                ? c.closed(formatMoney(closed.tab.totalCents), t.checkout.methods[closed.tab.paymentMethod])
+                : c.closedFree}
           </Notice>
         )}
 

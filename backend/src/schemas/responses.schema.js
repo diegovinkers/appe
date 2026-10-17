@@ -297,6 +297,7 @@ export const tab = z.strictObject({
   closedAt: date.nullable(),
   paymentMethod: z.enum(PAYMENT_METHODS).nullable(),
   changeForCents: cents.nullable(),
+  payments: z.array(z.strictObject({ paymentMethod: z.enum(PAYMENT_METHODS), amountCents: cents, changeForCents: cents.nullable() })),
   totalCents: cents,
   ordersCount: z.number().int(),
 });

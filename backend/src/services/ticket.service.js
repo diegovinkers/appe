@@ -130,7 +130,10 @@ export function buildBill(tab, orders, store, { paperWidth = 80, now = new Date(
     total += order.totalCents;
   }
   lines.push(rule, ...row("TOTAL", money(total), width), rule);
-  if (tab.paymentMethod) lines.push(`Pagamento: ${PAYMENT_LABELS[tab.paymentMethod]}`);
+  if (tab.payments?.length > 1) {
+    lines.push("Pagamentos:");
+    for (const part of tab.payments) lines.push(...row(`  ${PAYMENT_LABELS[part.paymentMethod]}`, money(part.amountCents), width));
+  } else if (tab.paymentMethod) lines.push(`Pagamento: ${PAYMENT_LABELS[tab.paymentMethod]}`);
   lines.push(center("Obrigado pela visita!", width));
   return `${lines.join("\n")}\n`;
 }

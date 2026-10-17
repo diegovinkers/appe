@@ -37,7 +37,17 @@ export const tableOrderSchema = z.object({
 export const moveTabSchema = z.object({ tableId: objectId });
 
 // Cerrar la cuenta cobrando. Sin pedidos (la mesa se fue sin consumir) no hace falta forma de pago.
-export const closeTabSchema = z.object({
-  paymentMethod: z.enum(PAYMENT_METHODS).optional(),
+// Dividida: `payments`, una parte por persona (cada una con su forma de pago); tienen que sumar
+// justo el total.
+const paymentPart = z.object({
+  paymentMethod: z.enum(PAYMENT_METHODS),
+  amountCents: cents.refine((value) => value > 0, "O valor precisa ser maior que zero"),
   changeForCents: cents.optional(),
 });
+export const closeTabSchema = z
+  .object({
+    paymentMethod: z.enum(PAYMENT_METHODS).optional(),
+    changeForCents: cents.optional(),
+    payments: z.array(paymentPart).min(1).max(20).optional(),
+  })
+  .refine((body) => !(body.payments && body.paymentMethod), "Use paymentMethod ou payments, não os dois");

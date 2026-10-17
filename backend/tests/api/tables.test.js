@@ -133,6 +133,41 @@ describe("salón: la cuenta de la mesa", () => {
     expect((await owner.post(`/api/owner/tables/${table._id}/orders`).send({ items: items() })).body.tab._id).not.toBe(tabId);
   });
 
+  it("cuenta dividida: cada parte con su forma de pago, que tienen que sumar el total", async () => {
+    const table = (await newTable({})).body.table;
+    const first = await owner.post(`/api/owner/tables/${table._id}/orders`).send({ items: items() });
+    const tabId = first.body.tab._id;
+    await owner.patch(`/api/owner/orders/${first.body.order._id}/status`).send({ status: "ready" });
+    const short = await owner.post(`/api/owner/tabs/${tabId}/close`).send({ payments: [{ paymentMethod: "pix", amountCents: 2800 }, { paymentMethod: "cash", amountCents: 2000 }] });
+    expect(short.status).toBe(400);
+    expect(short.body.error).toMatchObject({ code: "PAYMENTS_DONT_MATCH", details: { totalCents: 5600, paidCents: 4800 } });
+    expect((await owner.post(`/api/owner/tabs/${tabId}/close`).send({ paymentMethod: "pix", payments: [{ paymentMethod: "pix", amountCents: 5600 }] })).status).toBe(400);
+
+    const closed = await owner.post(`/api/owner/tabs/${tabId}/close`).send({
+      payments: [{ paymentMethod: "pix", amountCents: 2800 }, { paymentMethod: "cash", amountCents: 2800, changeForCents: 5000 }],
+    });
+    expect(closed.status).toBe(200);
+    expect(closed.body.tab).toMatchObject({
+      status: "closed",
+      paymentMethod: null,
+      totalCents: 5600,
+      payments: [
+        { paymentMethod: "pix", amountCents: 2800, changeForCents: null },
+        { paymentMethod: "cash", amountCents: 2800, changeForCents: 5000 },
+      ],
+    });
+    // Los pedidos no quedan con una sola forma: el cierre de caja cuenta cada parte.
+    expect((await Order.findById(first.body.order._id).lean()).paymentMethod).toBeNull();
+    const day = new Date(Date.now() - 5 * 60 * 60 * 1000).toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+    const report = await owner.get(`/api/owner/reports?from=${day}&to=${day}`);
+    expect(report.body.payments).toEqual([
+      { method: "cash", count: 1, salesCents: 2800 },
+      { method: "pix", count: 1, salesCents: 2800 },
+    ]);
+    const bill = await owner.get(`/api/owner/tabs/${tabId}/bill?format=text`);
+    expect(bill.text).toContain("Pagamentos:");
+  });
+
   it("una mesa que se fue sin consumir se cierra sin forma de pago", async () => {
     const table = (await newTable({})).body.table;
     const first = await owner.post(`/api/owner/tables/${table._id}/orders`).send({ items: items() });
