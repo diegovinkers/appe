@@ -359,6 +359,7 @@ export const es: Dictionary = {
     add: "Agregar mesa",
     planLabel: "Plano del salón",
     hint: "Arrastrá cada mesa a su lugar. Con el teclado, elegí una mesa y usá las flechas.",
+    scrollHint: "El salón es más ancho que la pantalla: deslizá de costado para ver todas las mesas.",
     empty: "Tu salón todavía no tiene mesas. Agregá la primera: quedan ordenadas solas y después podés arrastrar cada una a su lugar.",
     table: (number: number) => `Mesa ${number}`,
     seats: (count: number) => (count === 1 ? "1 lugar" : `${count} lugares`),
@@ -412,6 +413,7 @@ export const es: Dictionary = {
     newOrderTitle: (number: number) => `Pedido para la mesa ${number}`,
     newOrderDescription: "Elegí los productos. El pedido va a la cocina y entra en la cuenta de la mesa.",
     submit: (total: string) => `Mandar a la cocina ${total}`,
+    sendShort: "Mandar a la cocina",
   },
 
   // Inicio: el resumen del día, la primera pantalla del panel.
@@ -489,6 +491,8 @@ export const es: Dictionary = {
     channel: "¿Cómo llegó el pedido?",
     products: "Productos",
     pickProducts: "Tocá un producto para agregarlo al pedido.",
+    itemsCount: (count: number) => (count === 1 ? "1 producto" : `${count} productos`),
+    review: "Ver pedido",
     order: "Pedido",
     noItems: "Todavía no hay productos.",
     customer: "Cliente",
@@ -618,7 +622,10 @@ export const es: Dictionary = {
 
   pages: {
     home: { title: "Inicio", description: "Lo que te necesita ahora y cómo va el día." },
-    orders: { title: "Pedidos de hoy", description: "Primero los más urgentes. El día termina a las 5 de la mañana." },
+    orders: {
+      title: "Pedidos de hoy",
+      description: (dayStart: string) => `Primero los más urgentes. ${dayStart === "00:00" ? "El día va de medianoche a medianoche." : `El día termina a las ${dayStart}.`}`,
+    },
     newOrder: {
       title: "Nuevo pedido",
       description: "Para los pedidos que llegan por teléfono, WhatsApp o en el mostrador.",
@@ -650,7 +657,11 @@ export const es: Dictionary = {
     payments: { title: "Pagos", description: "Cómo te pagan tus clientes. El dinero va directo al local." },
     subscription: { title: "Suscripción", description: "Tu plan en la plataforma y los pagos registrados." },
     availability: { title: "Disponibilidad", description: "Lo que falta hoy. Queda así hasta que lo reactives." },
-    reports: { title: "Reportes", description: "Ventas y cierre de caja. El día va de 5:00 a 5:00 (hora de Brasilia)." },
+    reports: {
+      title: "Reportes",
+      description: (dayStart: string) =>
+        `Ventas y cierre de caja. ${dayStart === "00:00" ? "El día va de medianoche a medianoche" : `El día va de ${dayStart} a ${dayStart}`} (hora de Brasilia).`,
+    },
     salon: { title: "Salón", description: "Las mesas del local, en el lugar donde están. Solo aparece en el panel si hay mesas." },
     team: { title: "Equipo", description: "Quién atiende con vos. Cada persona entra con su propio e-mail." },
     myAccount: { title: "Mi cuenta", description: "Tus datos de acceso al panel." },

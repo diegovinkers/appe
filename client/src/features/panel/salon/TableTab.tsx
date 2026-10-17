@@ -13,6 +13,7 @@ import { parseMoney } from "../../../lib/money";
 import { StatusChip } from "../orders/OrderDetail";
 import { useDeviceSettings } from "../orders/deviceSettings";
 import { printBill } from "../orders/printTicket";
+import { nextLabel, nextStatus } from "../orders/orderFlow";
 import { useChangeStatus } from "../orders/useOrders";
 import { usePanel } from "../PanelLayout";
 import { STATE_TONE, tabRequest, useSalonTables, useTabAction, useTableTab } from "./useSalon";
@@ -23,10 +24,13 @@ type Closed = { tab: Tab };
 const chip = (active: boolean) =>
   `inline-flex min-h-11 items-center rounded-lg px-4 font-bold ${active ? "bg-action text-white" : "bg-surface ring-1 ring-line hover:bg-paper"}`;
 
-// Un pedido de la cuenta: qué se pidió, en qué está y, si está listo, "Marcar servido".
+// Un pedido de la cuenta: qué se pidió, en qué está y el paso siguiente (confirmar, "Marcar
+// listo" cuando sale de la cocina, "Marcar servido" en la mesa), sin ir a la lista de pedidos.
 function TabOrder({ order, canWrite, onOpen }: { order: Order; canWrite: boolean; onOpen: () => void }) {
   const t = useT();
   const change = useChangeStatus();
+  const next = nextStatus(order);
+  const label = nextLabel(order, t);
   return (
     <li className={`py-3 ${order.status === "cancelled" ? "opacity-60" : ""}`}>
       <div className="flex flex-wrap items-center gap-2">
@@ -48,14 +52,16 @@ function TabOrder({ order, canWrite, onOpen }: { order: Order; canWrite: boolean
           </li>
         ))}
       </ul>
-      {order.status === "ready" && canWrite && (
+      {next && label && canWrite && (
         <button
           type="button"
           disabled={change.isPending}
-          onClick={() => change.mutate({ id: order._id, status: "delivered" })}
-          className="mt-2 h-11 rounded-lg bg-[#16794a] px-4 text-sm font-bold text-white hover:bg-[#126a40] disabled:opacity-60"
+          onClick={() => change.mutate({ id: order._id, status: next })}
+          className={`mt-2 h-11 rounded-lg px-4 text-sm font-bold text-white disabled:opacity-60 ${
+            order.status === "ready" ? "bg-[#16794a] hover:bg-[#126a40]" : "bg-action hover:bg-action-hover"
+          }`}
         >
-          {t.orders.next.readyTable}
+          {label}
         </button>
       )}
       {change.isError && <p className="mt-1 text-sm font-bold text-error">{errorText(change.error, t)}</p>}

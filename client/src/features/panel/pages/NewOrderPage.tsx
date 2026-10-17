@@ -187,6 +187,10 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
   };
 
   const invalid = (key: string) => (errors[key] ? { "aria-invalid": true } : {});
+  const inCart = (productId: string) => lines.filter(({ line }) => line.productId === productId).reduce((sum, { line }) => sum + line.quantity, 0);
+  const count = available.reduce((sum, { line }) => sum + line.quantity, 0);
+  // En la mesa se manda desde la barra; en el mostrador faltan los datos del cliente: va al resumen.
+  const toSummary = () => document.getElementById("itens")?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] lg:items-start">
@@ -209,6 +213,10 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
                     className="flex min-h-12 w-full items-center justify-between gap-3 py-2 text-left hover:bg-paper disabled:text-ink-muted"
                   >
                     <span className="font-bold">
+                      {/* Cuántos ya hay en el pedido: se ve que se agregó sin bajar al resumen. */}
+                      {inCart(product._id) > 0 && (
+                        <span className="mr-2 inline-grid min-w-6 place-items-center rounded-full bg-action px-1.5 text-sm text-white tabular-nums">{inCart(product._id)}</span>
+                      )}
                       {product.name}
                       {!product.available && <span className="ml-2 text-sm text-error">{t.menu.soldOut}</span>}
                     </span>
@@ -221,7 +229,7 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
         ))}
       </section>
 
-      <form onSubmit={submit} noValidate className="space-y-5 rounded-xl border border-line bg-surface p-4 lg:sticky lg:top-20">
+      <form id="pedido-form" onSubmit={submit} noValidate className="space-y-5 rounded-xl border border-line bg-surface p-4 lg:sticky lg:top-20">
         {!table && (
           <fieldset>
             <legend className="mb-2 font-bold">{t.manualOrder.channel}</legend>
@@ -421,6 +429,27 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
           {sending.isPending ? t.manualOrder.submitting : table ? t.tables.submit(formatMoney(shownTotal)) : t.manualOrder.submit(formatMoney(shownTotal))}
         </button>
       </form>
+
+      {/* En el celular el resumen queda abajo de todos los productos: esta barra lo tiene a mano. */}
+      {count > 0 && (
+        <div className="fixed inset-x-0 bottom-16 z-20 border-t border-line bg-surface px-4 py-2 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={toSummary} className="min-w-0 flex-1 text-left">
+              <span className="block text-sm text-ink-muted">{t.manualOrder.itemsCount(count)}</span>
+              <span className="block font-bold tabular-nums">{formatMoney(shownTotal)}</span>
+            </button>
+            {table ? (
+              <button type="submit" form="pedido-form" disabled={sending.isPending} className={`${button.primary} h-12`}>
+                {sending.isPending ? t.manualOrder.submitting : t.tables.sendShort}
+              </button>
+            ) : (
+              <button type="button" onClick={toSummary} className={`${button.primary} h-12`}>
+                {t.manualOrder.review}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {picking && (
         <ProductSheet

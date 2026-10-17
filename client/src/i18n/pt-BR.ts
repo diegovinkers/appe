@@ -358,6 +358,7 @@ export const ptBR = {
     add: "Adicionar mesa",
     planLabel: "Plano do salão",
     hint: "Arraste cada mesa para o lugar dela. No teclado, escolha uma mesa e use as setas.",
+    scrollHint: "O salão é mais largo que a tela: deslize para o lado para ver todas as mesas.",
     empty: "Seu salão ainda não tem mesas. Adicione a primeira: elas ficam organizadas sozinhas e depois você pode arrastar cada uma para o lugar dela.",
     table: (number: number) => `Mesa ${number}`,
     seats: (count: number) => (count === 1 ? "1 lugar" : `${count} lugares`),
@@ -411,6 +412,7 @@ export const ptBR = {
     newOrderTitle: (number: number) => `Pedido para a mesa ${number}`,
     newOrderDescription: "Escolha os produtos. O pedido vai para a cozinha e entra na conta da mesa.",
     submit: (total: string) => `Enviar para a cozinha ${total}`,
+    sendShort: "Enviar para a cozinha",
   },
 
   // Início: o resumo do dia, a primeira tela do painel.
@@ -488,6 +490,8 @@ export const ptBR = {
     channel: "Como chegou o pedido?",
     products: "Produtos",
     pickProducts: "Toque num produto para adicionar ao pedido.",
+    itemsCount: (count: number) => (count === 1 ? "1 produto" : `${count} produtos`),
+    review: "Ver pedido",
     order: "Pedido",
     noItems: "Nenhum produto ainda.",
     customer: "Cliente",
@@ -617,7 +621,10 @@ export const ptBR = {
 
   pages: {
     home: { title: "Início", description: "O que precisa de você agora e como vai o dia." },
-    orders: { title: "Pedidos de hoje", description: "Os mais urgentes primeiro. O dia vai até as 5h da manhã." },
+    orders: {
+      title: "Pedidos de hoje",
+      description: (dayStart: string) => `Os mais urgentes primeiro. ${dayStart === "00:00" ? "O dia vai de meia-noite a meia-noite." : `O dia vai até as ${dayStart}.`}`,
+    },
     newOrder: {
       title: "Novo pedido",
       description: "Para pedidos que chegam por telefone, WhatsApp ou no balcão.",
@@ -649,7 +656,11 @@ export const ptBR = {
     payments: { title: "Pagamentos", description: "Como seus clientes pagam. O dinheiro vai direto para a loja." },
     subscription: { title: "Assinatura", description: "Seu plano na plataforma e os pagamentos registrados." },
     availability: { title: "Disponibilidade", description: "O que está em falta hoje. Fica assim até você reativar." },
-    reports: { title: "Relatórios", description: "Vendas e fechamento de caixa. O dia vai das 5h às 5h (horário de Brasília)." },
+    reports: {
+      title: "Relatórios",
+      description: (dayStart: string) =>
+        `Vendas e fechamento de caixa. ${dayStart === "00:00" ? "O dia vai de meia-noite a meia-noite" : `O dia vai das ${dayStart} às ${dayStart}`} (horário de Brasília).`,
+    },
     salon: { title: "Salão", description: "As mesas do local, no lugar onde ficam. Só aparece no painel se houver mesas." },
     team: { title: "Equipe", description: "Quem atende com você. Cada pessoa entra com o próprio e-mail." },
     myAccount: { title: "Minha conta", description: "Seus dados de acesso ao painel." },

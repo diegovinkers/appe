@@ -107,7 +107,7 @@ export function ReportsPage() {
     <>
       <PageHeader
         title={t.pages.reports.title}
-        description={t.pages.reports.description}
+        description={t.pages.reports.description(store.hours.dayStart)}
         actions={
           <button type="button" className={`${button.secondary} print:hidden`} onClick={() => window.print()} disabled={!data}>
             <Printer aria-hidden className="size-5" />

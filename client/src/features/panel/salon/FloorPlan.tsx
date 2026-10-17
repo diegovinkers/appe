@@ -1,4 +1,5 @@
-import { type KeyboardEvent, type PointerEvent, type ReactNode, useCallback, useRef, useState } from "react";
+import { type KeyboardEvent, type PointerEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { useT } from "../../../i18n";
 
 // El plano del salón: una grilla de puntos donde cada mesa ocupa una celda. Se usa para armarlo
 // (Configurações → Salão: arrastrar y mover con flechas) y para atender (panel Salão, con el estado).
@@ -66,7 +67,9 @@ export function FloorPlan<T extends PlanTable>({ tables, label, selectedId, onSe
   // El plano entra en el ancho que haya; en pantallas chicas, con un mínimo y desplazamiento de costado.
   const [box, setBox] = useState({ width: 0, height: 0 });
   const frame = useRef<ResizeObserver | null>(null);
+  const plan = useRef<HTMLDivElement | null>(null);
   const measure = useCallback((element: HTMLDivElement | null) => {
+    plan.current = element;
     frame.current?.disconnect();
     if (!element) return;
     frame.current = new ResizeObserver(([entry]) => setBox({ width: entry.contentRect.width, height: entry.contentRect.height }));
@@ -86,6 +89,14 @@ export function FloorPlan<T extends PlanTable>({ tables, label, selectedId, onSe
   const marginY = Math.round((cellY - size) / 2);
   const drag = useRef<{ id: string; startX: number; startY: number; moved: boolean } | null>(null);
   const [offset, setOffset] = useState<{ id: string; dx: number; dy: number } | null>(null);
+  const t = useT();
+  // Al armarlo en una pantalla angosta el plano es más ancho que la pantalla: la mesa elegida (o
+  // la recién agregada) se trae a la vista, y un aviso dice que se puede deslizar.
+  const overflows = !fill && box.width > 0 && columns * cellX + pad * 2 > box.width + 1;
+  useEffect(() => {
+    if (fill || !selectedId) return;
+    plan.current?.querySelector(`[data-table="${selectedId}"]`)?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [fill, selectedId, tables.length]);
   const taken = (x: number, y: number, except: string) => tables.some((table) => table._id !== except && table.x === x && table.y === y);
 
   const down = (event: PointerEvent<HTMLButtonElement>, table: T) => {
@@ -130,60 +141,64 @@ export function FloorPlan<T extends PlanTable>({ tables, label, selectedId, onSe
   };
 
   return (
-    <div ref={measure} className={fill ? "h-full min-h-0 overflow-auto" : "overflow-auto rounded-xl border border-line bg-paper"}>
-      <div
-        role="group"
-        aria-label={label}
-        className={fill ? "relative mx-auto" : "relative"}
-        style={{
-          width: columns * cellX + pad * 2,
-          height: rows * cellY + pad * 2,
-          // Puntos en las esquinas de cada celda: la planta del local (solo para armarlo).
-          ...(!fill && {
-            backgroundImage: "radial-gradient(var(--color-line) 1.5px, transparent 1.5px)",
-            backgroundSize: `${cell}px ${cell}px`,
-            backgroundPosition: `${pad + cell / 2}px ${pad + cell / 2}px`,
-          }),
-        }}
-      >
-        {tables.map((table) => {
-          const dragging = offset?.id === table._id;
-          const selected = selectedId === table._id;
-          return (
-            <button
-              key={table._id}
-              type="button"
-              aria-label={describe(table)}
-              aria-pressed={onSelect ? selected : undefined}
-              onPointerDown={(event) => down(event, table)}
-              onPointerMove={move}
-              onPointerUp={() => up(table)}
-              onPointerCancel={() => {
-                drag.current = null;
-                setOffset(null);
-              }}
-              onKeyDown={(event) => keys(event, table)}
-              onClick={(event) => {
-                // Con teclado (Enter/espacio) no hay puntero: se elige acá. Si no se arrastra, siempre acá.
-                if (event.detail === 0 || !onMove) onSelect?.(table);
-              }}
-              className={`absolute flex flex-col items-center justify-center rounded-xl border-2 text-center leading-tight shadow-sm transition-[box-shadow] ${
-                onMove ? "cursor-grab touch-none active:cursor-grabbing" : ""
-              } ${tone?.(table) ?? "border-ink/70 bg-surface text-ink"} ${selected ? "ring-4 ring-[#2f7de1]/50" : ""} ${dragging ? "z-10 shadow-lg" : ""}`}
-              style={{
-                width: size,
-                height: size,
-                left: pad + column(table) * cellX + marginX,
-                top: pad + row(table) * cellY + marginY,
-                transform: dragging ? `translate(${offset.dx}px, ${offset.dy}px)` : undefined,
-              }}
-            >
-              {!fill && <Chairs seats={table.seats} size={size} />}
-              {content(table, size)}
-            </button>
-          );
-        })}
+    <>
+      {overflows && <p className="mb-1 text-sm font-bold text-ink-muted">{t.salon.scrollHint}</p>}
+      <div ref={measure} className={fill ? "h-full min-h-0 overflow-auto" : "overflow-auto rounded-xl border border-line bg-paper"}>
+        <div
+          role="group"
+          aria-label={label}
+          className={fill ? "relative mx-auto" : "relative"}
+          style={{
+            width: columns * cellX + pad * 2,
+            height: rows * cellY + pad * 2,
+            // Puntos en las esquinas de cada celda: la planta del local (solo para armarlo).
+            ...(!fill && {
+              backgroundImage: "radial-gradient(var(--color-line) 1.5px, transparent 1.5px)",
+              backgroundSize: `${cell}px ${cell}px`,
+              backgroundPosition: `${pad + cell / 2}px ${pad + cell / 2}px`,
+            }),
+          }}
+        >
+          {tables.map((table) => {
+            const dragging = offset?.id === table._id;
+            const selected = selectedId === table._id;
+            return (
+              <button
+                key={table._id}
+                data-table={table._id}
+                type="button"
+                aria-label={describe(table)}
+                aria-pressed={onSelect ? selected : undefined}
+                onPointerDown={(event) => down(event, table)}
+                onPointerMove={move}
+                onPointerUp={() => up(table)}
+                onPointerCancel={() => {
+                  drag.current = null;
+                  setOffset(null);
+                }}
+                onKeyDown={(event) => keys(event, table)}
+                onClick={(event) => {
+                  // Con teclado (Enter/espacio) no hay puntero: se elige acá. Si no se arrastra, siempre acá.
+                  if (event.detail === 0 || !onMove) onSelect?.(table);
+                }}
+                className={`absolute flex flex-col items-center justify-center rounded-xl border-2 text-center leading-tight shadow-sm transition-[box-shadow] ${
+                  onMove ? "cursor-grab touch-none active:cursor-grabbing" : ""
+                } ${tone?.(table) ?? "border-ink/70 bg-surface text-ink"} ${selected ? "ring-4 ring-[#2f7de1]/50" : ""} ${dragging ? "z-10 shadow-lg" : ""}`}
+                style={{
+                  width: size,
+                  height: size,
+                  left: pad + column(table) * cellX + marginX,
+                  top: pad + row(table) * cellY + marginY,
+                  transform: dragging ? `translate(${offset.dx}px, ${offset.dy}px)` : undefined,
+                }}
+              >
+                {!fill && <Chairs seats={table.seats} size={size} />}
+                {content(table, size)}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

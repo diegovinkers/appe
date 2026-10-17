@@ -450,6 +450,7 @@ export function OrdersPage() {
 
 function OrdersNarrow() {
   const t = useT();
+  const { store } = usePanel();
   const view = useOrdersView();
   const detail = useParamSheet("pedido");
   const tableSheet = useParamSheet("mesa");
@@ -470,7 +471,7 @@ function OrdersNarrow() {
     <>
       <PageHeader
         title={view.day === view.today ? t.pages.orders.title : t.orders.titleForDay(formatDay(view.day))}
-        description={t.pages.orders.description}
+        description={t.pages.orders.description(store.hours.dayStart)}
         actions={
           <div className="flex flex-wrap items-center gap-3">
             <NewOrderButton />

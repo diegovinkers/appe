@@ -1,7 +1,7 @@
 import { PageHeader } from "../../../components/PageHeader";
 import { type Dictionary, useT } from "../../../i18n";
 
-type PageKey = Exclude<keyof Dictionary["pages"], "orders" | "qr" | "platform">;
+type PageKey = Exclude<keyof Dictionary["pages"], "orders" | "reports" | "qr" | "platform">;
 
 // Páginas que ya tienen su lugar en el menú y se construyen en las próximas etapas.
 export function PlaceholderPage({ page }: { page: PageKey }) {
