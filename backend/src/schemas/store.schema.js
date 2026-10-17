@@ -66,6 +66,7 @@ export const updateStoreSchema = z
     coverUrl: imageUrl,
     instagram,
     googleReviewUrl,
+    quickNotes: z.array(requiredText(30)).max(12).refine(unique, "Nota repetida"),
     primaryColor: hexColor,
     secondaryColor: hexColor,
     whatsapp: phone,

@@ -308,6 +308,16 @@ describe("entrega por barrio", () => {
 });
 
 describe("presentación, tiempos y programación", () => {
+  it("notas rápidas: un local nuevo trae las de siempre y el dueño las cambia", async () => {
+    const res = await owner.get("/api/owner/store");
+    expect(res.body.store.quickNotes).toEqual(["Sem cebola", "Sem tomate", "Bem passado", "Ao ponto", "Para viagem"]);
+    const changed = await owner.patch("/api/owner/store").send({ quickNotes: [" Sem gelo ", "Bem passado"] });
+    expect(changed.body.store.quickNotes).toEqual(["Sem gelo", "Bem passado"]);
+    expect((await owner.patch("/api/owner/store").send({ quickNotes: ["Igual", "Igual"] })).status).toBe(400);
+    expect((await owner.patch("/api/owner/store").send({ quickNotes: ["x".repeat(31)] })).status).toBe(400);
+    expect((await owner.patch("/api/owner/store").send({ quickNotes: Array.from({ length: 13 }, (_, i) => `Nota ${i}`) })).status).toBe(400);
+  });
+
   it("guarda portada, Instagram normalizado, texto y aviso", async () => {
     const res = await owner.patch("/api/owner/store").send({
       coverUrl: `https://res.cloudinary.com/nube-de-prueba/image/upload/v1/app-pedidos/${commerce._id}/cover/capa.jpg`,

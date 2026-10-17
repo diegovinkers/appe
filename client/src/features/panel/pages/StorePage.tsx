@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, Plus, X } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { api, type ApiError } from "../../../api/client";
 import type { OwnerStore, OwnerStoreResponse } from "../../../api/types";
@@ -16,6 +16,8 @@ const copy = {
     identity: "Identidade da loja", contact: "Contato", name: "Nome", descriptionLabel: "Descrição curta", about: "Sobre a loja", notice: "Aviso no cardápio",
     logo: "Logo", cover: "Foto de capa", upload: "Escolher imagem", remove: "Remover imagem", imageHint: "JPG, PNG ou WebP, até 5 MB.", imageError: "Escolha uma imagem JPG, PNG ou WebP de até 5 MB.",
     primary: "Cor principal", secondary: "Cor secundária", address: "Endereço",
+    quickNotes: "Observações rápidas", quickNotesHint: "Aparecem como botões ao montar um pedido no painel: um toque adiciona ao produto. Até 12.",
+    quickNoteNew: "Nova observação", quickNoteAdd: "Adicionar", quickNoteRemove: (note: string) => `Remover ${note}`, quickNoteRepeated: "Essa observação já está na lista.",
     google: "Link de avaliações do Google (opcional)", googleHint: "No seu Perfil da Empresa no Google, toque em \u201cPedir avaliações\u201d e copie o link. Depois de avaliar aqui, o cliente vê um botão para avaliar também no Google.",
     translations: "Textos do cardápio em espanhol", translationHint: "Opcional. Quando vazio, será mostrado o texto em português.",
     save: "Salvar alterações", saving: "Salvando…", saved: "Configuração salva.", preview: "Ver cardápio", reset: "Descartar alterações", discard: "Descartar as alterações não salvas?", changed: "Há alterações não salvas.",
@@ -24,6 +26,8 @@ const copy = {
     identity: "Identidad del comercio", contact: "Contacto", name: "Nombre", descriptionLabel: "Descripción corta", about: "Sobre el comercio", notice: "Aviso en el menú",
     logo: "Logo", cover: "Foto de portada", upload: "Elegir imagen", remove: "Quitar imagen", imageHint: "JPG, PNG o WebP, hasta 5 MB.", imageError: "Elegí una imagen JPG, PNG o WebP de hasta 5 MB.",
     primary: "Color principal", secondary: "Color secundario", address: "Dirección",
+    quickNotes: "Aclaraciones rápidas", quickNotesHint: "Aparecen como botones al armar un pedido en el panel: un toque se la agrega al producto. Hasta 12.",
+    quickNoteNew: "Nueva aclaración", quickNoteAdd: "Agregar", quickNoteRemove: (note: string) => `Quitar ${note}`, quickNoteRepeated: "Esa aclaración ya está en la lista.",
     google: "Link de reseñas de Google (opcional)", googleHint: "En tu Perfil de Empresa de Google, tocá \u201cPedir reseñas\u201d y copiá el link. Después de opinar acá, el cliente ve un botón para dejar su reseña también en Google.",
     translations: "Textos del menú en español", translationHint: "Opcional. Si quedan vacíos, se muestra el texto en portugués.",
     save: "Guardar cambios", saving: "Guardando…", saved: "Configuración guardada.", preview: "Ver menú", reset: "Descartar cambios", discard: "¿Descartar los cambios sin guardar?", changed: "Hay cambios sin guardar.",
@@ -34,6 +38,7 @@ const fields = (store: OwnerStore) => ({
   name: store.name, description: store.description, about: store.about, notice: store.notice,
   logoUrl: store.logoUrl, coverUrl: store.coverUrl, primaryColor: store.primaryColor, secondaryColor: store.secondaryColor,
   whatsapp: store.whatsapp, address: store.address, instagram: store.instagram, googleReviewUrl: store.googleReviewUrl,
+  quickNotes: [...(store.quickNotes ?? [])],
   translations: { es: { description: store.translations?.es?.description ?? "", about: store.translations?.es?.about ?? "", notice: store.translations?.es?.notice ?? "" } },
 });
 
@@ -71,6 +76,14 @@ export function StorePage() {
     },
   });
   const busy = uploading || save.isPending;
+  const [newNote, setNewNote] = useState("");
+  const noteRepeated = draft.quickNotes.some((note) => note.toLowerCase() === newNote.trim().toLowerCase());
+  const addNote = () => {
+    const note = newNote.trim();
+    if (!note || noteRepeated || draft.quickNotes.length >= 12) return;
+    change("quickNotes", [...draft.quickNotes, note]);
+    setNewNote("");
+  };
   const change = <K extends keyof typeof draft>(key: K, value: typeof draft[K]) => {
     setDraft((current) => ({ ...current, [key]: value })); setSaved(false); setLocalError(""); save.reset();
   };
@@ -125,6 +138,45 @@ export function StorePage() {
           <Field id="store-googleReviewUrl" label={c.google} hint={c.googleHint}>
             <input id="store-googleReviewUrl" type="url" inputMode="url" className={input} placeholder="https://g.page/r/…/review" value={draft.googleReviewUrl} onChange={(e) => change("googleReviewUrl", e.target.value.trim())} maxLength={500} />
           </Field>
+        </SettingsSection>
+        <SettingsSection title={c.quickNotes}>
+          <p className="text-sm text-ink-muted">{c.quickNotesHint}</p>
+          {draft.quickNotes.length > 0 && (
+            <ul className="flex flex-wrap gap-2">
+              {draft.quickNotes.map((note) => (
+                <li key={note} className="inline-flex items-center gap-1 rounded-full bg-paper py-1 pr-1 pl-3 text-sm font-bold ring-1 ring-line">
+                  {note}
+                  <button type="button" onClick={() => change("quickNotes", draft.quickNotes.filter((item) => item !== note))} aria-label={c.quickNoteRemove(note)} className="grid size-7 place-items-center rounded-full text-ink-muted hover:bg-surface hover:text-error">
+                    <X aria-hidden className="size-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {draft.quickNotes.length < 12 && (
+            <div className="flex max-w-md gap-2">
+              <input
+                id="store-quick-note"
+                aria-label={c.quickNoteNew}
+                placeholder={c.quickNoteNew}
+                maxLength={30}
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addNote();
+                  }
+                }}
+                className={input}
+              />
+              <button type="button" onClick={addNote} disabled={!newNote.trim()} className={button.secondary}>
+                <Plus aria-hidden className="size-4" />
+                {c.quickNoteAdd}
+              </button>
+            </div>
+          )}
+          {noteRepeated && <p className="text-sm text-error">{c.quickNoteRepeated}</p>}
         </SettingsSection>
         <SettingsSection title={c.translations}>
           <p className="text-sm text-ink-muted">{c.translationHint}</p>

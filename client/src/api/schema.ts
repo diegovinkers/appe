@@ -2511,6 +2511,7 @@ export interface paths {
                                 coverUrl: string;
                                 instagram: string;
                                 googleReviewUrl: string;
+                                quickNotes: string[];
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -2693,6 +2694,7 @@ export interface paths {
                         coverUrl?: "" | string;
                         instagram?: string;
                         googleReviewUrl?: "" | string;
+                        quickNotes?: string[];
                         primaryColor?: string;
                         secondaryColor?: string;
                         whatsapp?: string;
@@ -2783,6 +2785,7 @@ export interface paths {
                                 coverUrl: string;
                                 instagram: string;
                                 googleReviewUrl: string;
+                                quickNotes: string[];
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3037,6 +3040,7 @@ export interface paths {
                                 coverUrl: string;
                                 instagram: string;
                                 googleReviewUrl: string;
+                                quickNotes: string[];
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3263,6 +3267,7 @@ export interface paths {
                                 coverUrl: string;
                                 instagram: string;
                                 googleReviewUrl: string;
+                                quickNotes: string[];
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -3474,6 +3479,7 @@ export interface paths {
                                 coverUrl: string;
                                 instagram: string;
                                 googleReviewUrl: string;
+                                quickNotes: string[];
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -10094,6 +10100,7 @@ export interface paths {
                                 coverUrl: string;
                                 instagram: string;
                                 googleReviewUrl: string;
+                                quickNotes: string[];
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -10292,6 +10299,7 @@ export interface paths {
                                 coverUrl: string;
                                 instagram: string;
                                 googleReviewUrl: string;
+                                quickNotes: string[];
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;
@@ -10512,6 +10520,7 @@ export interface paths {
                                 coverUrl: string;
                                 instagram: string;
                                 googleReviewUrl: string;
+                                quickNotes: string[];
                                 primaryColor: string;
                                 secondaryColor: string;
                                 whatsapp: string;

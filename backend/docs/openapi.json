@@ -5665,6 +5665,12 @@
                         "googleReviewUrl": {
                           "type": "string"
                         },
+                        "quickNotes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -6273,6 +6279,7 @@
                         "coverUrl",
                         "instagram",
                         "googleReviewUrl",
+                        "quickNotes",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -6481,6 +6488,15 @@
                         "format": "uri"
                       }
                     ]
+                  },
+                  "quickNotes": {
+                    "maxItems": 12,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 30
+                    }
                   },
                   "primaryColor": {
                     "type": "string",
@@ -6810,6 +6826,12 @@
                         "googleReviewUrl": {
                           "type": "string"
                         },
+                        "quickNotes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -7418,6 +7440,7 @@
                         "coverUrl",
                         "instagram",
                         "googleReviewUrl",
+                        "quickNotes",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -7902,6 +7925,12 @@
                         "googleReviewUrl": {
                           "type": "string"
                         },
+                        "quickNotes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -8510,6 +8539,7 @@
                         "coverUrl",
                         "instagram",
                         "googleReviewUrl",
+                        "quickNotes",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -8784,6 +8814,12 @@
                         "googleReviewUrl": {
                           "type": "string"
                         },
+                        "quickNotes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -9392,6 +9428,7 @@
                         "coverUrl",
                         "instagram",
                         "googleReviewUrl",
+                        "quickNotes",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -9616,6 +9653,12 @@
                         "googleReviewUrl": {
                           "type": "string"
                         },
+                        "quickNotes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -10224,6 +10267,7 @@
                         "coverUrl",
                         "instagram",
                         "googleReviewUrl",
+                        "quickNotes",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -27251,6 +27295,12 @@
                           "googleReviewUrl": {
                             "type": "string"
                           },
+                          "quickNotes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
                           "primaryColor": {
                             "type": "string"
                           },
@@ -27886,6 +27936,7 @@
                           "coverUrl",
                           "instagram",
                           "googleReviewUrl",
+                          "quickNotes",
                           "primaryColor",
                           "secondaryColor",
                           "whatsapp",
@@ -28066,6 +28117,12 @@
                         },
                         "googleReviewUrl": {
                           "type": "string"
+                        },
+                        "quickNotes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
                         },
                         "primaryColor": {
                           "type": "string"
@@ -28675,6 +28732,7 @@
                         "coverUrl",
                         "instagram",
                         "googleReviewUrl",
+                        "quickNotes",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",
@@ -28888,6 +28946,12 @@
                         "googleReviewUrl": {
                           "type": "string"
                         },
+                        "quickNotes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
                         "primaryColor": {
                           "type": "string"
                         },
@@ -29496,6 +29560,7 @@
                         "coverUrl",
                         "instagram",
                         "googleReviewUrl",
+                        "quickNotes",
                         "primaryColor",
                         "secondaryColor",
                         "whatsapp",

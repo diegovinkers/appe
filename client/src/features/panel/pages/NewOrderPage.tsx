@@ -25,7 +25,7 @@ import { useCart } from "../../menu/cart";
 import { indexMenu, resolveLines } from "../../menu/lines";
 import { SearchBox } from "../../menu/MenuChrome";
 import { Price } from "../../menu/ProductList";
-import { ProductSheet, Stepper } from "../../menu/ProductSheet";
+import { ProductSheet, QuickNotes, Stepper } from "../../menu/ProductSheet";
 import { orderTotals } from "../../menu/pricing";
 import { usePublicStore } from "../../menu/usePublicStore";
 import { ordersKey, printIfConfirmed } from "../orders/useOrders";
@@ -199,6 +199,7 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
   };
 
   const invalid = (key: string) => (errors[key] ? { "aria-invalid": true } : {});
+  const quickNotes = usePanel().store.quickNotes ?? [];
   const inCart = (productId: string) => lines.filter(({ line }) => line.productId === productId).reduce((sum, { line }) => sum + line.quantity, 0);
   const count = available.reduce((sum, { line }) => sum + line.quantity, 0);
   // En la mesa se manda desde la barra; en el mostrador faltan los datos del cliente: va al resumen.
@@ -316,6 +317,7 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
                   </div>
                   {optionsText && <p className="text-sm text-ink-muted">{optionsText}</p>}
                   {line.notes && <p className="text-sm text-ink-muted">“{line.notes}”</p>}
+                  {ok && quickNotes.length > 0 && <QuickNotes notes={line.notes} options={quickNotes} onChange={(next) => cart.setNotes(line.key, next)} />}
                   <div className="mt-1 flex items-center gap-2">
                     {ok && (
                       <Stepper label={t.product.quantity} value={line.quantity} min={1} max={50} onChange={(value) => cart.setQuantity(line.key, value)} />
@@ -506,6 +508,7 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
           key={picking._id}
           product={picking}
           groups={groups}
+          quickNotes={quickNotes}
           canOrder
           onAdd={(quantity, options, lineNotes) => {
             cart.add(picking._id, quantity, options, lineNotes);

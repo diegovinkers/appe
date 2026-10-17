@@ -916,6 +916,7 @@ export const ptBR = {
     chooseBetween: (min: number, max: number) => `Escolha de ${min} a ${max} opções`,
     notes: "Alguma observação?",
     notesHint: "Ex.: sem cebola, molho à parte.",
+    quickNotes: "Observações rápidas",
     quantity: "Quantidade",
     less: "Menos",
     more: "Mais",

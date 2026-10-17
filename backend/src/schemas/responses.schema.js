@@ -92,6 +92,7 @@ export const store = z.strictObject({
   coverUrl: z.string(),
   instagram: z.string(),
   googleReviewUrl: z.string(),
+  quickNotes: z.array(z.string()),
   primaryColor: z.string(),
   secondaryColor: z.string(),
   whatsapp: z.string(),

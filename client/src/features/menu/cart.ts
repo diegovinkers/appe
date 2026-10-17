@@ -74,6 +74,20 @@ export function useCart(slug: string) {
       const current = read(slug);
       write(slug, quantity > 0 ? current.map((line) => (line.key === key ? { ...line, quantity } : line)) : current.filter((line) => line.key !== key));
     },
+    setNotes(key: string, notes: string) {
+      const current = read(slug);
+      const line = current.find((item) => item.key === key);
+      if (!line) return;
+      const nextKey = lineKey(line.productId, line.options, notes);
+      if (nextKey === key) return;
+      const twin = current.find((item) => item.key === nextKey);
+      write(
+        slug,
+        twin
+          ? current.filter((item) => item.key !== key).map((item) => (item.key === nextKey ? { ...item, quantity: item.quantity + line.quantity } : item))
+          : current.map((item) => (item.key === key ? { ...item, key: nextKey, notes: notes.trim() } : item))
+      );
+    },
     clear: () => write(slug, []),
   };
 }

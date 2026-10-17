@@ -3,6 +3,7 @@ import { PAYMENT_FULFILLMENTS } from "../services/payments.service.js";
 
 export const PAYMENT_METHODS = ["cash", "pix", "card"];
 export const COMMERCE_STATUSES = ["active", "suspended"];
+export const DEFAULT_QUICK_NOTES = ["Sem cebola", "Sem tomate", "Bem passado", "Ao ponto", "Para viagem"];
 export const OVERRIDE_MODES = ["open", "closed", "paused"];
 export const DELIVERY_MODES = ["fixed", "zones"];
 export const SLOT_MINUTES = [15, 30, 60];
@@ -83,6 +84,9 @@ const commerceSchema = new mongoose.Schema(
     // Link del Perfil de Empresa en Google para dejar una reseña: el cliente lo ve después de
     // opinar en el seguimiento. Google no deja publicar reseñas por otro: la escribe el cliente.
     googleReviewUrl: { type: String, trim: true, maxlength: 500, default: "" },
+    // Notas rápidas para los productos de un pedido cargado en el panel ("Sem cebola"…): un toque
+    // las agrega. El local las cambia; estas son las de un local nuevo.
+    quickNotes: { type: [{ type: String, trim: true, maxlength: 30 }], default: () => [...DEFAULT_QUICK_NOTES] },
     primaryColor: { type: String, match: HEX_COLOR, default: "#D9480F" },
     secondaryColor: { type: String, match: HEX_COLOR, default: "#212529" },
     // E.164: +5555999998888

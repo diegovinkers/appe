@@ -7,6 +7,7 @@ import { Sheet } from "../../components/Sheet";
 import { cloudinaryImage } from "../../lib/images";
 import { Price } from "./ProductList";
 import { type ChosenOption, type Groups, unitPrice, unmetGroups } from "./pricing";
+import { hasQuickNote, toggleQuickNote } from "./quickNotes";
 
 export function Stepper({ value, min, max, onChange, label }: { value: number; min: number; max: number; onChange: (value: number) => void; label: string }) {
   const t = useT();
@@ -119,6 +120,8 @@ type Props = {
   groups: Groups;
   canOrder: boolean;
   onAdd: (quantity: number, options: ChosenOption[], notes: string) => void;
+  // En el panel: notas que se agregan con un toque.
+  quickNotes?: string[];
 };
 
 function useProductChoice(product: PublicProduct, groups: Groups) {
@@ -130,7 +133,7 @@ function useProductChoice(product: PublicProduct, groups: Groups) {
   return { chosen, setChosen, quantity, setQuantity, notes, setNotes, missing, totalCents };
 }
 
-function ProductSheetBody({ product, groups, choice }: Pick<Props, "product" | "groups"> & { choice: ReturnType<typeof useProductChoice> }) {
+function ProductSheetBody({ product, groups, choice, quickNotes = [] }: Pick<Props, "product" | "groups" | "quickNotes"> & { choice: ReturnType<typeof useProductChoice> }) {
   const t = useT();
   const productGroups = product.optionGroups.map((id) => groups.get(id)).filter((group): group is PublicOptionGroup => !!group);
   return (
@@ -156,6 +159,7 @@ function ProductSheetBody({ product, groups, choice }: Pick<Props, "product" | "
         <label htmlFor="observacao" className="font-bold">
           {t.product.notes}
         </label>
+        {quickNotes.length > 0 && <QuickNotes notes={choice.notes} options={quickNotes} onChange={choice.setNotes} />}
         <textarea
           id="observacao"
           rows={2}
@@ -201,5 +205,28 @@ export function ProductSheet({ onClose, ...props }: Props & { onClose: () => voi
     <Sheet open title={props.product.name} onClose={onClose} footer={<ProductSheetFooter {...props} choice={choice} />}>
       <ProductSheetBody {...props} choice={choice} />
     </Sheet>
+  );
+}
+
+// Botones de notas rápidas: marcado = ya está en la nota.
+export function QuickNotes({ notes, options, onChange }: { notes: string; options: string[]; onChange: (notes: string) => void }) {
+  const t = useT();
+  return (
+    <div role="group" aria-label={t.product.quickNotes} className="mt-2 flex flex-wrap gap-1.5">
+      {options.map((option) => {
+        const on = hasQuickNote(notes, option);
+        return (
+          <button
+            key={option}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onChange(toggleQuickNote(notes, option))}
+            className={`min-h-9 rounded-full px-3 text-sm font-bold ring-1 ring-inset ${on ? "bg-action text-white ring-action" : "bg-surface text-ink ring-line hover:bg-paper"}`}
+          >
+            {option}
+          </button>
+        );
+      })}
+    </div>
   );
 }

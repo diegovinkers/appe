@@ -916,6 +916,7 @@ export const es: Dictionary = {
     chooseBetween: (min: number, max: number) => `Elegí de ${min} a ${max} opciones`,
     notes: "¿Alguna aclaración?",
     notesHint: "Ej.: sin cebolla, salsa aparte.",
+    quickNotes: "Aclaraciones rápidas",
     quantity: "Cantidad",
     less: "Menos",
     more: "Más",
