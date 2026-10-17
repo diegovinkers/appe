@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, CircleUser, LogOut, Moon, Sun } from "lucide-react";
+import { Check, CircleUser, LogOut, Moon, Sun, Users } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { api } from "../../api/client";
 import type { SessionUser } from "../../api/types";
+import { useTeamDevice } from "../../auth/device";
 import { useDismiss } from "../../hooks/useDismiss";
 import { LANGUAGES, setLanguage, useLanguage, useT } from "../../i18n";
 import { initials } from "../../lib/color";
@@ -11,6 +12,7 @@ import { ThemeSwitch } from "../../components/ThemeSwitch";
 import { setTheme, useTheme } from "../../lib/theme";
 
 export function UserMenu({ user }: { user: SessionUser }) {
+  const teamDevice = useTeamDevice();
   const t = useT();
   const language = useLanguage();
   const dark = useTheme() === "dark";
@@ -58,7 +60,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
         <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-64 rounded-xl border border-line bg-surface p-1.5 shadow-lg">
           <div className="px-3 py-2">
             <p className="font-bold">{user.name}</p>
-            <p className="break-all text-sm text-ink-muted">{user.email}</p>
+            {user.email && <p className="break-all text-sm text-ink-muted">{user.email}</p>}
             <p className="text-sm text-ink-muted">{t.user.roles[user.role]}</p>
           </div>
           {user.role !== "superadmin" && (
@@ -70,6 +72,17 @@ export function UserMenu({ user }: { user: SessionUser }) {
             >
               <CircleUser aria-hidden className="size-4" />
               {t.user.myAccount}
+            </Link>
+          )}
+          {teamDevice.data && (
+            <Link
+              to="/entrar/equipe"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex h-11 w-full items-center gap-2 rounded-lg px-3 text-left hover:bg-paper"
+            >
+              <Users aria-hidden className="size-4" />
+              {t.user.switchPerson}
             </Link>
           )}
           <hr className="my-1 border-line" />

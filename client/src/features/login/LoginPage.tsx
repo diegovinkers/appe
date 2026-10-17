@@ -5,6 +5,7 @@ import { Link, Navigate, useLocation } from "react-router";
 import { type ApiError, api } from "../../api/client";
 import type { SessionResponse } from "../../api/types";
 import { clearPanelExpired } from "../../auth/expiry";
+import { useTeamDevice } from "../../auth/device";
 import { homeFor, sessionKey, useSession } from "../../auth/session";
 import { LanguageSwitch } from "../../components/LanguageSwitch";
 import { Notice } from "../../components/Notice";
@@ -34,6 +35,7 @@ export function LoginPage() {
   const location = useLocation();
   const [form, setForm] = useState<Credentials>({ email: "", password: "" });
   const contact = supportContact();
+  const teamDevice = useTeamDevice();
 
   const login = useMutation<SessionResponse, ApiError, Credentials>({
     mutationFn: (credentials) => api<SessionResponse>("/auth/login", { method: "POST", body: credentials }),
@@ -86,6 +88,16 @@ export function LoginPage() {
             <p className="mt-1 text-ink-muted">{t.login.subtitle}</p>
           </div>
           {expired && !login.isError && <Notice tone="warning">{t.login.expired}</Notice>}
+          {/* En un aparato del equipo, lo de todos los días: tocar el nombre y poner el PIN. */}
+          {teamDevice.data && (
+            <Link to="/entrar/equipe" className="flex min-h-14 items-center justify-between gap-3 rounded-xl bg-board px-4 py-3 text-white hover:bg-board-hover">
+              <span>
+                <span className="block text-sm text-chalk-muted">{t.pinLogin.teamDevice(teamDevice.data.commerce.name)}</span>
+                <span className="block text-lg font-bold">{t.pinLogin.enterWithPin}</span>
+              </span>
+              <span aria-hidden className="text-2xl">→</span>
+            </Link>
+          )}
           <div>
             <label htmlFor="email" className="mb-1.5 block font-bold">
               {t.login.email}

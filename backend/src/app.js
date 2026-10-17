@@ -20,7 +20,7 @@ import { errorHandler, routeNotFound } from "./middlewares/error.middleware.js";
 // Routers de la API por prefijo. Los tests los recorren para comparar con el OpenAPI.
 export function createApiRouters({ limits = {} } = {}) {
   return {
-    "/api/auth": createAuthRouter({ loginLimiter: createLimiter("login", limits.login) }),
+    "/api/auth": createAuthRouter({ loginLimiter: createLimiter("login", limits.login), pinLimiter: createLimiter("pin", limits.pin) }),
     "/api/public": createPublicRouter({
       orderLimiter: createLimiter("orders", limits.orders),
       couponLimiter: createLimiter("coupons", limits.coupons),

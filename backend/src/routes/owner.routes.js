@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { listDevices, registerDevice, revokeDevice } from "../controllers/device.controller.js";
+import { deviceSchema } from "../schemas/device.schema.js";
 import { getQrCode, getStore, setBusy, setHours, setStatus, updateStore } from "../controllers/store.controller.js";
 import {
   createCategory,
@@ -9,12 +11,14 @@ import {
 } from "../controllers/category.controller.js";
 import { exportMenu, importMenu } from "../controllers/menu.controller.js";
 import { getAvailability, restoreAvailability, setOptionAvailabilityByName } from "../controllers/availability.controller.js";
-import { createMember, listTeam, resetMemberPassword, updateMember } from "../controllers/team.controller.js";
+import { createMember, listTeam, resetMemberPassword,
+  setMemberPin, updateMember } from "../controllers/team.controller.js";
 import { closeTab, createTable, createTableOrder, deleteTable, getTabBill, getTableTab, listTables, moveTab,
   setServiceFee, requestBill, setTableLayout, updateTable } from "../controllers/table.controller.js";
 import { closeTabSchema, createTableSchema, moveTabSchema,
   serviceFeeSchema, tableLayoutSchema, tableOrderSchema, updateTableSchema } from "../schemas/table.schema.js";
-import { createMemberSchema, memberPasswordSchema, updateMemberSchema } from "../schemas/team.schema.js";
+import { createMemberSchema, memberPasswordSchema,
+  memberPinSchema, updateMemberSchema } from "../schemas/team.schema.js";
 import { createUploadSignature } from "../controllers/upload.controller.js";
 import {
   createProduct,
@@ -211,6 +215,10 @@ router.get("/team", can("team:manage"), listTeam);
 router.post("/team", can("team:manage"), validate({ body: createMemberSchema }), createMember);
 router.patch("/team/:id", can("team:manage"), validate({ params: idParams, body: updateMemberSchema }), updateMember);
 router.put("/team/:id/password", can("team:manage"), validate({ params: idParams, body: memberPasswordSchema }), resetMemberPassword);
+router.put("/team/:id/pin", can("team:manage"), validate({ params: idParams, body: memberPinSchema }), setMemberPin);
+router.get("/devices", can("team:manage"), listDevices);
+router.post("/devices", can("team:manage"), validate({ body: deviceSchema }), registerDevice);
+router.delete("/devices/:id", can("team:manage"), validate({ params: idParams }), revokeDevice);
 
 router.get("/coupons", can("coupons:manage"), listCoupons);
 router.post("/coupons", can("coupons:manage"), validate({ body: createCouponSchema }), createCoupon);

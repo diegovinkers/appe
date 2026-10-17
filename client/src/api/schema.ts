@@ -554,7 +554,7 @@ export interface paths {
                             user: {
                                 _id: string;
                                 name: string;
-                                email: string;
+                                email: string | null;
                                 /** @enum {string} */
                                 role: "superadmin" | "owner" | "staff";
                                 commerce: {
@@ -649,6 +649,157 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Si este aparato es del equipo: el local y quién entra con PIN (401 si no)
+         * @description Sin sesión.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            device: {
+                                _id: string;
+                                name: string;
+                            };
+                            commerce: {
+                                name: string;
+                                slug: string;
+                                logoUrl: string;
+                                primaryColor: string;
+                            };
+                            people: {
+                                _id: string;
+                                name: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Entrar o cambiar de persona con el PIN, desde un aparato del equipo
+         * @description Sin sesión.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        userId: string;
+                        pin: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            user: {
+                                _id: string;
+                                name: string;
+                                email: string | null;
+                                /** @enum {string} */
+                                role: "superadmin" | "owner" | "staff";
+                                commerce: {
+                                    _id: string;
+                                    name: string;
+                                    slug: string;
+                                    /** @enum {string} */
+                                    status: "active" | "suspended";
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me": {
         parameters: {
             query?: never;
@@ -679,7 +830,7 @@ export interface paths {
                             user: {
                                 _id: string;
                                 name: string;
-                                email: string;
+                                email: string | null;
                                 /** @enum {string} */
                                 role: "superadmin" | "owner" | "staff";
                                 commerce: {
@@ -6610,7 +6761,8 @@ export interface paths {
                             members: {
                                 _id: string;
                                 name: string;
-                                email: string;
+                                email: string | null;
+                                hasPin: boolean;
                                 /** @enum {string} */
                                 role: "owner" | "staff";
                                 active: boolean;
@@ -6656,8 +6808,9 @@ export interface paths {
                 content: {
                     "application/json": {
                         name: string;
-                        email: string;
-                        password: string;
+                        email?: string;
+                        password?: string;
+                        pin?: string;
                     };
                 };
             };
@@ -6672,7 +6825,8 @@ export interface paths {
                             member: {
                                 _id: string;
                                 name: string;
-                                email: string;
+                                email: string | null;
+                                hasPin: boolean;
                                 /** @enum {string} */
                                 role: "owner" | "staff";
                                 active: boolean;
@@ -6753,7 +6907,8 @@ export interface paths {
                             member: {
                                 _id: string;
                                 name: string;
-                                email: string;
+                                email: string | null;
+                                hasPin: boolean;
                                 /** @enum {string} */
                                 role: "owner" | "staff";
                                 active: boolean;
@@ -6843,6 +6998,246 @@ export interface paths {
         };
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/team/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Poner o cambiar el PIN de un empleado (también lo desbloquea)
+         * @description Con sesión y el permiso `team:manage`.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        pin: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Sin contenido */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Aparatos del equipo (desde donde se entra con PIN)
+         * @description Con sesión y el permiso `team:manage`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            devices: {
+                                _id: string;
+                                name: string;
+                                lastUsedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Registrar este aparato para el equipo (deja la cookie del aparato)
+         * @description Con sesión y el permiso `team:manage`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description OK */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            device: {
+                                _id: string;
+                                name: string;
+                                lastUsedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/owner/devices/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Dar de baja un aparato del equipo
+         * @description Con sesión y el permiso `team:manage`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Sin contenido */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Error */
+                "4XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description Error */
+                "5XX": {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -10591,7 +10986,7 @@ export interface paths {
                             owner: {
                                 _id: string;
                                 name: string;
-                                email: string;
+                                email?: string;
                                 /** @enum {string} */
                                 role: "superadmin" | "owner" | "staff";
                                 commerce?: string;

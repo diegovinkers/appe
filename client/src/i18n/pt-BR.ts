@@ -9,6 +9,21 @@ export const ptBR = {
   showPassword: "Mostrar senha",
   hidePassword: "Ocultar senha",
 
+  pinLogin: {
+    title: "Entrar com PIN",
+    who: "Quem é você?",
+    hello: (name: string) => `Olá, ${name}`,
+    typePin: "Digite seu PIN.",
+    digits: (count: number) => `${count} números digitados`,
+    erase: "Apagar",
+    notMe: "Não sou eu",
+    withEmail: "Entrar com e-mail",
+    notRegistered: "Este aparelho não está liberado para entrar com PIN. O dono libera em Configurações → Equipe.",
+    nobody: "Ninguém da equipe tem PIN ainda. O dono cria em Configurações → Equipe.",
+    teamDevice: (store: string) => `Equipe de ${store}`,
+    enterWithPin: "Entrar com PIN",
+  },
+
   login: {
     title: "Entrar no painel",
     subtitle: "Use o e-mail e a senha que você recebeu ao cadastrar a sua loja.",
@@ -96,6 +111,7 @@ export const ptBR = {
     menu: "Conta",
     myAccount: "Minha conta",
     logout: "Sair",
+    switchPerson: "Trocar de pessoa",
   },
 
   orders: {
@@ -289,6 +305,28 @@ export const ptBR = {
     saved: "Alterações salvas.",
     passwordSaved: "Senha trocada.",
     empty: "Ainda não há ninguém além de você. Adicione quem atende os pedidos.",
+    howEnter: "Como entra?",
+    withEmail: "E-mail e senha",
+    withPin: "Só com PIN",
+    withPinHint: "Para garçons e quem atende no salão: entra tocando no nome num aparelho da equipe e digitando o PIN. Não precisa de e-mail.",
+    pin: "PIN (4 a 6 números)",
+    pinBadge: "PIN",
+    pinOnly: "Entra com PIN",
+    setPin: "PIN",
+    setPinTitle: (name: string) => `PIN de ${name}`,
+    setPinHint: "O PIN novo vale na hora. Se tinha sido bloqueado por erros, também é desbloqueado.",
+    pinSaved: "PIN salvo.",
+    devices: "Aparelhos da equipe",
+    devicesHint: "Nestes aparelhos (o tablet do salão, o celular de um garçom) se entra com nome e PIN. Cadastre pelo próprio aparelho.",
+    thisDevice: "Este aparelho",
+    deviceName: "Nome do aparelho",
+    deviceNamePlaceholder: "Ex.: Tablet do salão",
+    registerDevice: "Usar este aparelho para a equipe",
+    noDevices: "Ainda não há aparelhos da equipe.",
+    lastUsed: (when: string) => `Último uso: ${when}`,
+    neverUsed: "Ainda sem uso",
+    revoke: "Descadastrar",
+    revokeConfirm: (name: string) => `Descadastrar "${name}"? Dele não vai mais dar para entrar com PIN.`,
   },
 
   // Minha conta: cambiar la contraseña.
@@ -304,6 +342,7 @@ export const ptBR = {
     save: "Trocar senha",
     saving: "Trocando…",
     saved: "Senha trocada. Os outros aparelhos vão pedir login de novo.",
+    pinOnly: "Você entra com PIN, sem senha. Para trocar o PIN, fale com o dono da loja.",
   },
 
   // Configurações (la lista de tarjetas) y la página de Pagamentos.
@@ -685,7 +724,7 @@ export const ptBR = {
         `Vendas e fechamento de caixa. ${dayStart === "00:00" ? "O dia vai de meia-noite a meia-noite" : `O dia vai das ${dayStart} às ${dayStart}`} (horário de Brasília).`,
     },
     salon: { title: "Salão", description: "As mesas do local, no lugar onde ficam. Só aparece no painel se houver mesas." },
-    team: { title: "Equipe", description: "Quem atende com você. Cada pessoa entra com o próprio e-mail." },
+    team: { title: "Equipe", description: "Quem atende com você. Cada pessoa entra com o próprio e-mail ou, nos aparelhos da equipe, com o PIN." },
     myAccount: { title: "Minha conta", description: "Seus dados de acesso ao painel." },
     settings: { title: "Configurações", description: "O que se configura uma vez. As que dizem “Revisar” ainda precisam de atenção." },
   },

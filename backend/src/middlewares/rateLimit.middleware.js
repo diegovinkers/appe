@@ -5,6 +5,9 @@ import { isTest } from "../config.js";
 // internet por la misma IP de la operadora.
 export const DEFAULT_LIMITS = {
   login: { windowMs: 15 * 60 * 1000, limit: isTest ? 1000 : 10 },
+  // Entrar con PIN en un aparato del equipo: varios mozos cambian de turno en la misma tablet.
+  // Además, cada persona se bloquea sola después de 5 PIN equivocados.
+  pin: { windowMs: 15 * 60 * 1000, limit: isTest ? 1000 : 60 },
   orders: { windowMs: 10 * 60 * 1000, limit: isTest ? 1000 : 30 },
   // Validar cupones: evita que alguien pruebe códigos a fuerza bruta.
   coupons: { windowMs: 10 * 60 * 1000, limit: isTest ? 1000 : 30 },
@@ -15,6 +18,7 @@ export const DEFAULT_LIMITS = {
 
 const MESSAGES = {
   login: "Muitas tentativas de login. Tente novamente em alguns minutos.",
+  pin: "Muitas tentativas de PIN. Tente novamente em alguns minutos.",
   orders: "Muitos pedidos em pouco tempo. Tente novamente em alguns minutos.",
   coupons: "Muitas tentativas de cupom. Tente novamente em alguns minutos.",
   reviews: "Muitas avaliações em pouco tempo. Tente novamente em alguns minutos.",

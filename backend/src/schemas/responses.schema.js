@@ -44,7 +44,7 @@ export const sessionResponse = z.strictObject({
   user: z.strictObject({
     _id: id,
     name: z.string(),
-    email: z.string(),
+    email: z.string().nullable(),
     role: z.enum(ROLES),
     commerce: z
       .strictObject({ _id: id, name: z.string(), slug: z.string(), status: z.enum(COMMERCE_STATUSES) })
@@ -134,7 +134,7 @@ export const ownerStoreResponse = z.strictObject({ store, opening, storeUrl: z.s
 export const user = z.strictObject({
   _id: id,
   name: z.string(),
-  email: z.string(),
+  email: z.string().optional(),
   role: z.enum(ROLES),
   commerce: id.optional(),
   active: z.boolean(),
@@ -598,7 +598,8 @@ export const auditEntry = z.strictObject({
 export const teamMember = z.strictObject({
   _id: id,
   name: z.string(),
-  email: z.string(),
+  email: z.string().nullable(),
+  hasPin: z.boolean(),
   role: z.enum(["owner", "staff"]),
   active: z.boolean(),
   createdAt: date,
@@ -687,4 +688,12 @@ export const reviewRequestResponse = z.strictObject({
   inApp: z.boolean(),
   reason: z.enum(["NOT_DELIVERED", "REVIEWED", "NO_CONVERSATION", "WINDOW_CLOSED", "NOT_CONNECTED"]).nullable(),
   requestedAt: date.nullable(),
+});
+
+// Aparatos del equipo (entrar con PIN).
+export const device = z.strictObject({ _id: id, name: z.string(), lastUsedAt: date.nullable(), createdAt: date });
+export const deviceInfoResponse = z.strictObject({
+  device: z.strictObject({ _id: id, name: z.string() }),
+  commerce: z.strictObject({ name: z.string(), slug: z.string(), logoUrl: z.string(), primaryColor: z.string() }),
+  people: z.array(z.strictObject({ _id: id, name: z.string() })),
 });

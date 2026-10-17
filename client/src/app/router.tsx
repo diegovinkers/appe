@@ -5,6 +5,7 @@ import type { Permission } from "../auth/permissions";
 import { AccountPage } from "../features/account/AccountPage";
 import { DirectoryPage } from "../features/directory/DirectoryPage";
 import { CommercialPage } from "../features/directory/CommercialPage";
+import { PinLoginPage } from "../features/login/PinLoginPage";
 import { LoginPage } from "../features/login/LoginPage";
 import { MenuPage } from "../features/menu/MenuPage";
 import { PanelLayout } from "../features/panel/PanelLayout";
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
   { path: "/", element: <DirectoryPage /> },
   { path: "/entrar", element: <LoginPage /> },
   { path: "/entrar/conhecer", element: <CommercialPage /> },
+  { path: "/entrar/equipe", element: <PinLoginPage /> },
   {
     element: <RequireSession roles={["owner", "staff"]} />,
     children: [

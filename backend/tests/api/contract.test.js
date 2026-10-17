@@ -172,6 +172,16 @@ describe("contrato de las respuestas", () => {
     check(await owner.get("/api/owner/team"), "get", "/api/owner/team");
     check(await owner.patch(`/api/owner/team/${member._id}`).send({ active: false }), "patch", "/api/owner/team/:id");
     check(await owner.put(`/api/owner/team/${member._id}/password`).send({ password: "outra-senha-123" }), "put", "/api/owner/team/:id/password");
+    // Mozo con PIN y la tablet del salón: el dueño la registra y desde ahí se entra con PIN.
+    const waiter = (await owner.post("/api/owner/team").send({ name: "Garçom", pin: "4321" })).body.member;
+    check(await owner.put(`/api/owner/team/${waiter._id}/pin`).send({ pin: "1234" }), "put", "/api/owner/team/:id/pin");
+    const registered = check(await owner.post("/api/owner/devices").send({ name: "Tablet do salão" }), "post", "/api/owner/devices");
+    const tablet = registered.body.device;
+    const deviceCookie = registered.headers["set-cookie"].find((cookie) => cookie.startsWith("aparelho=")).split(";")[0];
+    check(await owner.get("/api/owner/devices"), "get", "/api/owner/devices");
+    check(await request(app).get("/api/auth/device").set("Cookie", deviceCookie), "get", "/api/auth/device");
+    check(await request(app).post("/api/auth/pin").set("Cookie", deviceCookie).send({ userId: waiter._id, pin: "1234" }), "post", "/api/auth/pin");
+    check(await owner.delete(`/api/owner/devices/${tablet._id}`), "delete", "/api/owner/devices/:id");
     check(await owner.get("/api/owner/availability"), "get", "/api/owner/availability");
     check(await owner.patch("/api/owner/availability/options").send({ name: "bacon", available: false }), "patch", "/api/owner/availability/options");
     check(await owner.post("/api/owner/availability/restore"), "post", "/api/owner/availability/restore");

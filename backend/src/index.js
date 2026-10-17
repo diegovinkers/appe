@@ -6,10 +6,12 @@ import connectDB from "./db.js";
 import { createApp } from "./app.js";
 import { logger } from "./lib/logger.js";
 import { startJobs, stopJobs } from "./jobs/index.js";
+import { runMigrations } from "./lib/migrations.js";
 
 try {
   await connectDB();
   logger.info("MongoDB connected successfully");
+  await runMigrations();
 } catch (error) {
   logger.fatal(`Error connecting to MongoDB: ${error.message}`);
   process.exit(1);

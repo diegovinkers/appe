@@ -67,6 +67,9 @@ Body: `{ "email": "ana@loja.com", "password": "..." }`. Rate limit: 10 intentos 
 ```
 `role` es `superadmin`, `owner` (dueño) o `staff` (empleado del local); para un superadmin, `commerce` es `null`. Errores: `INVALID_CREDENTIALS`, `TOO_MANY_REQUESTS`.
 
+### `GET /api/auth/device` y `POST /api/auth/pin`
+Entrar con PIN, solo desde un aparato del equipo (cookie `aparelho`; sin ella o dada de baja, `401 DEVICE_NOT_REGISTERED`). `GET` devuelve `{ "device", "commerce", "people" }`: el local y los empleados activos con PIN. `POST` con `{ "userId", "pin" }` abre la sesión de esa persona (sirve también para cambiar de persona) y responde como `/login`. PIN equivocado: `401 INVALID_PIN`; después de 5 seguidos, esa persona queda bloqueada 15 minutos (`429 PIN_LOCKED`). Límite por IP: 60 cada 15 minutos. Queda en la auditoría (`auth.pin_login`, `auth.pin_locked`).
+
 ### `POST /api/auth/logout`
 Borra la cookie. `204`.
 
@@ -439,7 +442,10 @@ Cada miembro: `{ _id, name, email, role: "owner" | "staff", active, createdAt }`
 - `GET /api/owner/team` → `{ "members": [...] }`: el dueño y los empleados del local.
 - `POST /api/owner/team` → `201 { "member" }`. Body: `{ "name", "email", "password" }` (8+ caracteres). Siempre crea un empleado (`staff`) del local. `409 EMAIL_TAKEN` si el e-mail ya está en uso.
 - `PATCH /api/owner/team/:id` → `{ "member" }`. Body: `{ "name"?, "active"? }`. Desactivado no puede entrar y pierde la sesión abierta.
-- `PUT /api/owner/team/:id/password` → `204`. Body: `{ "password" }`. Cierra las sesiones del empleado.
+- `PUT /api/owner/team/:id/password` → `204`. Body: `{ "password" }`. Cierra las sesiones del empleado. `409 MEMBER_WITHOUT_EMAIL` si entra solo con PIN.
+- Un empleado se puede crear sin email: `POST /api/owner/team` con `{ "name", "pin" }` (PIN de 4 a 6 dígitos). Con email y contraseña sigue igual, y se pueden dar las dos cosas. Cada miembro trae `email` (o `null`) y `hasPin`.
+- `PUT /api/owner/team/:id/pin` → `204`. Body: `{ "pin" }`. Pone o cambia el PIN (también desbloquea a quien se equivocó 5 veces).
+- `GET /api/owner/devices`, `POST /api/owner/devices` (`{ "name" }`, deja en este aparato la cookie httpOnly `aparelho`, 400 días) y `DELETE /api/owner/devices/:id` (`team:manage`): los aparatos del equipo, desde donde los empleados entran con PIN. En la base queda solo el hash del token.
 
 ### Cupones (`coupons:manage`, solo el dueño)
 - `GET /api/owner/coupons` → `{ "coupons": [...] }`, los más nuevos primero.

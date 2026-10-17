@@ -11,14 +11,14 @@ const dummyHash = hashPassword("senha-que-nao-existe");
 const invalidCredentials = () => new AppError(401, "INVALID_CREDENTIALS", "E-mail ou senha incorretos");
 
 // Lo que el front necesita saber de la sesión. Nunca incluye passwordHash ni tokenVersion.
-async function sessionView(user) {
+export async function sessionView(user) {
   const commerce = user.commerce
     ? await Commerce.findById(user.commerce).select("name slug status")
     : null;
   return {
     _id: user._id,
     name: user.name,
-    email: user.email,
+    email: user.email ?? null,
     role: user.role,
     commerce: commerce && {
       _id: commerce._id,
@@ -53,6 +53,8 @@ export const me = async (req, res) => {
 export const changePassword = async (req, res) => {
   const { currentPassword, newPassword } = req.valid.body;
   const user = await User.findById(req.user.id).select("+passwordHash +tokenVersion");
+  // Quien entra solo con PIN no tiene contraseña: el PIN se lo cambia el dueño.
+  if (!user.passwordHash) throw new AppError(409, "NO_PASSWORD", "Você entra com PIN: peça ao dono para trocar o PIN");
   if (!(await checkPassword(currentPassword, user.passwordHash))) {
     throw badRequest("INVALID_PASSWORD", "A senha atual está incorreta");
   }

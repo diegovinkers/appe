@@ -6,7 +6,8 @@ import { z } from "zod";
 import { subscriptionInput, subscriptionPaymentInput, subscriptionResponse, reportsQuery, reportResponse } from "../schemas/business.schema.js";
 import { auditQuery, createCommerceSchema, resetPasswordSchema, updateCommerceSchema } from "../schemas/admin.schema.js";
 import { changePasswordSchema, loginSchema } from "../schemas/auth.schema.js";
-import { createMemberSchema, memberPasswordSchema, updateMemberSchema } from "../schemas/team.schema.js";
+import { createMemberSchema, memberPasswordSchema, memberPinSchema, updateMemberSchema } from "../schemas/team.schema.js";
+import { deviceSchema, pinLoginSchema } from "../schemas/device.schema.js";
 import { closeTabSchema, createTableSchema, moveTabSchema,
   serviceFeeSchema, tableLayoutSchema, tableOrderSchema, updateTableSchema } from "../schemas/table.schema.js";
 import { idParams } from "../schemas/common.schema.js";
@@ -44,7 +45,7 @@ import { createReviewSchema, updateReviewSchema } from "../schemas/review.schema
 import { customerLoginSchema, deleteCustomerSchema, linkOrdersSchema, signupSchema, updateCustomerSchema } from "../schemas/customer.schema.js";
 import { conversationAutomationBlockSchema, conversationsQuery, simulatorAudioSchema, simulatorMessageSchema, speechSchema, staffMessageSchema, updateAssistantSchema } from "../schemas/assistant.schema.js";
 import { d360WebhookBody, d360WebhookParams, twilioWebhookBody, webhookBody, webhookVerifyQuery } from "../schemas/whatsapp.schema.js";
-import { reviewRequestResponse,
+import { device, deviceInfoResponse, reviewRequestResponse,
   auditEntry,
   availabilityResponse,
   table,
@@ -111,6 +112,8 @@ export const operations = [
   // Sesión
   { method: "post", path: "/api/auth/login", tag: "Sesión", summary: "Iniciar sesión (pone la cookie)", auth: "public", body: loginSchema, responses: { 200: sessionResponse } },
   { method: "post", path: "/api/auth/logout", tag: "Sesión", summary: "Cerrar sesión", auth: "public", responses: { 204: NO_CONTENT } },
+  { method: "get", path: "/api/auth/device", tag: "Sesión", summary: "Si este aparato es del equipo: el local y quién entra con PIN (401 si no)", auth: "public", responses: { 200: deviceInfoResponse } },
+  { method: "post", path: "/api/auth/pin", tag: "Sesión", summary: "Entrar o cambiar de persona con el PIN, desde un aparato del equipo", auth: "public", body: pinLoginSchema, responses: { 200: sessionResponse } },
   { method: "get", path: "/api/auth/me", tag: "Sesión", summary: "Usuario de la sesión actual", auth: "session", responses: { 200: sessionResponse } },
   { method: "patch", path: "/api/auth/password", tag: "Sesión", summary: "Cambiar la contraseña (cierra las otras sesiones)", auth: "session", body: changePasswordSchema, responses: { 204: NO_CONTENT } },
 
@@ -182,6 +185,10 @@ export const operations = [
   { method: "post", path: "/api/owner/team", tag: "Panel: local", summary: "Dar de alta un empleado (409 si el e-mail ya existe)", auth: "team:manage", body: createMemberSchema, responses: { 201: z.strictObject({ member: teamMember }) } },
   { method: "patch", path: "/api/owner/team/:id", tag: "Panel: local", summary: "Cambiar el nombre de un empleado o desactivarlo", auth: "team:manage", params: idParams, body: updateMemberSchema, responses: { 200: z.strictObject({ member: teamMember }) } },
   { method: "put", path: "/api/owner/team/:id/password", tag: "Panel: local", summary: "Poner una contraseña nueva a un empleado (cierra sus sesiones)", auth: "team:manage", params: idParams, body: memberPasswordSchema, responses: { 204: NO_CONTENT } },
+  { method: "put", path: "/api/owner/team/:id/pin", tag: "Panel: local", summary: "Poner o cambiar el PIN de un empleado (también lo desbloquea)", auth: "team:manage", params: idParams, body: memberPinSchema, responses: { 204: NO_CONTENT } },
+  { method: "get", path: "/api/owner/devices", tag: "Panel: local", summary: "Aparatos del equipo (desde donde se entra con PIN)", auth: "team:manage", responses: { 200: z.strictObject({ devices: z.array(device) }) } },
+  { method: "post", path: "/api/owner/devices", tag: "Panel: local", summary: "Registrar este aparato para el equipo (deja la cookie del aparato)", auth: "team:manage", body: deviceSchema, responses: { 201: z.strictObject({ device }) } },
+  { method: "delete", path: "/api/owner/devices/:id", tag: "Panel: local", summary: "Dar de baja un aparato del equipo", auth: "team:manage", params: idParams, responses: { 204: NO_CONTENT } },
   { method: "get", path: "/api/owner/availability", tag: "Panel: menú", summary: "Disponibilidade: productos y opciones (juntadas por nombre) con lo que está agotado", auth: "menu:read", responses: { 200: availabilityResponse } },
   { method: "patch", path: "/api/owner/availability/options", tag: "Panel: menú", summary: "Agotar o volver a ofrecer una opción por nombre, en todos sus grupos", auth: "menu:availability", body: optionAvailabilityByNameSchema, responses: { 200: availabilityResponse } },
   { method: "post", path: "/api/owner/availability/restore", tag: "Panel: menú", summary: "Volver a ofrecer todos los productos y opciones agotados a mano", auth: "menu:availability", responses: { 200: availabilityResponse } },
