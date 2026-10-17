@@ -489,7 +489,8 @@ export const ptBR = {
   manualOrder: {
     channel: "Como chegou o pedido?",
     products: "Produtos",
-    pickProducts: "Toque num produto para adicionar ao pedido.",
+    pickProducts: "Toque num produto para adicionar ao pedido. O botão ao lado serve para pôr uma observação.",
+    details: (name: string) => `Observação ou quantidade de ${name}`,
     itemsCount: (count: number) => (count === 1 ? "1 produto" : `${count} produtos`),
     review: "Ver pedido",
     order: "Pedido",

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Trash2 } from "lucide-react";
+import { MessageSquarePlus, Trash2 } from "lucide-react";
 import { type FormEvent, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { type ApiError, api } from "../../../api/client";
@@ -204,26 +204,43 @@ function NewOrderForm({ data, table }: { data: PublicStoreResponse; table?: Tabl
           <div key={category._id} className="mt-4">
             <h3 className="text-sm font-bold text-ink-muted">{category.name}</h3>
             <ul className="divide-y divide-line">
-              {products.map((product) => (
-                <li key={product._id}>
-                  <button
-                    type="button"
-                    disabled={!product.available || !category.availableNow}
-                    onClick={() => setPicking(product)}
-                    className="flex min-h-12 w-full items-center justify-between gap-3 py-2 text-left hover:bg-paper disabled:text-ink-muted"
-                  >
-                    <span className="font-bold">
-                      {/* Cuántos ya hay en el pedido: se ve que se agregó sin bajar al resumen. */}
-                      {inCart(product._id) > 0 && (
-                        <span className="mr-2 inline-grid min-w-6 place-items-center rounded-full bg-action px-1.5 text-sm text-white tabular-nums">{inCart(product._id)}</span>
-                      )}
-                      {product.name}
-                      {!product.available && <span className="ml-2 text-sm text-error">{t.menu.soldOut}</span>}
-                    </span>
-                    <Price product={product} />
-                  </button>
-                </li>
-              ))}
+              {products.map((product) => {
+                // Sin opciones para elegir, un toque lo agrega; el botón del costado abre la ficha (nota, cantidad).
+                const simple = product.optionGroups.length === 0;
+                const off = !product.available || !category.availableNow;
+                return (
+                  <li key={product._id} className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={off}
+                      onClick={() => (simple ? cart.add(product._id, 1, [], "") : setPicking(product))}
+                      className="flex min-h-12 min-w-0 flex-1 items-center justify-between gap-3 py-2 text-left hover:bg-paper active:bg-paper disabled:text-ink-muted"
+                    >
+                      <span className="font-bold">
+                        {/* Cuántos ya hay en el pedido: se ve que se agregó sin bajar al resumen. */}
+                        {inCart(product._id) > 0 && (
+                          <span className="mr-2 inline-grid min-w-6 place-items-center rounded-full bg-action px-1.5 text-sm text-white tabular-nums">{inCart(product._id)}</span>
+                        )}
+                        {product.name}
+                        {!product.available && <span className="ml-2 text-sm text-error">{t.menu.soldOut}</span>}
+                      </span>
+                      <Price product={product} />
+                    </button>
+                    {simple && (
+                      <button
+                        type="button"
+                        disabled={off}
+                        onClick={() => setPicking(product)}
+                        aria-label={t.manualOrder.details(product.name)}
+                        title={t.manualOrder.details(product.name)}
+                        className="grid size-11 shrink-0 place-items-center rounded-lg text-ink-muted hover:bg-paper hover:text-ink disabled:opacity-40"
+                      >
+                        <MessageSquarePlus aria-hidden className="size-5" />
+                      </button>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ))}
